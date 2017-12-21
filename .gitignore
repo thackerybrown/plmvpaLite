@@ -1,0 +1,12 @@
+## ignore matlab autosaves
+
+*.m~
+
+
+# Dropbox settings and caches
+.dropbox
+.dropbox.attr
+.dropbox.cache
+
+# DS Store OSX nightmare
+.DS_Store
