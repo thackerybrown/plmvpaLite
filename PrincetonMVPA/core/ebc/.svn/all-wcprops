@@ -1,0 +1,59 @@
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/ebc
+END
+ebc_average_results.m
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/ebc/ebc_average_results.m
+END
+ebc_tutorial_adv_load.m
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/ebc/ebc_tutorial_adv_load.m
+END
+ebc_tutorial_adv.m
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/ebc/ebc_tutorial_adv.m
+END
+ebc_tutorial_adv_optimize.m
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/ebc/ebc_tutorial_adv_optimize.m
+END
+ebc_tutorial_intro.m
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/ebc/ebc_tutorial_intro.m
+END
+ebc_tutorial_adv_preprocess.m
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/ebc/ebc_tutorial_adv_preprocess.m
+END
+ebc_tutorial_parameters.m
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/ebc/ebc_tutorial_parameters.m
+END
+ebc_tutorial_adv_xval.m
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/ebc/ebc_tutorial_adv_xval.m
+END
+ebc_feature_rater.m
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/ebc/ebc_feature_rater.m
+END

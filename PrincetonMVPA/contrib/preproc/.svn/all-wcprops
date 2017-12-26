@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/repos/distpat/!svn/ver/2157/trunk/mvpa/contrib/preproc
+END
+hpfilter_runs.m
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/repos/distpat/!svn/ver/2157/trunk/mvpa/contrib/preproc/hpfilter_runs.m
+END
+detrend_runs.m
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/repos/distpat/!svn/ver/2157/trunk/mvpa/contrib/preproc/detrend_runs.m
+END

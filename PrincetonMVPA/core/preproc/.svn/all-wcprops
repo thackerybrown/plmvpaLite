@@ -1,0 +1,293 @@
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/repos/distpat/!svn/ver/3229/trunk/mvpa/core/preproc
+END
+statmap_searchlight.m
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/repos/distpat/!svn/ver/2629/trunk/mvpa/core/preproc/statmap_searchlight.m
+END
+statmap_xcorr.m
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/preproc/statmap_xcorr.m
+END
+make_clust.m
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/preproc/make_clust.m
+END
+zscore_mvpa.m
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/preproc/zscore_mvpa.m
+END
+feature_select.m
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/repos/distpat/!svn/ver/2684/trunk/mvpa/core/preproc/feature_select.m
+END
+apply_detrend.m
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/preproc/apply_detrend.m
+END
+shift_regressors.m
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/preproc/shift_regressors.m
+END
+create_thresh_mask.m
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/repos/distpat/!svn/ver/2810/trunk/mvpa/core/preproc/create_thresh_mask.m
+END
+statmap_anova.m
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/preproc/statmap_anova.m
+END
+peek_feature_select.m
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/repos/distpat/!svn/ver/3229/trunk/mvpa/core/preproc/peek_feature_select.m
+END
+create_sorted_mask.m
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/preproc/create_sorted_mask.m
+END
+calc_avg_adj_neighborhood_size.m
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/preproc/calc_avg_adj_neighborhood_size.m
+END
+average_object.m
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/repos/distpat/!svn/ver/2472/trunk/mvpa/core/preproc/average_object.m
+END
+compute_xcorr.mexglx
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/repos/distpat/!svn/ver/1724/trunk/mvpa/core/preproc/compute_xcorr.mexglx
+END
+compute_xcorr.mexa64
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/repos/distpat/!svn/ver/1798/trunk/mvpa/core/preproc/compute_xcorr.mexa64
+END
+blur_pattern.m
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/repos/distpat/!svn/ver/2183/trunk/mvpa/core/preproc/blur_pattern.m
+END
+apply_filt.m
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/preproc/apply_filt.m
+END
+convert_mask_to_pat_idx.m
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/repos/distpat/!svn/ver/2709/trunk/mvpa/core/preproc/convert_mask_to_pat_idx.m
+END
+statmap_classify.m
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/repos/distpat/!svn/ver/2629/trunk/mvpa/core/preproc/statmap_classify.m
+END
+scramble_regressors.m
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/repos/distpat/!svn/ver/2835/trunk/mvpa/core/preproc/scramble_regressors.m
+END
+create_balanced_xvalid_selectors.m
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/repos/distpat/!svn/ver/3229/trunk/mvpa/core/preproc/create_balanced_xvalid_selectors.m
+END
+compute_xcorr.mexmac
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/repos/distpat/!svn/ver/1724/trunk/mvpa/core/preproc/compute_xcorr.mexmac
+END
+statmap_glm_multiv.m
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/preproc/statmap_glm_multiv.m
+END
+create_xvalid_indices.m
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/repos/distpat/!svn/ver/3229/trunk/mvpa/core/preproc/create_xvalid_indices.m
+END
+apply_zscore.m
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/preproc/apply_zscore.m
+END
+create_xvalid_oddeven.m
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/repos/distpat/!svn/ver/2972/trunk/mvpa/core/preproc/create_xvalid_oddeven.m
+END
+convert_pat_idx_to_mask_coords.m
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/repos/distpat/!svn/ver/2709/trunk/mvpa/core/preproc/convert_pat_idx_to_mask_coords.m
+END
+convert_mask_coords_to_pat_idx.m
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/repos/distpat/!svn/ver/2709/trunk/mvpa/core/preproc/convert_mask_coords_to_pat_idx.m
+END
+statmap_3dDeconvolve.m
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/repos/distpat/!svn/ver/3229/trunk/mvpa/core/preproc/statmap_3dDeconvolve.m
+END
+filter_runs.m
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/preproc/filter_runs.m
+END
+intersect_masks.m
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/preproc/intersect_masks.m
+END
+apply_to_runs.m
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/preproc/apply_to_runs.m
+END
+and_bool_selectors.m
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/preproc/and_bool_selectors.m
+END
+create_blocklabels.m
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/repos/distpat/!svn/ver/2453/trunk/mvpa/core/preproc/create_blocklabels.m
+END
+create_main_effect_contrast.m
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/distpat/!svn/ver/2810/trunk/mvpa/core/preproc/create_main_effect_contrast.m
+END
+adj_sphere.m
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/repos/distpat/!svn/ver/2292/trunk/mvpa/core/preproc/adj_sphere.m
+END
+convert_pat_to_mask_idx.m
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/repos/distpat/!svn/ver/2709/trunk/mvpa/core/preproc/convert_pat_to_mask_idx.m
+END
+convolve_regressors_afni.m
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/repos/distpat/!svn/ver/2971/trunk/mvpa/core/preproc/convolve_regressors_afni.m
+END
+anova1_mvpa.m
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/preproc/anova1_mvpa.m
+END
+zscore_runs.m
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/repos/distpat/!svn/ver/2839/trunk/mvpa/core/preproc/zscore_runs.m
+END
+create_adj_list.m
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/preproc/create_adj_list.m
+END
+compute_xcorr.c
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/preproc/compute_xcorr.c
+END
+balance_active_selector.m
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/repos/distpat/!svn/ver/2841/trunk/mvpa/core/preproc/balance_active_selector.m
+END
+create_spatial_avg_pat.m
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/repos/distpat/!svn/ver/2810/trunk/mvpa/core/preproc/create_spatial_avg_pat.m
+END
+binarize_regressors.m
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/repos/distpat/!svn/ver/2971/trunk/mvpa/core/preproc/binarize_regressors.m
+END
+separate_regressors.m
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/preproc/separate_regressors.m
+END
+detrend_pattern.m
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/repos/distpat/!svn/ver/2183/trunk/mvpa/core/preproc/detrend_pattern.m
+END
+adj_cuboid.m
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/preproc/adj_cuboid.m
+END

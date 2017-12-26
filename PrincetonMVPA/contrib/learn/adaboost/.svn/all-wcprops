@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/repos/distpat/!svn/ver/2164/trunk/mvpa/contrib/learn/adaboost
+END
+perfmet_maxclass_adaboostrounds.m
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/repos/distpat/!svn/ver/2164/trunk/mvpa/contrib/learn/adaboost/perfmet_maxclass_adaboostrounds.m
+END
+decisionStump.m
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/repos/distpat/!svn/ver/2164/trunk/mvpa/contrib/learn/adaboost/decisionStump.m
+END
+decisionStumpInitialize.m
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/repos/distpat/!svn/ver/2164/trunk/mvpa/contrib/learn/adaboost/decisionStumpInitialize.m
+END
+train_adaboost.m
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/repos/distpat/!svn/ver/2164/trunk/mvpa/contrib/learn/adaboost/train_adaboost.m
+END
+test_adaboost.m
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/repos/distpat/!svn/ver/2164/trunk/mvpa/contrib/learn/adaboost/test_adaboost.m
+END
+weaklearner_template.m
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/repos/distpat/!svn/ver/2164/trunk/mvpa/contrib/learn/adaboost/weaklearner_template.m
+END
+weaklearnerinitialize_template.m
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/repos/distpat/!svn/ver/2164/trunk/mvpa/contrib/learn/adaboost/weaklearnerinitialize_template.m
+END
+dstump.c
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/repos/distpat/!svn/ver/2164/trunk/mvpa/contrib/learn/adaboost/dstump.c
+END

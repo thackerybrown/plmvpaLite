@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/template
+END
+statmap_template.m
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/template/statmap_template.m
+END
+train_template.m
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/template/train_template.m
+END
+test_template.m
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/template/test_template.m
+END
+perfmet_template.m
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/template/perfmet_template.m
+END
+dimred_template.m
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/template/dimred_template.m
+END

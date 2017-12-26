@@ -1,0 +1,227 @@
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/repos/distpat/!svn/ver/2248/trunk/mvpa/core/learn
+END
+default_class_args.m
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/learn/default_class_args.m
+END
+test_bp_netlab.m
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/learn/test_bp_netlab.m
+END
+train_svdlr.m
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/repos/distpat/!svn/ver/2248/trunk/mvpa/core/learn/train_svdlr.m
+END
+logRegFun.m
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/repos/distpat/!svn/ver/2072/trunk/mvpa/core/learn/logRegFun.m
+END
+test_ridge.m
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/learn/test_ridge.m
+END
+perfmet_maxclass_ignore_rest.m
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/distpat/!svn/ver/2180/trunk/mvpa/core/learn/perfmet_maxclass_ignore_rest.m
+END
+smlr_mex.mexa64
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/repos/distpat/!svn/ver/2080/trunk/mvpa/core/learn/smlr_mex.mexa64
+END
+train_bp.m
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/repos/distpat/!svn/ver/2204/trunk/mvpa/core/learn/train_bp.m
+END
+train_corr.m
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/learn/train_corr.m
+END
+train_gnb.m
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/learn/train_gnb.m
+END
+cross_validation.m
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/repos/distpat/!svn/ver/2243/trunk/mvpa/core/learn/cross_validation.m
+END
+smlr_mex.mexmac
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/repos/distpat/!svn/ver/2080/trunk/mvpa/core/learn/smlr_mex.mexmac
+END
+test_svm.m
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/learn/test_svm.m
+END
+train_smlr.m
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/repos/distpat/!svn/ver/2071/trunk/mvpa/core/learn/train_smlr.m
+END
+smlr_mex.c
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/repos/distpat/!svn/ver/2071/trunk/mvpa/core/learn/smlr_mex.c
+END
+test_logreg.m
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/repos/distpat/!svn/ver/2181/trunk/mvpa/core/learn/test_logreg.m
+END
+perfmet_xcorr.m
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/learn/perfmet_xcorr.m
+END
+perfmet_for_class_corr.m
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/learn/perfmet_for_class_corr.m
+END
+train_bp_netlab.m
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/learn/train_bp_netlab.m
+END
+train_ridge.m
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/learn/train_ridge.m
+END
+perfmet_corr.m
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/learn/perfmet_corr.m
+END
+test_svdlr.m
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/repos/distpat/!svn/ver/2243/trunk/mvpa/core/learn/test_svdlr.m
+END
+perfmet_maxclass.m
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/learn/perfmet_maxclass.m
+END
+apply_trained_classifier.m
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/learn/apply_trained_classifier.m
+END
+test_bp.m
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/learn/test_bp.m
+END
+train_svm.m
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/repos/distpat/!svn/ver/2243/trunk/mvpa/core/learn/train_svm.m
+END
+wavestrapper_results.m
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/repos/distpat/!svn/ver/2149/trunk/mvpa/core/learn/wavestrapper_results.m
+END
+test_corr.m
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/learn/test_corr.m
+END
+test_gnb.m
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/learn/test_gnb.m
+END
+interpret_weights.m
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/repos/distpat/!svn/ver/2155/trunk/mvpa/core/learn/interpret_weights.m
+END
+perfmet_xcorr_onoff.m
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/repos/distpat/!svn/ver/2179/trunk/mvpa/core/learn/perfmet_xcorr_onoff.m
+END
+MVPA_SVM_setup.rtf
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/repos/distpat/!svn/ver/2238/trunk/mvpa/core/learn/MVPA_SVM_setup.rtf
+END
+fastsvd.m
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/repos/distpat/!svn/ver/2243/trunk/mvpa/core/learn/fastsvd.m
+END
+train_logreg.m
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/repos/distpat/!svn/ver/2247/trunk/mvpa/core/learn/train_logreg.m
+END
+test_smlr.m
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/repos/distpat/!svn/ver/2079/trunk/mvpa/core/learn/test_smlr.m
+END
+smlr.m
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/repos/distpat/!svn/ver/2181/trunk/mvpa/core/learn/smlr.m
+END
+random_blocks.m
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/repos/distpat/!svn/ver/2247/trunk/mvpa/core/learn/random_blocks.m
+END

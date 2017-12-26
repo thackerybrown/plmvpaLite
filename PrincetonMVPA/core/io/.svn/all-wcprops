@@ -1,0 +1,83 @@
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/repos/distpat/!svn/ver/2834/trunk/mvpa/core/io
+END
+load_afni_mask.m
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/repos/distpat/!svn/ver/2697/trunk/mvpa/core/io/load_afni_mask.m
+END
+load_afni_pattern.m
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/repos/distpat/!svn/ver/2139/trunk/mvpa/core/io/load_afni_pattern.m
+END
+write_to_afni.m
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/repos/distpat/!svn/ver/2831/trunk/mvpa/core/io/write_to_afni.m
+END
+load_spm_mask.m
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/repos/distpat/!svn/ver/2834/trunk/mvpa/core/io/load_spm_mask.m
+END
+load_pattern_from_hd.m
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/io/load_pattern_from_hd.m
+END
+load_spm_pattern.m
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/repos/distpat/!svn/ver/2603/trunk/mvpa/core/io/load_spm_pattern.m
+END
+write_to_spm.m
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/repos/distpat/!svn/ver/2603/trunk/mvpa/core/io/write_to_spm.m
+END
+write_regs_1d.m
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/io/write_regs_1d.m
+END
+zeroify_write_afni.m
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/repos/distpat/!svn/ver/2831/trunk/mvpa/core/io/zeroify_write_afni.m
+END
+load_matrix_pattern.m
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/repos/distpat/!svn/ver/2810/trunk/mvpa/core/io/load_matrix_pattern.m
+END
+write_out_censor_from_sel.m
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/io/write_out_censor_from_sel.m
+END
+load_subj.m
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/io/load_subj.m
+END
+load_bv_pattern.m
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/io/load_bv_pattern.m
+END

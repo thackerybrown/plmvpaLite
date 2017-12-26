@@ -1,0 +1,52 @@
+8
+
+dir
+2270
+https://www.csbmb.princeton.edu/repos/distpat/trunk/mvpa/core/synth
+https://www.csbmb.princeton.edu/repos/distpat
+
+
+
+2008-04-03T18:10:30.163592Z
+2155
+greg
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+f450c881-92ed-0310-9277-8549c73aefcf
+
+noisify_regressors.m
+file
+
+
+
+
+2008-04-03T21:12:13.000000Z
+428c3ab5ced840d03d7b46a0a68cc161
+2008-04-03T18:10:30.163592Z
+2155
+greg
+
+fake_smooth_regs.m
+file
+
+
+
+
+2008-04-03T21:12:13.000000Z
+cf15a2c7a9acd3a9bbff324116dff960
+2008-04-03T12:58:42.614687Z
+2149
+greg
+

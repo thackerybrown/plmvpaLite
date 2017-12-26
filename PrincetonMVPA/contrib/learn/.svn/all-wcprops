@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/repos/distpat/!svn/ver/2243/trunk/mvpa/contrib/learn
+END
+test_svm.m
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/repos/distpat/!svn/ver/2156/trunk/mvpa/contrib/learn/test_svm.m
+END
+perfmet_svm.m
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/repos/distpat/!svn/ver/2156/trunk/mvpa/contrib/learn/perfmet_svm.m
+END
+train_lda.m
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/repos/distpat/!svn/ver/2156/trunk/mvpa/contrib/learn/train_lda.m
+END
+test_lda.m
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/repos/distpat/!svn/ver/2156/trunk/mvpa/contrib/learn/test_lda.m
+END
+perfmet_lda.m
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/repos/distpat/!svn/ver/2156/trunk/mvpa/contrib/learn/perfmet_lda.m
+END
+train_svm.m
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/repos/distpat/!svn/ver/2243/trunk/mvpa/contrib/learn/train_svm.m
+END

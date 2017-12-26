@@ -1,0 +1,329 @@
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/repos/distpat/!svn/ver/3229/trunk/mvpa/core/util
+END
+titlef.m
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/util/titlef.m
+END
+idwt1.m
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/repos/distpat/!svn/ver/2182/trunk/mvpa/core/util/idwt1.m
+END
+db4dwt.m
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/repos/distpat/!svn/ver/2182/trunk/mvpa/core/util/db4dwt.m
+END
+exclude.m
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/repos/distpat/!svn/ver/2243/trunk/mvpa/core/util/exclude.m
+END
+unixf.m
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/repos/distpat/!svn/ver/2292/trunk/mvpa/core/util/unixf.m
+END
+rows.m
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/util/rows.m
+END
+normfilt.m
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/repos/distpat/!svn/ver/2182/trunk/mvpa/core/util/normfilt.m
+END
+datetime.m
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/repos/distpat/!svn/ver/2626/trunk/mvpa/core/util/datetime.m
+END
+shuffle.m
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/util/shuffle.m
+END
+sympad.m
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/repos/distpat/!svn/ver/2182/trunk/mvpa/core/util/sympad.m
+END
+db4idwt.m
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/repos/distpat/!svn/ver/2182/trunk/mvpa/core/util/db4idwt.m
+END
+cross_entropy_deriv.m
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/util/cross_entropy_deriv.m
+END
+confusion.m
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/repos/distpat/!svn/ver/2810/trunk/mvpa/core/util/confusion.m
+END
+args_into_workspace.m
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/repos/distpat/!svn/ver/2462/trunk/mvpa/core/util/args_into_workspace.m
+END
+progress.m
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/repos/distpat/!svn/ver/2139/trunk/mvpa/core/util/progress.m
+END
+mean_ignore_zeros.m
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/repos/distpat/!svn/ver/2453/trunk/mvpa/core/util/mean_ignore_zeros.m
+END
+dispf.m
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/util/dispf.m
+END
+volumize_pattern.m
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/util/volumize_pattern.m
+END
+create_legendre.m
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/repos/distpat/!svn/ver/2182/trunk/mvpa/core/util/create_legendre.m
+END
+bundle.m
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/repos/distpat/!svn/ver/2182/trunk/mvpa/core/util/bundle.m
+END
+eta.m
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/repos/distpat/!svn/ver/2245/trunk/mvpa/core/util/eta.m
+END
+onoff_metric.m
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/util/onoff_metric.m
+END
+check_1ofn_regressors.m
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/repos/distpat/!svn/ver/2455/trunk/mvpa/core/util/check_1ofn_regressors.m
+END
+dwt1.m
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/repos/distpat/!svn/ver/2182/trunk/mvpa/core/util/dwt1.m
+END
+multiple_iterations_confusion.m
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/distpat/!svn/ver/2784/trunk/mvpa/core/util/multiple_iterations_confusion.m
+END
+sample.m
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/repos/distpat/!svn/ver/3144/trunk/mvpa/core/util/sample.m
+END
+getpropval.m
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/repos/distpat/!svn/ver/2182/trunk/mvpa/core/util/getpropval.m
+END
+genpathsafe.m
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/repos/distpat/!svn/ver/2182/trunk/mvpa/core/util/genpathsafe.m
+END
+mergestructs.m
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/repos/distpat/!svn/ver/2182/trunk/mvpa/core/util/mergestructs.m
+END
+readvtc.m
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/util/readvtc.m
+END
+count.m
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/util/count.m
+END
+ind2vec_robust.m
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/util/ind2vec_robust.m
+END
+wavescram.m
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/repos/distpat/!svn/ver/2182/trunk/mvpa/core/util/wavescram.m
+END
+wavelet_scramble_multi.m
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/util/wavelet_scramble_multi.m
+END
+cdata2rgb.m
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/repos/distpat/!svn/ver/2243/trunk/mvpa/core/util/cdata2rgb.m
+END
+arg2funct.m
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/util/arg2funct.m
+END
+ste.m
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/repos/distpat/!svn/ver/3229/trunk/mvpa/core/util/ste.m
+END
+compress.m
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/repos/distpat/!svn/ver/2182/trunk/mvpa/core/util/compress.m
+END
+mini.m
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/repos/distpat/!svn/ver/2462/trunk/mvpa/core/util/mini.m
+END
+vec2ind_inclrest.m
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/util/vec2ind_inclrest.m
+END
+maxi.m
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/repos/distpat/!svn/ver/2462/trunk/mvpa/core/util/maxi.m
+END
+cols.m
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/util/cols.m
+END
+sorti.m
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/repos/distpat/!svn/ver/2462/trunk/mvpa/core/util/sorti.m
+END
+compute_pval_1tailed.m
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/repos/distpat/!svn/ver/2645/trunk/mvpa/core/util/compute_pval_1tailed.m
+END
+mean_ignore_nans.m
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/repos/distpat/!svn/ver/2453/trunk/mvpa/core/util/mean_ignore_nans.m
+END
+get_perfmet_called.m
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/repos/distpat/!svn/ver/2149/trunk/mvpa/core/util/get_perfmet_called.m
+END
+urandom.m
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/repos/distpat/!svn/ver/2243/trunk/mvpa/core/util/urandom.m
+END
+cross_entropy.m
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/util/cross_entropy.m
+END
+iscategorical.m
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/util/iscategorical.m
+END
+estimate.m
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/repos/distpat/!svn/ver/2245/trunk/mvpa/core/util/estimate.m
+END
+dwt1expand.m
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/repos/distpat/!svn/ver/2224/trunk/mvpa/core/util/dwt1expand.m
+END
+compare_size.m
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/util/compare_size.m
+END
+spm_extract_voxel_dims.m
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/repos/distpat/!svn/ver/2107/trunk/mvpa/core/util/spm_extract_voxel_dims.m
+END
+propval.m
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/repos/distpat/!svn/ver/2054/trunk/mvpa/core/util/propval.m
+END

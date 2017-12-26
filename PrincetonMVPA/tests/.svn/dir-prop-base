@@ -1,0 +1,13 @@
+K 10
+svn:ignore
+V 215
+unit_spm_cellarrayfilename_load.asv
+unit_spm_ana.asv
+unit_ana.asv
+unit_ana_cellarrayfilename_load.asv
+unit_spm_ana_haxby_dat_compare.asv
+unit_spm_runall.asv
+unit_spm_afni_tutcompare.asv
+unit_spm_ana_afnicompare.asv
+
+END

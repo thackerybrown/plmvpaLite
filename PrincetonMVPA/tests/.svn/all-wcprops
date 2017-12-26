@@ -1,0 +1,209 @@
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/repos/distpat/!svn/ver/3229/trunk/mvpa/tests
+END
+unit_zscore_mvpa.m
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/repos/distpat/!svn/ver/2136/trunk/mvpa/tests/unit_zscore_mvpa.m
+END
+unit_plot_deviations_from_condmean.m
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/distpat/!svn/ver/2454/trunk/mvpa/tests/unit_plot_deviations_from_condmean.m
+END
+spm_test_omnibus.m
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/repos/distpat/!svn/ver/2834/trunk/mvpa/tests/spm_test_omnibus.m
+END
+oldtest_set_mat.m
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/repos/distpat/!svn/ver/2136/trunk/mvpa/tests/oldtest_set_mat.m
+END
+compare_struct.m
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/repos/distpat/!svn/ver/2136/trunk/mvpa/tests/compare_struct.m
+END
+unit_and_bool_selectors.m
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/repos/distpat/!svn/ver/2136/trunk/mvpa/tests/unit_and_bool_selectors.m
+END
+unit_hd_scripts.m
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/repos/distpat/!svn/ver/2142/trunk/mvpa/tests/unit_hd_scripts.m
+END
+alert_unit_errors.m
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/repos/distpat/!svn/ver/2698/trunk/mvpa/tests/alert_unit_errors.m
+END
+unit_confusion.m
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/repos/distpat/!svn/ver/2785/trunk/mvpa/tests/unit_confusion.m
+END
+unit_create_xvalid_indices.m
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/repos/distpat/!svn/ver/2136/trunk/mvpa/tests/unit_create_xvalid_indices.m
+END
+unit_spm_ana.m
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/repos/distpat/!svn/ver/2603/trunk/mvpa/tests/unit_spm_ana.m
+END
+unit_create_xvalid_oddeven.m
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/repos/distpat/!svn/ver/2136/trunk/mvpa/tests/unit_create_xvalid_oddeven.m
+END
+unit_check_1ofn_regressors.m
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/repos/distpat/!svn/ver/2639/trunk/mvpa/tests/unit_check_1ofn_regressors.m
+END
+unit_perfmet_xcorr.m
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/repos/distpat/!svn/ver/2136/trunk/mvpa/tests/unit_perfmet_xcorr.m
+END
+oldtest_compare_size.m
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/repos/distpat/!svn/ver/2136/trunk/mvpa/tests/oldtest_compare_size.m
+END
+generic_unit_classifier.m
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/repos/distpat/!svn/ver/2454/trunk/mvpa/tests/generic_unit_classifier.m
+END
+unit_create_spatial_avg_pat.m
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/repos/distpat/!svn/ver/2136/trunk/mvpa/tests/unit_create_spatial_avg_pat.m
+END
+unit_spm_ana_afnicompare.m
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/repos/distpat/!svn/ver/2603/trunk/mvpa/tests/unit_spm_ana_afnicompare.m
+END
+oldtest_tutorial_easy.m
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/repos/distpat/!svn/ver/2136/trunk/mvpa/tests/oldtest_tutorial_easy.m
+END
+run_unit_tests.m
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/repos/distpat/!svn/ver/2142/trunk/mvpa/tests/run_unit_tests.m
+END
+iserror.m
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/repos/distpat/!svn/ver/2136/trunk/mvpa/tests/iserror.m
+END
+unit_set_mat.m
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/repos/distpat/!svn/ver/2626/trunk/mvpa/tests/unit_set_mat.m
+END
+unit_spm_cellarrayfilename_load.m
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/repos/distpat/!svn/ver/2603/trunk/mvpa/tests/unit_spm_cellarrayfilename_load.m
+END
+unit_spm_afni_tutcompare.m
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/repos/distpat/!svn/ver/2603/trunk/mvpa/tests/unit_spm_afni_tutcompare.m
+END
+unit_get_group_as_matrix.m
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/repos/distpat/!svn/ver/2139/trunk/mvpa/tests/unit_get_group_as_matrix.m
+END
+unit_create_balanced_xvalid_selectors.m
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/repos/distpat/!svn/ver/3229/trunk/mvpa/tests/unit_create_balanced_xvalid_selectors.m
+END
+unit_interpret_weights.m
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/repos/distpat/!svn/ver/2142/trunk/mvpa/tests/unit_interpret_weights.m
+END
+unit_spm_ana_haxby_dat_compare.m
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/repos/distpat/!svn/ver/2603/trunk/mvpa/tests/unit_spm_ana_haxby_dat_compare.m
+END
+unit_volumize_pattern.m
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/repos/distpat/!svn/ver/2136/trunk/mvpa/tests/unit_volumize_pattern.m
+END
+unit_template.m
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/repos/distpat/!svn/ver/2148/trunk/mvpa/tests/unit_template.m
+END
+unit_afni_cellarrayfilename_load.m
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/repos/distpat/!svn/ver/2234/trunk/mvpa/tests/unit_afni_cellarrayfilename_load.m
+END
+unit_smooth_predictions.m
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/repos/distpat/!svn/ver/2136/trunk/mvpa/tests/unit_smooth_predictions.m
+END
+unit_zscore_runs.m
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/repos/distpat/!svn/ver/2639/trunk/mvpa/tests/unit_zscore_runs.m
+END
+unit_afni.m
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/repos/distpat/!svn/ver/2252/trunk/mvpa/tests/unit_afni.m
+END

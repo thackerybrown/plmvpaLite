@@ -1,0 +1,11 @@
+K 10
+svn:ignore
+V 129
+load_analyze_pattern_syl.m
+load_analyze_pattern.asv
+write_to_analyze.asv
+write_to_spm.asv
+load_spm_mask.asv
+load_spm_pattern.asv
+
+END

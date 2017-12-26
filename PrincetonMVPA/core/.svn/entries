@@ -1,0 +1,94 @@
+10
+
+dir
+3279
+https://www.csbmb.princeton.edu/repos/distpat/trunk/mvpa/core
+https://www.csbmb.princeton.edu/repos/distpat
+
+
+
+2009-12-17T19:11:00.959954Z
+3229
+gmcgrath
+has-props
+
+
+
+
+
+
+
+
+
+
+
+
+
+f450c881-92ed-0310-9277-8549c73aefcf
+
+tutorial_easy.m
+file
+
+
+
+
+2009-05-28T22:16:42.000000Z
+e6bfe8a4b494856e9600e724708767db
+2009-04-27T18:42:32.270707Z
+2834
+gmcgrath
+
+deprecated
+dir
+
+learn
+dir
+
+vis
+dir
+
+subj
+dir
+
+synth
+dir
+
+io
+dir
+
+ebc
+dir
+
+preproc
+dir
+
+template
+dir
+
+tutorial_hard.m
+file
+
+
+
+
+2008-03-10T18:21:04.000000Z
+646b8fff18e80b464dc38d35ddc3017b
+2008-02-28T19:08:20.678461Z
+2054
+gmcgrath
+
+util
+dir
+
+tutorial_easy_spm.m
+file
+
+
+
+
+2009-07-10T19:08:50.000000Z
+caab238b94a547b9509e2c78877ec4fd
+2009-06-29T19:58:22.539524Z
+2971
+greg
+
