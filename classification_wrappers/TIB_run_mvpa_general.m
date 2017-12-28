@@ -1,4 +1,16 @@
-function [res, results]= TIB_run_mvpa_general(subj_array, task, TRsperRun, studyName, portion)%PM_run_mvpa_general(subj_array, task, TRsperRun, saveName, portion)
+function [res, results]= TIB_run_mvpa_general(subj_array, task, TRsperRun, studyName, portion)
+
+
+%example call - TIB_run_mvpa_general({'001'},'CM_localizer',[114,114],'8080test',1)
+
+%subj_array = structural array listing strings of unique sub IDs. The code
+%at large assumes the rest of subj identifier, if any, that is not
+%specified here is consistent across subs (e.g., study identification code
+%'CM' tacked on in front of these unique sub IDs
+
+%studyName **test if matters**
+%task **test if matters**
+
 %% Dependencies (For TIB Circmaze Study)
 %*_mvpa_params.m
 %TIB_generate_betafilenames
@@ -7,16 +19,12 @@ function [res, results]= TIB_run_mvpa_general(subj_array, task, TRsperRun, study
 %....
 
 for b=(1:length(subj_array))
-    
+    tic; %start stopwatch to track analysis time on machine
     %% load general parameter information
-    tic;
-    %[S idxTr idxTe par] = PM_mvpa_loc_params(subj_array(b), task, TRsperRun); %PM_mvpa_params(subj_array(b), task, TRsperRun);%
-    
-    %[S idxTr idxTe par] = PM_mvpa_params(subj_array(b), task, TRsperRun);
-    [S idxTr idxTe par] = TIB_mvpa_params_betas(subj_array(b), task, TRsperRun);
-    
-    %[S idxTr idxTe par] = TIB_localizer_mvpa_params(subj_array(b), task, TRsperRun);%runs with melina's localizer data
-    %[S idxTr idxTe par] = TIB_surrogate_mvpa_params(subj_array(b), task, TRsperRun);%runs with melina's localizer data
+
+    %[S idxTr idxTe par] = TIB_mvpa_params_betas(subj_array(b), task, TRsperRun);%runs with Circmaze data
+    [S idxTr idxTe par] = TIB_mvpa_params_8080(subj_array(b), task, TRsperRun, 'raw');%runs with CM localizer data.
+    %[S idxTr idxTe par] = TIB_surrogate_mvpa_params(subj_array(b), task, TRsperRun);%runs with pseudodata
     
     if nargin > 4%3 %AG had 3 here... set to 4 just to keep things rolling for now with testing the script
         S.portion = portion;%******QUESTION for AG****what was this used for?
@@ -27,7 +35,6 @@ for b=(1:length(subj_array))
     S.idxTe = idxTe;
     S.saveName = [studyName '_' S.nwayclass 'way_' S.xvaltype '_' S.subj_id]%set name for the .mat results and data log file. Will contain all the goodies for analysis.
     S.saveName2 = [studyName '_' S.nwayclass 'way_MeanActivity' S.subj_id]
-    %S.saveName = [studyName '_' S.nwayclass 'way_' S.xvaltype S.subj_id]%set name for the .mat results and data log file. Will contain all the goodies for analysis.
     
     S.subj_array = subj_array; %subjects, input to function at the "call". put in as strings of subject numbers - e.g. '12'.
     
@@ -330,7 +337,7 @@ for b=(1:length(subj_array))
         
         %save (fullfile(S.group_mvpa_dir, S.saveName), 'res');
         
-        % display time it took.
+        % display time classification pass took.
         time2finish = toc/60;
         display(['Finished ' S.subj_id ' in ' num2str(time2finish) ' minutes']);
         
