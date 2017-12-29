@@ -53,7 +53,7 @@ for b=(1:length(subj_array))
     %% Onsets
     S = TB_mvpa_onsets_and_images(S);%PM_mvpa_onsets_and_images(S);
     S.num_conds = size(S.onsets,2);
-    
+      
     
     %% Workspace stuff
     existWorkspace = exist(S.workspace);
@@ -80,10 +80,17 @@ for b=(1:length(subj_array))
             
             % convert from seconds to TRs - note, if your onsets are more
             % frequent than TRs, some trials will be lost in this step.
-            % This is a natural outcome of the rounding, and - honestly -
-            % probably shouldn't be considered an "error" since you are
-            % attempting to sample patterns above your resolution
+            % This is a natural outcome of the rounding, and 
+            % probably shouldn't be "forced" since you are
+            % attempting to sample patterns above your resolution. Instead
+            % we run a sanity check that onsets to be used are valid for
+            % our temporal resolution.
             for cond = 1:S.num_conds
+                %sanity check on distance between target onsets
+                if min(diff(S.onsets{cond})) < S.TR
+                    error(['your planned onsets for cond ' num2str(cond) ' are closer in time than your TR. This is not a valid model'])
+                end
+                                
                 for trial = 1: length(S.onsets{cond})
                     time_idx = round(S.onsets{cond}(trial)/S.TR) + 1; % divide by 2 and add 1 to convert back from sec to TRs (first timepoint = 0 sec; first TR = 1)
                     all_regs(cond, round(time_idx)) = 1;
