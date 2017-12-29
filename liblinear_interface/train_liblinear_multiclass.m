@@ -48,7 +48,8 @@ if strcmp(in_args.classType,'svm')
 else
     trainOpts_orig = in_args.libLin ;
     trainOpts = [trainOpts_orig ' -c ' num2str(opt_penalty)];
-    model = ll_train(choice, sparse(v), trainOpts);%NOTE: changed this from "train(...)" because I needed to refer to mac-friendly compiled files Alan put together for Valerie
+    %OSX version - model = ll_train(choice, sparse(v), trainOpts);%NOTE: changed this from "train(...)" because I needed to refer to mac-friendly compiled files Alan put together for Valerie
+    model = train(choice, sparse(v), trainOpts);
     scratchpad.classOrientation = model.Label';
     
     

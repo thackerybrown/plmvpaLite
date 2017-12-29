@@ -35,7 +35,7 @@ if strcmp(part, 'train')
     thisConds = S.condsTrain;%good, comes from PM_mvpa_params
     theseFiles = S.filenames_train;%good, comes from PM_mvpa_params
     theseTRWeights = S.TR_weights{1};%good, comes from PM_mvpa_params
-    thisIdx = S.idxTr;%-----------------what to doooooo
+    thisIdx = S.idxTr;
 elseif strcmp(part, 'test')
     thisOns = load(fullfile(S.onsetsTestDir, S.onsets_filename));%good, comes from PM_mvpa_params
     if strcmp(S.inputformat, 'betas')
@@ -44,24 +44,24 @@ elseif strcmp(part, 'test')
     thisConds = S.condsTest;%good, comes from PM_mvpa_params
     theseFiles = S.filenames_test;%good, comes from PM_mvpa_params
     theseTRWeights = S.TR_weights{2};%good, comes from PM_mvpa_params
-    thisIdx = S.idxTe;%-----------------what to doooooo
+    thisIdx = S.idxTe;
 %added for train on one set, test on the other set circumstance -
 %6/11/2014, TIB
 elseif strcmp(part, 'train_set')
     thisOns = load(fullfile(S.onsetsTrainDir, S.onsets_filename_tr));%good, comes from PM_mvpa_params
     if strcmp(S.inputformat, 'betas')
         thisbetidx = load(fullfile(S.onsetsTrainDir, S.betaidx_filename_tr));%load the betas_idx file
-        thisbetidx.betaidx = thisbetidx.betaidx_tr
+        thisbetidx.betaidx = thisbetidx.betaidx_tr;
     end
     thisConds = S.condsTrain;%good, comes from PM_mvpa_params
     theseFiles = S.filenames_train;%good, comes from PM_mvpa_params
     theseTRWeights = S.TR_weights{1};%good, comes from PM_mvpa_params
-    thisIdx = S.idxTr;%-----------------what to doooooo
+    thisIdx = S.idxTr;
 elseif strcmp(part, 'test_set')
     thisOns = load(fullfile(S.onsetsTestDir, S.onsets_filename_tst));%good, comes from PM_mvpa_params
     if strcmp(S.inputformat, 'betas')
         thisbetidx = load(fullfile(S.onsetsTestDir, S.betaidx_filename_te));%load the betas_idx file
-        thisbetidx.betaidx = thisbetidx.betaidx_te
+        thisbetidx.betaidx = thisbetidx.betaidx_te;
     end
     thisConds = S.condsTest;%good, comes from PM_mvpa_params
     theseFiles = S.filenames_test;%good, comes from PM_mvpa_params

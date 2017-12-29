@@ -30,8 +30,8 @@ ImgDims = 3; %it is highly recommended that you use 4D nifti files for raw BOLD 
 %Functional image scan selectors
 %par.scansSelect.goals.loc = 1:1;%***if ALL FILENAMES corresponding to ALL RUNS OF INTEREST are stored in ONE cell of raw_filenames.mat (i.e., not broken up by run), set index to 1 or 1:1. Otherwise, create indexing for elements of cell array raw_filenames.mat corresponding to task of interest (i.e. if cells runs 1:4 correspond to task 1, we want to reference {1}, {2}... in raw_filenames.mat)
 %par.scansSelect.plan.loc = 1:1;%***if ALL FILENAMES corresponding to ALL RUNS OF INTEREST are stored in ONE cell of raw_filenames.mat (i.e., not broken up by run), set index to 1 or 1:1. Otherwise, create indexing for elements of cell array raw_filenames.mat corresponding to task of interest (i.e. if cells runs 5:8 correspond to task 2, we want to reference {5}, {6}... in raw_filenames.mat)
-par.scansSelect.phase1.loc = 1:1;%***if ALL FILENAMES corresponding to ALL RUNS OF INTEREST are stored in ONE cell of raw_filenames.mat (i.e., not broken up by run), set index to 1 or 1:1. Otherwise, create indexing for elements of cell array raw_filenames.mat corresponding to task of interest (i.e. if cells runs 1:4 correspond to phase 1, we want to reference {1}, {2}... in raw_filenames.mat)
-par.scansSelect.phase2.loc = 1:1;%***if ALL FILENAMES corresponding to ALL RUNS OF INTEREST are stored in ONE cell of raw_filenames.mat (i.e., not broken up by run), set index to 1 or 1:1. Otherwise, create indexing for elements of cell array raw_filenames.mat corresponding to task of interest (i.e. if cells runs 5:8 correspond to phase 2, we want to reference {5}, {6}... in raw_filenames.mat)
+par.scansSelect.CM_localizer.loc = 1:1;%***if ALL FILENAMES corresponding to ALL RUNS OF INTEREST are stored in ONE cell of raw_filenames.mat (i.e., not broken up by run), set index to 1 or 1:1. Otherwise, create indexing for elements of cell array raw_filenames.mat corresponding to task of interest (i.e. if cells runs 1:4 correspond to phase 1, we want to reference {1}, {2}... in raw_filenames.mat)
+par.scansSelect.CM_localizer.loc = 1:1;%***if ALL FILENAMES corresponding to ALL RUNS OF INTEREST are stored in ONE cell of raw_filenames.mat (i.e., not broken up by run), set index to 1 or 1:1. Otherwise, create indexing for elements of cell array raw_filenames.mat corresponding to task of interest (i.e. if cells runs 5:8 correspond to phase 2, we want to reference {5}, {6}... in raw_filenames.mat)
 
 
 %input image info
@@ -50,17 +50,17 @@ S.preprocType = 'spm'; % 'spm' for spm preprocessing, 'knk' for kendrick preproc
 %data (e.g., a localizer) and test on another (e.g., a retrieval task),
 %then specify different tasks or study phases
 
-S.trainTask = 'localizer';%Circmaze - 'goals' vs 'plan'
-S.testTask = 'localizer';%Circamze - 'goals' vs 'plan'
+S.trainTask = 'EAvsScene';%Circmaze - 'goals' or 'plan'
+S.testTask = 'EAvsScene';%Circamze - 'goals' or 'plan'
 
 %x-validation info
 S.xvaltype = 'loo'; %set to 'loo' for leave-one-out x-validation or 'nf' for nfold using the S.nFolds defined below
 
 %%model information - define which timepoints or images correspond to which classes of data
 if strcmp(S.inputformat, 'raw')
-    S.onsets_filename = ['onsets_' S.subj_id '_allruns'];
-    S.onsets_filename_tr = ['onsets_' S.subj_id '_allruns'];%added for train on 1 phase, test on another - this assumes the data are actually in the same set of files.
-    S.onsets_filename_tst = ['onsets_' S.subj_id '_allruns'];%added for train on 1 phase, test on another - this assumes the data are actually in the same set of files.
+    S.onsets_filename = [S.subj_id '_localizer_onsets_test'];%['onsets_' S.subj_id '_allruns'];
+    S.onsets_filename_tr = ['onsets_mvpa'];%['onsets_' S.subj_id '_allruns'];%added for train on 1 phase, test on another - this assumes the data are actually in the same set of files.
+    S.onsets_filename_tst = ['onsets_mvpa'];%['onsets_' S.subj_id '_allruns'];%added for train on 1 phase, test on another - this assumes the data are actually in the same set of files.
 elseif strcmp(S.inputformat, 'betas')
     S.onsets_filename = ['onsets_' S.subj_id '_allruns_cuenew_rearranged'];
     S.onsets_filename_tr = ['onsets_' S.subj_id '_allruns_cuenew_rearranged'];
@@ -81,11 +81,13 @@ par.funcdir =[par.subdir '/bolds/'];%subfolder for 'raw' BOLD data. Assumes BOLD
 S.workspace_dir = [par.subdir '/mvpa_workspace'];%temporary files workspace
 
 
-%model file directory (onsets.mat and betas in here)
+%model file directory (onsets.mat and betas in here) - this is still used
+%when working with raw data. We must have some way to tell the classifier
+%which images correspond to which classes
 if strcmp(S.inputformat, 'raw')
-    S.mvpa_dir = [S.expt_dir S.subj_id '/model_allruns_includemarginals/'];
+    S.mvpa_dir = [S.expt_dir S.subj_id '/results01/'];
 elseif strcmp(S.inputformat, 'betas')
-    S.mvpa_dir = [S.expt_dir S.subj_id '/model_allruns_includemarginals/betaseries_cue_rearranged/'];
+    S.mvpa_dir = [S.expt_dir S.subj_id '/results01/betaseries_rearranged/'];
 end
 
 %ROI masks (could be whole-brain mask, but the code wants a mask file
@@ -202,9 +204,6 @@ else
 end
 
 %% information specific to the training and testing of specific subsets of data
-% parTr = par for the training data = dump all params relevant to a
-% specific task - e.g. 'mnem' - into a variable parTr ***don't bother for
-% circmaze study***
 
 % S.onsetsTrainDir = location of training onsets
 
@@ -224,35 +223,21 @@ end
 
 % S.filenames_train = names of data images to use for training
 
-% idxTr = behavioral indices for training task, used by PM_run_MVPA_general
+% idxTr = behavioral indices for training task, used by TIB_run_MVPA_general
 
-if strcmp(S.trainTask,'goals')
-    %parTr = PM_Params(subj_id, 'mnem');
+if strcmp(S.trainTask,'EAvsScene')
     S.onsetsTrainDir = [S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
-    
-    %S.condsTrain = {{'goal1'}  {'goal2'} {'goal3'} {'goal4'} {'goal5'}} ;%corresponds to the names in the onsets.mat or betas_idx.mat files. This is used to select what is being compared with what.
-    S.condsTrain = {{'cues1'}  {'cues2'} {'cues3'} {'cues4'} {'cues5'}} %{{'cues1_1'}  {'cues1_2'} {'cues2_1'} {'cues2_2'} {'cues3_1'} {'cues3_2'}  {'cues4_1'} {'cues4_2'} {'cues5_1'} {'cues5_2'}}%{{'cues1'}  {'cues2'} {'cues3'} {'cues4'} {'cues5'}} %{ {'plan1'} {'plan2'} {'plan3'} {'plan4'} {'plan5'}} ;%%corresponds to the names in the onsets.mat or betas_idx.mat files. This is used to select what is being compared with what.
-    %S.condsTrain = {{'cues1_1'} {'cues2_1'} {'cues3_1'} {'cues4_1'} {'cues5_1'}}%
-    
-    %S.condsTrain = {{'objects'}  {'scenes'} } ;%corresponds to the names in the onsets.mat or betas_idx.mat files. This is used to select what is being compared with what.
-    
-    %S.condsTrain = {{'goal_1'}  {'goal_2'} {'goal_3'}} ;%corresponds to the names in the onsets.mat or betas_idx.mat files. This is used to select what is being compared with what.
-    %S.dnCondsTrain = {{'face'}  {'house'} {'noise'}};
-    S.TrainRuns = par.scansSelect.(par.task).loc;%pull up indexing from PM_Params for RUNS corresponding to task of interest (i.e. if runs 2,4,6 correspond to task 1)
-    %S.filenames_train = vertcat(par.swrascanfilesByRun{S.TrainRuns});%create a filename list with all image names relevant to analysis of interest (i.e., skip of runs 1,3,5 if they correspond to task 2)
+    S.condsTrain = {{'EA'}  {'Scene'}} ;%corresponds to the names in the onsets.mat or betas_idx.mat files. This is used to select what is being compared with what.
+    S.TrainRuns = par.scansSelect.(par.task).loc;%pull up indexing, defined above, for RUNS corresponding to task of interest (i.e. if runs 2,4,6 correspond to task 1)
     if strcmp(S.inputformat, 'raw')
         S.filenames_train = raw_filenames;%
     elseif strcmp(S.inputformat, 'betas')
         S.filenames_train = beta_filenames;%
     end
-    
-    %S.durTrain = sum(par.(par.task).numvols(S.TrainRuns)) * par.TR; %AG
-    %version
     S.durTrain = numel(S.filenames_train) * par.TR;
     %[~, idxTr] = fMRIBehAnalysis_Loc(par);
     
-elseif strcmp(S.trainTask,'percloc_2sess')
-    %par2 = PM_Params3(subj_id, 'mnem');
+elseif strcmp(S.trainTask,'AAvsScene')
     S.onsetsTrainDir = [S.expt_dir S.subj_id '/analysis_mvpa_Loc_3d_2sess/'];
     S.condsTrain = {{'noise'}  {'houseCor'}} ;
     S.TrainRuns1 = par.scansSelect.(par.task).loc;
@@ -264,22 +249,12 @@ elseif strcmp(S.trainTask,'percloc_2sess')
     S.filenames_train = char(S.filenames_train_h);
 end
 
-%% testing
-if strcmp(S.testTask,'goals')
+%% testing - this defines the testing set. The code is set up this way to enable us to step outside xval if desired to test on different set of data (e.g., at retrieval)
+if strcmp(S.testTask,'EAvsScene')
     S.onsetsTestDir =[S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
-    %S.condsTest = {{'goal_1_plan'}  {'goal_2_plan'} {'goal_3_plan'} {'goal_4_plan'} {'goal_5_plan'}};
-    S.condsTest = {{'cues1'} {'cues2'} {'cues3'} {'cues4'} {'cues5'}} %{{'cues1_1'}  {'cues1_2'} {'cues2_1'} {'cues2_2'} {'cues3_1'} {'cues3_2'}  {'cues4_1'} {'cues4_2'} {'cues5_1'} {'cues5_2'}}%{ {'plan1'} {'plan2'} {'plan3'} {'plan4'} {'plan5'}}%%{'goalhold1'} {'goalhold2'} {'goalhold3'} {'goalhold4'} {'goalhold5'}};
-    %S.condsTrain = {{'cues1_1'} {'cues2_1'} {'cues3_1'} {'cues4_1'} {'cues5_1'}}%
-    
-    
-    %S.condsTest = {{'goal1'} {'goal2'} {'goal3'} {'goal4'} {'goal5'}};
-    %S.condsTest = {{'objects'}  {'scenes'} } ;
-    
-    %S.condsTest = {{'goal_1'}  {'goal_2'}  {'goal_3'} };
+    S.condsTest = {{'EA'} {'Scene'}};
     S.nwayclass = num2str(numel(S.condsTest));%stores the number classification dimensions just for reference (i.e. is this a 5-way or a 2-way/binary classification?)
     S.TestRuns = par.scansSelect.(par.task).loc;
-    %S.durTest = sum(par.(par.task).numvols(S.TestRuns)) * par.TR;
-    %S.filenames_test = vertcat(par.betasByRun{S.TestRuns});
     if strcmp(S.inputformat, 'raw')
         S.filenames_test = raw_filenames;%
     elseif strcmp(S.inputformat, 'betas')
@@ -288,7 +263,7 @@ if strcmp(S.testTask,'goals')
     S.durTest = numel(S.filenames_test) * par.TR;
     %[~, idxTe] = fMRIBehAnalysis_Loc(par);
     
-elseif strcmp(S.testTask,'plan')
+elseif strcmp(S.testTask,'AAvsScene')
     S.onsetsTestDir =[S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
     %S.condsTest = {{'goal_1_plan'}  {'goal_2_plan'} {'goal_3_plan'} {'goal_4_plan'} {'goal_5_plan'}};
     %S.condsTest = {{'goal1'} {'goal2'} {'goal3'} {'goal4'} {'goal5'}};
@@ -307,21 +282,13 @@ elseif strcmp(S.testTask,'plan')
         S.filenames_test = beta_filenames;%
     end
     S.durTest = numel(S.filenames_test) * par.TR;
-    
-elseif strcmp(S.testTask,'mnemonicloc_2sess')
-    S.onsetsTestDir = [S.expt_dir S.subj_id '/analysis_mvpa_Loc_3d_2sess/'];
-    S.condsTest = {{'faceCor'}  {'houseCor'}} ;
-    S.TestRuns1 = par.scansSelect.(par.task).loc;
-    S.TestRuns2 = par2.scansSelect.(par2.task).loc;
-    S.TestRuns = [S.TrainRuns1 S.TrainRuns2 + max(par.scansSelect.mnem.all)];
-    S.durTest = sum([par.(par.task).numvols(S.TrainRuns1) par2.(par2.task).numvols(S.TrainRuns2)])* par.TR;
 end
 
 S.condnames = S.condsTrain;
 S.regName = 'conds';
 
 
-%% Smoothing Parameters
+%% Smoothing Parameters - ******************integrate with switch mode above
 S.funcType = 3;
 if strcmp(S.inputformat, 'betas')%override hard code here if we're playing with betas
     S.funcType = 4;
@@ -341,7 +308,7 @@ switch S.funcType
 end
 
 %% specify which files to load for classification
-if S.xval%if we are doing nfold xval (set above via a 1)
+if S.xval%if we are doing nfold xval (automatically set above via a 1)
     S.filenames = S.filenames_train;
 else
     S.filenames_h{1} = S.filenames_train;
@@ -353,21 +320,6 @@ S.img_files =  mat2cell(S.filenames, [ones(1,size(S.filenames,1))], [size(S.file
 %% Runs Parameters
 
 S.runs_vector = TRsperRun; % number of TRs per scanning run (coded for vector of values)
-
-% if ismember(S.trainTask,{'percloc_2sess' 'mnemonicloc_2sess'})
-%     if S.xval
-%         S.runs_vector = [par.(par.task).numvols(S.TrainRuns1) par2.(par2.task).numvols(S.TrainRuns2)];
-%     else
-%         S.runs_vector = [par.(par.task).numvols(S.TrainRuns1) parTr.(parTr.task).numvols(S.TrainRuns2) par.(par.task).numvols(S.TestRuns)];
-%     end
-% else
-%     if S.xval
-%         S.runs_vector =  [par.(par.task).numvols(S.TrainRuns)];
-%     else
-%         S.runs_vector =  [parTr.(parTr.task).numvols(S.TrainRuns) par.(par.task).numvols(S.TestRuns)];
-%         S.TrainTestOrder = [ones(size(S.TrainRuns)) 2*ones(size(S.TestRuns))];
-%     end
-% end
 
 S.meta_runs = S.runs_vector;
 S.num_runs = length(S.runs_vector);
@@ -404,57 +356,27 @@ end
 
 
 %% Volume Parameters
-S.vol_info = spm_vol(fullfile(par.funcdir, 'run_03', 'urun3_0006.nii')); %get functional data resolution info for spm .img writing
+S.vol_info = spm_vol(fullfile(par.funcdir, 'run_01', 'run_01_006.nii')); %get functional data resolution info for spm .img writing
 
-%S.roiWithNonTaksVoxels = fullfile(par.anatdir, 'tnativeOccTemp.nii');
-%S.roiWithNonTaksVoxelsName = 'tnativeOccTemp.nii';
-
-S.roi_name = 'rbilat_hipp_trace.nii';
-%S.roi_name = 'rphc_trace.nii';
-%S.roi_name = 'rprc_trace.nii';
-%S.roi_name = 'rec_trace.nii';
-
-%S.roi_name = 'rcd_trace.nii';
-%S.roi_name = 'rcerebell.nii';
-%S.roi_name = 'rv1.nii'
-
-%S.roi_name = 'rpfc.nii';%was chance for cm25 w/ nf160
-%S.roi_name = 'rvs_t.nii';
-%S.roi_name = 'gm_cm12.nii';
-
+S.roi_name = 'NativeGM_BOLDres.nii';
 S.roi_file = [S.expt_dir S.subj_id '/Masks/' S.roi_name]; %this is the large-scale ROI (could be wholebrain) that workspace info is calculated for. Saves time to have this volume include any sub-volumes you are interested in (e.g. MTL if you plan on looking in hippo and phc separately)
 
-%S.roi_name = 'mask.img';
-%S.roi_file = [S.mvpa_dir 'mask.img'];
-
-%S.noiseVoxels_file = fullfile(par.anatdir, 'rnativec2V001.nii');
-%S.noiseVoxels_name = 'rnativec2V001.nii';
-
-%S.sigVoxels_file = fullfile(par.anatdir, 'tnativeOccTempGrey.nii');
-%S.sigVoxels_name = 'tnativeOccTempGrey.nii';
-
-%mask the primary data loaded in the workspace. [] = no secondary mask.
+%Apply another mask to the primary data loaded in the workspace. [] = no secondary mask.
+%This is useful for a number of potential scenarios. It's particularly
+%useful when working with betas, enabling us to filter a hippocampal ROI
+%further to remove zeros or NaNs from outside the brain space mask (due to implicit masking, dropout, etc).
 if strcmp(S.inputformat, 'raw')
     S.secondaryMask = [S.expt_dir S.subj_id '/Masks/' S.roi_name]; % secondary mask (the specific classification mask - e.g. hippocampus within MTL)
 elseif strcmp(S.inputformat, 'betas')
     S.secondaryMask = [S.mvpa_dir 'mask.img'];
 end
 
-
-%S.secondaryMask = fullfile(par.anatdir, 'tnativeOccTempGrey.nii');
-%S.secondaryMask = ['/biac4/wagner/biac3/wagner5/alan/perceptMnemonic/fmri_data/masks/OTnoHipp.img'];
-%S.secondaryMask = ['/Users/gordonam/Studies/AG1/mvpa/OT_2012/rhipp.img'];
-%S.secondaryMask = ['/biac4/wagner/biac3/wagner5/alan/perceptMnemonic/fmri_data/masks/rparietal.img'];
-
-
-%% Workspace Parameters
+%% Workspace Parameters - these files can be huge. In future versions, consider finding ways to pare down.
 S.use_premade_workspace = 1;
 S.workspace = fullfile(S.workspace_dir, [S.subj_id '_' S.roi_name '_' S.smoothTxt{S.funcType} '_train_' S.trainTask '_test_' S.testTask S.preprocType '.mat']);
 
 %% Pattern names
 S.patternType = S.inputformat; %'raw' or 'betas'
-% S.preprocPatName = 'spiral_dn';
-% S.preprocPatName = 'patsAllVox_z_dn';
 if strcmp(S.inputformat, 'raw')
     S.preprocPatName = 'spiral_hp_z';%stands for 'spiral imaging'_'high-pass filtered'_'z-scored'
 elseif strcmp(S.inputformat, 'betas')
@@ -474,8 +396,8 @@ end
 S.inactivateArtifacts = 0; %remove artifact trials? 0 = no.
 
 %% Iteration Parameters
-S.num_results_iter = 10; % number of times to run the entire classification process (select subset of the data and train/test classifier)
-S.num_iter_with_same_data = 1; % number of times to run the classfication step for a given subset of data
+S.num_results_iter = 1; % number of times to run the entire classification process (select subset of the data and train/test classifier)
+S.num_iter_with_same_data = 1; % number of times to run the classfication step for a given subset of data - useful for non-deterministic cases
 
 %% Balancing Parameters
 S.equate_number_of_trials_in_groups = 0; % equate number of trials in conditions
@@ -492,16 +414,16 @@ S.remove_outlier_trials = 3;  % on-the-fly outlier detection/removal; specify ho
 S.generate_importance_maps = 0; %visualize classifier weights
 S.generateBetaMaps = 0; %use betas, instead of importance values
 S.impType = {'pos' 'neg' 'both' 'raw'}; %importance map types
-S.regNames = {'locationA' 'locationB' 'locationC' 'locationD' 'locationE'};
+S.regNames = {'CondA' 'CondB'}; % should match number of classes
 
 %% Special types of analysis
 S.searchlightAnalysis = 0; % run a searchlight analysis
-S.linReg = 0; % run an analysis with a continuous outcome variable
-S.scrambleregs = 1; % run an anlysis with the class labels scrambled on a run-by-run basis.
+%S.linReg = 0; % run an analysis with a continuous outcome variable
+S.scrambleregs = 0; % run an anlysis with the class labels scrambled on a run-by-run basis.
 
 %% Subsample %%alan stuff only - don't use
-S.subsampleToMatch = 0; %subsample trials to match quantities across them.
-S.balanceHiAndLowConf = 0;% match N of hi and low confidence trials?
+%S.subsampleToMatch = 0; %subsample trials to match quantities across them.
+%S.balanceHiAndLowConf = 0;% match N of hi and low confidence trials?
 
 %% voxel interactions
 S.includeVoxelInteractions = 0; %include interactions among voxels? 0 = no
@@ -548,25 +470,23 @@ S.logreg_2Features = 0; %perform a logistic regression, using the two extracted 
 %different images = different events
 if strcmp(S.inputformat, 'raw')
     %S.TR_weights_set = {[.0072 .2168 .3781 .2742 .1237] [.0072 .2168 .3781 .2742 .1237]}; %approximates the canonical haemodynamic response
-    %S.TR_weights_set = {[0 0.35 0.5 0.15 0] [0 0.35 0.5 0.15 0]};%v1
-    %S.TR_weights_set = {[0 0.15 0.5 0.35 0] [0 0.15 0.5 0.35 0]};%v2
-    S.TR_weights_set = {{[0 0.25 0.5 0.25] [0 0.25 0.5 0.25]}};%v3
+    S.TR_weights_set = {{[0 0.25 0.5 0.25] [0 0.25 0.5 0.25]}};%use double-bracket structure in case want to set code up to run a sliding window across multiple TR bins
 elseif strcmp(S.inputformat, 'betas')
     S.TR_weights_set = {{[1] [1]}};%give full weighting to the 1 and only image corresponding to each event
 end
 
 
 %% classifier parameters
-S.class_args.train_funct_name = 'train_liblinear_multiclass';%'train_pLR';%; %training function
-S.class_args.test_funct_name = 'test_liblinear_multiclass';%'test_pLR';%% %testing function
+S.class_args.train_funct_name = 'train_liblinear_multiclass';%'train_pLR';   %training function
+S.class_args.test_funct_name = 'test_liblinear_multiclass';%'test_pLR';      %testing function
 S.class_args.classType = 'libLin';
 S.perfmet_functs = 'perfmet_maxclass'; % performance metric
 S.statmap_funct = 'statmap_anova';%'AG_statmap_anova'; % performance metric
 S.nPlsCompsSet = 0; % number of pls components to include. 0 = do not use pls components.
-S.nFolds = 160; % number of cross validation iterations - used for nFold as opposed to run-by-run leave-one-out
+S.nFolds = 160; % number of cross validation iterations - only used for nFold (as opposed to run-by-run leave-one-out)
 
 S.class_args.nVox = 0; % number of voxels to select with feature selection e.g. [1000 5000 10000]
-S.class_args.fseltype = 'topn' % feature selection format: top N vox (topn) or random N vox (rand)?
+S.class_args.fseltype = 'topn'; % feature selection format: top N vox (topn) or random N vox (rand)?
 S.class_args.libLin = '-q -s 0 -B 1'; %arguments for liblinear
 S.class_args.libsvm = '-q -s 0 -t 2 -d 3'; % arguments for libsvm
 S.class_args.constant = true; % include a constant term?

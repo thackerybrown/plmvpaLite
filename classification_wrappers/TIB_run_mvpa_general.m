@@ -33,22 +33,22 @@ for b=(1:length(subj_array))
     end
     S.idxTr = idxTr;
     S.idxTe = idxTe;
-    S.saveName = [studyName '_' S.nwayclass 'way_' S.xvaltype '_' S.subj_id]%set name for the .mat results and data log file. Will contain all the goodies for analysis.
-    S.saveName2 = [studyName '_' S.nwayclass 'way_MeanActivity' S.subj_id]
+    S.saveName = [studyName '_' S.nwayclass 'way_' S.xvaltype '_' S.subj_id];%set name for the .mat results and data log file. Will contain all the goodies for analysis.
+    S.saveName2 = [studyName '_' S.nwayclass 'way_MeanActivity' S.subj_id];
     
     S.subj_array = subj_array; %subjects, input to function at the "call". put in as strings of subject numbers - e.g. '12'.
     
     %% information about which TRs to include in classification
     %which weighted combination of post-stimulus TRs should be used to train the classifier?
-    S.TR_weights_train = S.TR_weights_set{1}; % should sum to 1
+    S.TR_weights_train = S.TR_weights_set{1}{1}; % should sum to 1
     S.TRs_to_average_over_train = 1:length(S.TR_weights_train);
     
     %which weighted combination of post-stimulus TRs should be used to test the classifier?
-    S.TR_weights_test = S.TR_weights_set{2}; % should sum to 1
+    S.TR_weights_test = S.TR_weights_set{1}{2}; % should sum to 1
     S.TRs_to_average_over_test = 1:length(S.TR_weights_test);
     
-    S.TR_weights = S.TR_weights_set;
-    S.TRs_to_average_over = 1:length(S.TR_weights);
+    S.TR_weights = S.TR_weights_set{1};
+    %S.TRs_to_average_over = 1:length(S.TR_weights);
     
     %% Onsets
     S = TB_mvpa_onsets_and_images(S);%PM_mvpa_onsets_and_images(S);
@@ -78,7 +78,11 @@ for b=(1:length(subj_array))
         if strcmp(S.patternType, 'raw')
             all_regs = zeros(S.num_conds,S.num_vols); % initialize regs matrix as conditions x timepoints
             
-            % convert from seconds to TRs
+            % convert from seconds to TRs - note, if your onsets are more
+            % frequent than TRs, some trials will be lost in this step.
+            % This is a natural outcome of the rounding, and - honestly -
+            % probably shouldn't be considered an "error" since you are
+            % attempting to sample patterns above your resolution
             for cond = 1:S.num_conds
                 for trial = 1: length(S.onsets{cond})
                     time_idx = round(S.onsets{cond}(trial)/S.TR) + 1; % divide by 2 and add 1 to convert back from sec to TRs (first timepoint = 0 sec; first TR = 1)
@@ -100,7 +104,7 @@ for b=(1:length(subj_array))
             idx_condense =find(sum(all_regs));
             
             % condense meta_runs using idx_condense - create a "run" label
-            % corresponding to each onset?
+            % corresponding to each onset
             trial_idx = 1;
             m_runs = 0;
             for r = 1:length(S.meta_runs)
@@ -111,12 +115,13 @@ for b=(1:length(subj_array))
             
             
             %% select active trials
-            S.actives = ones(size(meta_runs_condensed));
+            S.actives = ones(size(meta_runs_condensed));% all active patterns of interest
                       
             % index active training trials
-            allTrainOns = sort([S.onsets_train_in_classifier{:}]);
+            allTrainOns = sort([S.onsets_train_in_classifier{:}]); %<--candidate to fix bug listed below. This should get condensed somehow to = 55 in this case study (when it would otherwise be 96)
             allOns = sort([S.onsets{:}]);
-            S.trainActives = ismember(allOns, allTrainOns);
+            S.trainActives = ismember(allOns, allTrainOns);% all active patterns of interest used for training
+%~~~~~~~~~~~^~~~this doesn't work in the case where condensed regs/runs becomes smaller than allTrainOns due to overlapping TR timepoints. Fix!!!            
             subj = init_object(subj,'selector','trainActives');
             subj = set_mat(subj,'selector','trainActives', S.trainActives);
                        
@@ -135,7 +140,9 @@ for b=(1:length(subj_array))
                     subj = init_object(subj,'selector','leave_one_out');
                     subj = set_mat(subj,'selector','leave_one_out', meta_runs_condensed);
                     subj = set_objfield(subj, 'selector', 'leave_one_out', 'group_name', 'leave_one_outGroup');
-                    subj = PM_create_xvalid_indices_trainActivesOnly(subj,'leave_one_out', 'actives_selname', 'trainActives');
+                    %subj = PM_create_xvalid_indices_trainActivesOnly(subj,'leave_one_out', 'actives_selname', 'trainActives');
+                    subj = TB_create_xvalid_indices(subj,'leave_one_out', 'actives_selname', 'trainActives');
+                    
                 elseif strcmp(S.xvaltype, 'nf')%nfold based on param set in PM_mvpa_params
                     randomNFold = ceil(shuffle(1:length(meta_runs_condensed))/(length(meta_runs_condensed)/S.nFolds));%this is NOT leave-one-out xval. This is for random NFold xval
                     %You specify "I want to run 10 xvalidation iterations" (in PM_mvpa_params) and then we are are going to leave 1/10th of the data out during xval, randomly distributed across runs.
@@ -163,7 +170,7 @@ for b=(1:length(subj_array))
             
             % load training data
             data_by_TR_train = [];
-            for dt = 1:length(S.TR_weights_set{1})
+            for dt = 1:length(S.TR_weights_set{1}{1})
                 data_by_TR_train(dt,:,:) = S.TR_weights_train(dt)*subj.patterns{end}.mat(:,meta_runs_train+(dt-1));
             end
             temporally_condensed_data_train = squeeze(sum(data_by_TR_train(S.TRs_to_average_over_train,:,:),1));
@@ -171,7 +178,7 @@ for b=(1:length(subj_array))
             
             % load testing data
             data_by_TR_test = [];
-            for dt = 1:length(S.TR_weights_set{2})
+            for dt = 1:length(S.TR_weights_set{1}{2})
                 data_by_TR_test(dt,:,:) = S.TR_weights_test(dt)*subj.patterns{end}.mat(:,meta_runs_test+(dt-1));
             end
             temporally_condensed_data_test = squeeze(sum(data_by_TR_test(S.TRs_to_average_over_test,:,:),1));%this will be blank, anyway, in xval situation, based on specification of meta_runs_test as [] above...

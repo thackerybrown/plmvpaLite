@@ -71,9 +71,11 @@ else
     %work with these mac-compiled files.
     probconvert = 0; %output RELATIVE probability values instead of one-vs-rest logits? 1 == yes, 0 == no
     if probconvert == 1
-        [theseLabels acc probVals]=ll_predict(theseTestLabels, thisTest', scratchpad.model, '-b 1');%NOTE: changed this from "predict(...)" because I needed to refer to mac-friendly compiled files Alan put together for Valerie
+    %OSX version - [theseLabels acc probVals]=ll_predict(theseTestLabels, thisTest', scratchpad.model, '-b 1');%NOTE: changed this from "predict(...)" because I needed to refer to mac-friendly compiled files Alan put together for Valerie
+        [theseLabels acc probVals]=predict(theseTestLabels, thisTest', scratchpad.model, '-b 1');%NOTE: changed this from "predict(...)" because I needed to refer to mac-friendly compiled files Alan put together for Valerie
     else
-        [theseLabels acc probVals]=ll_predict(theseTestLabels, thisTest', scratchpad.model);
+    %OSX version - [theseLabels acc probVals]=ll_predict(theseTestLabels, thisTest', scratchpad.model);
+        [theseLabels acc probVals]=predict(theseTestLabels, thisTest', scratchpad.model);
     end
     acts = nan(size(probVals));
     acts = probVals;
