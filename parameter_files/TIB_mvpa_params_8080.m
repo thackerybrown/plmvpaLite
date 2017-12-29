@@ -54,14 +54,14 @@ S.trainTask = 'EAvsScene';%Circmaze - 'goals' or 'plan'
 S.testTask = 'EAvsScene';%Circamze - 'goals' or 'plan'
 
 %x-validation info
-S.xvaltype = 'nf';%'loo'; %set to 'loo' for leave-one-out x-validation or 'nf' for nfold using the S.nFolds defined below
+S.xvaltype = 'loo';%'loo'; %set to 'loo' for leave-one-out x-validation or 'nf' for nfold using the S.nFolds defined below
 disp(['Cross-validation type is ' S.xvaltype])
 
 %%model information - define which timepoints or images correspond to which classes of data
 if strcmp(S.inputformat, 'raw')
-    S.onsets_filename = [S.subj_id '_localizer_onsets_test'];%['onsets_' S.subj_id '_allruns'];
-    S.onsets_filename_tr = ['onsets_mvpa'];%['onsets_' S.subj_id '_allruns'];%added for train on 1 phase, test on another - this assumes the data are actually in the same set of files.
-    S.onsets_filename_tst = ['onsets_mvpa'];%['onsets_' S.subj_id '_allruns'];%added for train on 1 phase, test on another - this assumes the data are actually in the same set of files.
+    S.onsets_filename = [S.subj_id '_localizer_onsets_test'];%
+    S.onsets_filename_tr = [S.subj_id '_localizer_onsets_test'];% added for train on 1 phase, test on another - this assumes the data are actually in the same set of files.
+    S.onsets_filename_tst = [S.subj_id '_localizer_onsets_test'];% added for train on 1 phase, test on another - this assumes the data are actually in the same set of files.
 elseif strcmp(S.inputformat, 'betas')
     S.onsets_filename = ['onsets_' S.subj_id '_allruns_cuenew_rearranged'];
     S.onsets_filename_tr = ['onsets_' S.subj_id '_allruns_cuenew_rearranged'];
@@ -401,7 +401,8 @@ S.num_results_iter = 1; % number of times to run the entire classification proce
 S.num_iter_with_same_data = 1; % number of times to run the classfication step for a given subset of data - useful for non-deterministic cases
 
 %% Balancing Parameters
-S.equate_number_of_trials_in_groups = 0; % equate number of trials in conditions
+S.equate_number_of_trials_in_groups = 1; % equate number of trials in conditions
+S.numBalancedParams = 1; % number of parameters to balance across (e.g., both goal location AND cue in Circmaze data). The code currently (12/29/17) only handles two options - 1 (standard; main class type), or 2 (main class type plus a second parameter, specified in a second file).
 S.numBalancedIts = 1; % number of iterations to run, with different randomization for the balancing
 
 %% Z-Scoring and outlier detection

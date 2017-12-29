@@ -231,7 +231,12 @@ for b=(1:length(subj_array))
         
         %equate the training set.
         if S.equate_number_of_trials_in_groups
-            subj = TB_balanceTrainPats(S, subj);%TB_balanceTrainPats(S, subj); %
+            display('bancing pattern counts across classes in training set')
+            if S.numBalancedParams == 1
+                subj = PM_balanceTrainPats(S, subj); %balance only on main classification classes (standard)
+            elseif S.numBalancedParams == 2
+                subj = TB_balanceTrainPats(S, subj); %currently can handle only one second balancing parameter
+            end
             S.classSelector = [S.thisSelector 'balanced'];
         end
         

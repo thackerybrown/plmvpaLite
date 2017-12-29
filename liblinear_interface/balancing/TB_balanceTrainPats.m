@@ -3,6 +3,9 @@ function subj = TB_balanceTrainPats(S, subj)
 % two factors (specifically, designed for balancing number of trials based
 % on both the goal location AND the cues for the goal location)
 
+% Rev 1.2 - 12/29/2017 - updated to accept 2nd balancing parameter as input
+% argument instead of hardcode
+
 % Rev 1.1 - 1/20/2015 - fixed bug in TrainTestOneIter balancing, added
 % option to hardcode max trial-count in the training set
 
@@ -10,7 +13,10 @@ function subj = TB_balanceTrainPats(S, subj)
 setmax = 0;%if a non-zero value is specified, override number of cues below to have a training trial-count of 2x this value (e.g. 6 = 12 training trials per cond)
 
 %files and data
-cuefile = ['/mnt/wagner/thackery/Circmaze/subs_preprocessed_fermi_nospikerepair/' S.subj_id '/model_plan_allruns_includemarginals/cues_' S.subj_id '_allruns.mat']
+cuefile = [S.mvpa_dir 'cues_' S.subj_id '_allruns.mat'];
+if exist(cuefile)==0;
+    error('you do not appear to have a file specifying a second balancing param')
+end
 load(cuefile)
 sels = squeeze(get_group_as_matrix(subj, 'selector',S.thisSelector));%create matrix of bins/iterations*trials (1s = training, 2s = testing trials)
 regs = get_mat(subj, 'regressors', 'conds');%get matrix of conditions/classes*trials (1s = trial X = this class, 0s = trial X ~= this class)
