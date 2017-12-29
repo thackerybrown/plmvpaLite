@@ -345,23 +345,14 @@ for b=(1:length(subj_array))
 %        res.subj{subjnum}.penalty(1).nVox(1).weights(1).iter{n}.confm = multiple_iterations_confusion(results);
         %         res.subj{b}.penalty(1).nVox(1).weights(1).iter{n} = results;
         %         res.subj{b}.penalty(1).nVox(1).weights(1).S = S;
-        %         res.subjArray = subj_array;
-        
-        
-        savepath = '/Users/thackery/Work/Circmaze/'
-        save (fullfile(savepath, S.saveName), 'res', '-v7.3');
-        
-        %save (fullfile(S.group_mvpa_dir, S.saveName), 'res', '-v7.3');
-        
-        
-        %save (fullfile(S.group_mvpa_dir, S.saveName), 'res');
+        %         res.subjArray = subj_array;       
+       
+        save (fullfile(S.group_mvpa_dir, S.saveName), 'res', '-v7.3');
         
         % display time classification pass took.
         time2finish = toc/60;
         display(['Finished ' S.subj_id ' in ' num2str(time2finish) ' minutes']);
-        
-        
-        
+                
         clear subj
         end
     end
