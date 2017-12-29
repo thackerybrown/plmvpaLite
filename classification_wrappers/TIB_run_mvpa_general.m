@@ -5,7 +5,7 @@ function [res, results]= TIB_run_mvpa_general(subj_array, task, TRsperRun, study
 
 %subj_array = structural array listing strings of unique sub IDs. The code
 %at large assumes the rest of subj identifier, if any, that is not
-%specified here is consistent across subs (e.g., study identification code
+%input is consistent across subs (e.g., study identification code
 %'CM' tacked on in front of these unique sub IDs
 
 %studyName **test if matters**
@@ -26,10 +26,10 @@ for b=(1:length(subj_array))
     [S idxTr idxTe par] = TIB_mvpa_params_8080(subj_array(b), task, TRsperRun, 'raw');%runs with CM localizer data.
     %[S idxTr idxTe par] = TIB_surrogate_mvpa_params(subj_array(b), task, TRsperRun);%runs with pseudodata
     
-    if nargin > 4%3 %AG had 3 here... set to 4 just to keep things rolling for now with testing the script
-        S.portion = portion;%******QUESTION for AG****what was this used for?
-    else
-        S.portion = [];
+%    if nargin > 4%3 %AG had 3 here... set to 4 just to keep things rolling for now with testing the script
+%        S.portion = portion;%******QUESTION for AG****what was this used for?
+%    else
+%        S.portion = [];
     end
     S.idxTr = idxTr;
     S.idxTe = idxTe;

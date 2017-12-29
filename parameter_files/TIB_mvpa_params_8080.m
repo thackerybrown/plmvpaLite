@@ -54,7 +54,8 @@ S.trainTask = 'EAvsScene';%Circmaze - 'goals' or 'plan'
 S.testTask = 'EAvsScene';%Circamze - 'goals' or 'plan'
 
 %x-validation info
-S.xvaltype = 'loo'; %set to 'loo' for leave-one-out x-validation or 'nf' for nfold using the S.nFolds defined below
+S.xvaltype = 'nf';%'loo'; %set to 'loo' for leave-one-out x-validation or 'nf' for nfold using the S.nFolds defined below
+disp(['Cross-validation type is ' S.xvaltype])
 
 %%model information - define which timepoints or images correspond to which classes of data
 if strcmp(S.inputformat, 'raw')
@@ -483,7 +484,7 @@ S.class_args.classType = 'libLin';
 S.perfmet_functs = 'perfmet_maxclass'; % performance metric
 S.statmap_funct = 'statmap_anova';%'AG_statmap_anova'; % performance metric
 S.nPlsCompsSet = 0; % number of pls components to include. 0 = do not use pls components.
-S.nFolds = 160; % number of cross validation iterations - only used for nFold (as opposed to run-by-run leave-one-out)
+S.nFolds = 24; % number of cross validation iterations - only used for nFold (as opposed to run-by-run leave-one-out)
 
 S.class_args.nVox = 0; % number of voxels to select with feature selection e.g. [1000 5000 10000]
 S.class_args.fseltype = 'topn'; % feature selection format: top N vox (topn) or random N vox (rand)?
@@ -495,6 +496,6 @@ S.class_args.chooseOptimalPenalty = 0; % 1 = yes. cycle through cost parameters 
 S.class_args.penaltyRange = [.001 .005 .01 .05 .1 .5 1 5 10 50 100 500 1000 50000]; % a vector "[]" of cost parameters to cycle through
 S.class_args.radialBasisSelection = [];%[.00001 .0001 .001 .01 .1 1 10];
 S.class_args.nFoldsPenaltySelection = 10; % number of cross validation folds for penalty parameter selection.
-S.class_args.penalty = 1; %uncomment if not using optimal penalty
+S.class_args.penalty = 0.000001; %uncomment if not using optimal penalty. Typical value is 1. If using sample data provided with plmvpaLite, start with 0.000001 to see how minimal regularization harms performance.
 %establishment
 end
