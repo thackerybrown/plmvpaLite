@@ -25,7 +25,7 @@ par.task = task; %assign input from function call. Task phase label. For circmaz
 
 par.TR = 2; %TR (s)
 
-ImgDims = 3; %it is highly recommended that you use 4D nifti files for raw BOLD data ('4'). If you have split them out into TR-by-TR, enter '3'
+ImgDims = 3; %as of 12/31/17, code only suppoerts 3D images. %it is highly recommended that you modify to use 4D nifti files for raw BOLD data ('4'). If you have split them out into TR-by-TR, enter '3'
 
 %Functional image scan selectors
 %par.scansSelect.goals.loc = 1:1;%***if ALL FILENAMES corresponding to ALL RUNS OF INTEREST are stored in ONE cell of raw_filenames.mat (i.e., not broken up by run), set index to 1 or 1:1. Otherwise, create indexing for elements of cell array raw_filenames.mat corresponding to task of interest (i.e. if cells runs 1:4 correspond to task 1, we want to reference {1}, {2}... in raw_filenames.mat)
@@ -54,7 +54,7 @@ S.trainTask = 'EAvsScene';%Circmaze - 'goals' or 'plan'
 S.testTask = 'EAvsScene';%Circamze - 'goals' or 'plan'
 
 %x-validation info
-S.xvaltype = 'loo';%'loo'; %set to 'loo' for leave-one-out x-validation or 'nf' for nfold using the S.nFolds defined below
+S.xvaltype = 'loo'; %set to 'loo' for leave-one-out x-validation or 'nf' for nfold using the S.nFolds defined below.
 disp(['Cross-validation type is ' S.xvaltype])
 
 %%model information - define which timepoints or images correspond to which classes of data
@@ -109,7 +109,7 @@ end
 
 %specify preprocessing level of BOLDs
 preproc_lvl = ''; % 'a' for slice-time-only, 'u' for realigned-only, 'ua' for realign+unwarped, 'swua' for smoothed, normalized, and... you get the picture. Modify as needed if you changed SPM's prefix append defaults
-boldnames = [preproc_lvl 'run'];
+boldnames = [preproc_lvl 'run']; %name of image files with preprocessing level prefix
 
 
 if strcmp(S.inputformat, 'raw')
@@ -159,7 +159,7 @@ if strcmp(S.inputformat, 'raw')
     a = sortrows(raw_filenames, 2);
     raw_filenames = a(:,1);
     
-    %if the BOLD images are 3D instead of 4D (TR-by-TR; NOT recommended),
+    %if the BOLD images are 3D instead of 4D (TR-by-TR; NOT recommended, but currently only option supported [12/31/17]),
     %we need to modify indices further to avoid introducing a new sorting error
     if ImgDims == 3
         
@@ -401,7 +401,7 @@ S.num_results_iter = 1; % number of times to run the entire classification proce
 S.num_iter_with_same_data = 1; % number of times to run the classfication step for a given subset of data - useful for non-deterministic cases
 
 %% Balancing Parameters
-S.equate_number_of_trials_in_groups = 1; % equate number of trials in conditions
+S.equate_number_of_trials_in_groups = 0; % equate number of trials in conditions
 S.numBalancedParams = 1; % number of parameters to balance across (e.g., both goal location AND cue in Circmaze data). The code currently (12/29/17) only handles two options - 1 (standard; main class type), or 2 (main class type plus a second parameter, specified in a second file).
 S.numBalancedIts = 1; % number of iterations to run, with different randomization for the balancing
 
@@ -445,15 +445,15 @@ S.thisSigIntenseSelector = 'randomNFold_xval'; %which selector to use for signal
 S.zscoreIntensityVals = 1; % zscore the intensity values?
 
 %% Denoising
-S.denoise = 0; %undergo denoising?
-S.denoiseOpt.denoisespec = '10001'; %which parts of the glm output do we want to save?
+%S.denoise = 0; %undergo denoising?
+%S.denoiseOpt.denoisespec = '10001'; %which parts of the glm output do we want to save?
 
 %% Mean Signal Extraction Params
 % parameters for selecting the mean signal from a class-specific ROI for each pattern.
 
 S.extractMeanSignal = 0; %1 - do signal extraction. 0 = don't do this.
 S.defineROIsFromANOVAFS = 0; % define ROIs using ANOVA-based feature selection, instead of pre-defining them.
-S.logreg_2Features = 0; %perform a logistic regression, using the two extracted intensity vectors
+%S.logreg_2Features = 0; %perform a logistic regression, using the two extracted intensity vectors
 %**********************************************************************************come back to this section once up and running......%%%%
 % S.ROI1PatName = [S.preprocPatCondensedName '_ROI1'];
 % S.ROI1_name = [ 'occipitoTemporal_faceVsScene_500vox.img'];
@@ -493,7 +493,7 @@ S.class_args.libLin = '-q -s 0 -B 1'; %arguments for liblinear
 S.class_args.libsvm = '-q -s 0 -t 2 -d 3'; % arguments for libsvm
 S.class_args.constant = true; % include a constant term?
 S.class_args.prefitWeights = true;
-S.class_args.chooseOptimalPenalty = 0; % 1 = yes. cycle through cost parameters in the training set, and chose the optimal one?
+S.class_args.chooseOptimalPenalty = 0; % 1 = yes. cycle through cost parameters in the training set, and chose the optimal one. Note, this only makes sense in context of loo with >2 runs or for nf with >2 folds, because it subdivides training set into additional 'runs' and performs nested xvalidation.
 S.class_args.penaltyRange = [.001 .005 .01 .05 .1 .5 1 5 10 50 100 500 1000 50000]; % a vector "[]" of cost parameters to cycle through
 S.class_args.radialBasisSelection = [];%[.00001 .0001 .001 .01 .1 1 10];
 S.class_args.nFoldsPenaltySelection = 10; % number of cross validation folds for penalty parameter selection.

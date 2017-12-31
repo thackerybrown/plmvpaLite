@@ -1,7 +1,7 @@
-function [res, results]= TIB_run_mvpa_general(subj_array, task, TRsperRun, studyName, portion)
+function [res, results]= TIB_run_mvpa_general(subj_array, task, TRsperRun, studyName)%, portion)
 
 
-%example call - TIB_run_mvpa_general({'001'},'CM_localizer',[114,114],'8080test',1)
+%example call - TIB_run_mvpa_general({'001'},'CM_localizer',[114,114],'8080test') %%,1)
 
 %subj_array = structural array listing strings of unique sub IDs. The code
 %at large assumes the rest of subj identifier, if any, that is not
