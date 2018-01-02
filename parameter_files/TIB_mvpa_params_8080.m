@@ -27,7 +27,7 @@ par.TR = 2; %TR (s)
 
 ImgDims = 3; %as of 12/31/17, code only supports 3D images. %it is highly recommended that you modify to use 4D nifti files for raw BOLD data ('4'). If you have split them out into TR-by-TR, enter '3'
 
-par.readimglist = 1; %1=yes; 0 = no. Flag specifies whether to generate raw_filenames on the fly or to read in a previously-made file
+par.readimglist = 0; %1=yes; 0 = no. Flag specifies whether to generate raw_filenames on the fly or to read in a previously-made file
 
 %Functional image scan selectors
 %par.scansSelect.goals.loc = 1:1;%***if ALL FILENAMES corresponding to ALL RUNS OF INTEREST are stored in ONE cell of raw_filenames.mat (i.e., not broken up by run), set index to 1 or 1:1. Otherwise, create indexing for elements of cell array raw_filenames.mat corresponding to task of interest (i.e. if cells runs 1:4 correspond to task 1, we want to reference {1}, {2}... in raw_filenames.mat)
@@ -55,7 +55,6 @@ S.testTask = 'EAvsScene';%Circamze - 'goals' or 'plan'
 
 %x-validation info
 S.xvaltype = 'loo'; %set to 'loo' for leave-one-out x-validation or 'nf' for nfold using the S.nFolds defined below.
-disp(['Cross-validation type is ' S.xvaltype])
 
 %%model information - define which timepoints or images correspond to which classes of data
 if strcmp(S.inputformat, 'raw')
@@ -196,6 +195,7 @@ end
 %localizer or encoding task and then wanted to test retrieval patterns
 if strcmp(S.trainTask, S.testTask)
     S.xval = 1;
+    disp(['Cross-validation type is ' S.xvaltype])
     if strcmp(S.xvaltype, 'nf')
         S.thisSelector =  'randomNFold_xval'; % nfold cross validation selector
     elseif strcmp(S.xvaltype, 'loo')
@@ -204,6 +204,7 @@ if strcmp(S.trainTask, S.testTask)
 else
     S.xval = 0;
     S.thisSelector = 'TrainTestOneIterGroup'; % train on one group, test on another
+    disp(['Instead of cross-validation, running ' S.thisSelector])
 end
 
 %% information specific to the training and testing of specific subsets of data
@@ -240,16 +241,71 @@ if strcmp(S.trainTask,'EAvsScene')
     S.durTrain = numel(S.filenames_train) * par.TR;
     %[~, idxTr] = fMRIBehAnalysis_Loc(par);
     
+elseif strcmp(S.trainTask,'EAvsScrambled')
+    S.onsetsTrainDir = [S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
+    S.condsTrain = {{'EA'}  {'EA_scrambled'}} ;%corresponds to the names in the onsets.mat or betas_idx.mat files. This is used to select what is being compared with what.
+    S.TrainRuns = par.scansSelect.(par.task).loc;%pull up indexing, defined above, for RUNS corresponding to task of interest (i.e. if runs 2,4,6 correspond to task 1)
+    if strcmp(S.inputformat, 'raw')
+        S.filenames_train = raw_filenames;%
+    elseif strcmp(S.inputformat, 'betas')
+        S.filenames_train = beta_filenames;%
+    end
+    S.durTrain = numel(S.filenames_train) * par.TR;
+    
 elseif strcmp(S.trainTask,'AAvsScene')
-    S.onsetsTrainDir = [S.expt_dir S.subj_id '/analysis_mvpa_Loc_3d_2sess/'];
-    S.condsTrain = {{'noise'}  {'houseCor'}} ;
-    S.TrainRuns1 = par.scansSelect.(par.task).loc;
-    S.TrainRuns2 = par2.scansSelect.(par2.task).loc;
-    S.TrainRuns = [S.TrainRuns1 S.TrainRuns2 + max(par.scansSelect.perc.all)];
-    S.durTrain = sum([par.(par.task).numvols(S.TrainRuns1) par2.(par2.task).numvols(S.TrainRuns2)])* par.TR;
-    S.filenames_train_h{1} = char(par.rascanfilesByRun{S.TrainRuns1});
-    S.filenames_train_h{2} = char(par2.rascanfilesByRun{S.TrainRuns2});
-    S.filenames_train = char(S.filenames_train_h);
+    S.onsetsTrainDir = [S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
+    S.condsTrain = {{'AA'}  {'Scene'}} ;%corresponds to the names in the onsets.mat or betas_idx.mat files. This is used to select what is being compared with what.
+    S.TrainRuns = par.scansSelect.(par.task).loc;%pull up indexing, defined above, for RUNS corresponding to task of interest (i.e. if runs 2,4,6 correspond to task 1)
+    if strcmp(S.inputformat, 'raw')
+        S.filenames_train = raw_filenames;%
+    elseif strcmp(S.inputformat, 'betas')
+        S.filenames_train = beta_filenames;%
+    end
+    S.durTrain = numel(S.filenames_train) * par.TR;
+    
+elseif strcmp(S.trainTask,'AAvsObj')
+    S.onsetsTrainDir = [S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
+    S.condsTrain = {{'AA'}  {'Obj'}} ;%corresponds to the names in the onsets.mat or betas_idx.mat files. This is used to select what is being compared with what.
+    S.TrainRuns = par.scansSelect.(par.task).loc;%pull up indexing, defined above, for RUNS corresponding to task of interest (i.e. if runs 2,4,6 correspond to task 1)
+    if strcmp(S.inputformat, 'raw')
+        S.filenames_train = raw_filenames;%
+    elseif strcmp(S.inputformat, 'betas')
+        S.filenames_train = beta_filenames;%
+    end
+    S.durTrain = numel(S.filenames_train) * par.TR;
+    
+elseif strcmp(S.trainTask,'AAvsScrambled')
+    S.onsetsTrainDir = [S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
+    S.condsTrain = {{'AA'}  {'AA_scrambled'}} ;%corresponds to the names in the onsets.mat or betas_idx.mat files. This is used to select what is being compared with what.
+    S.TrainRuns = par.scansSelect.(par.task).loc;%pull up indexing, defined above, for RUNS corresponding to task of interest (i.e. if runs 2,4,6 correspond to task 1)
+    if strcmp(S.inputformat, 'raw')
+        S.filenames_train = raw_filenames;%
+    elseif strcmp(S.inputformat, 'betas')
+        S.filenames_train = beta_filenames;%
+    end
+    S.durTrain = numel(S.filenames_train) * par.TR;
+    
+elseif strcmp(S.trainTask,'FacevsScene')
+    S.onsetsTrainDir = [S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
+    S.condsTrain = {{'Face'}  {'Scene'}} ;%corresponds to the names in the onsets.mat or betas_idx.mat files. This is used to select what is being compared with what.
+    S.TrainRuns = par.scansSelect.(par.task).loc;%pull up indexing, defined above, for RUNS corresponding to task of interest (i.e. if runs 2,4,6 correspond to task 1)
+    if strcmp(S.inputformat, 'raw')
+        S.filenames_train = raw_filenames;%
+    elseif strcmp(S.inputformat, 'betas')
+        S.filenames_train = beta_filenames;%
+    end
+    S.durTrain = numel(S.filenames_train) * par.TR;
+    
+    elseif strcmp(S.trainTask,'FacevsScenevsObj')
+    S.onsetsTrainDir = [S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
+    S.condsTrain = {{'Face'}  {'Scene'} {'Obj'}} ;%corresponds to the names in the onsets.mat or betas_idx.mat files. This is used to select what is being compared with what.
+    S.TrainRuns = par.scansSelect.(par.task).loc;%pull up indexing, defined above, for RUNS corresponding to task of interest (i.e. if runs 2,4,6 correspond to task 1)
+    if strcmp(S.inputformat, 'raw')
+        S.filenames_train = raw_filenames;%
+    elseif strcmp(S.inputformat, 'betas')
+        S.filenames_train = beta_filenames;%
+    end
+    S.durTrain = numel(S.filenames_train) * par.TR;
 end
 
 %% testing - this defines the testing set. The code is set up this way to enable us to step outside xval if desired to test on different set of data (e.g., at retrieval)
@@ -266,25 +322,90 @@ if strcmp(S.testTask,'EAvsScene')
     S.durTest = numel(S.filenames_test) * par.TR;
     %[~, idxTe] = fMRIBehAnalysis_Loc(par);
     
-elseif strcmp(S.testTask,'AAvsScene')
+elseif strcmp(S.testTask,'EAvsObj')
     S.onsetsTestDir =[S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
-    %S.condsTest = {{'goal_1_plan'}  {'goal_2_plan'} {'goal_3_plan'} {'goal_4_plan'} {'goal_5_plan'}};
-    %S.condsTest = {{'goal1'} {'goal2'} {'goal3'} {'goal4'} {'goal5'}};
-    S.condsTest = {{'cues1'} {'cues2'} {'cues3'} {'cues4'} {'cues5'}} %
-    %S.condsTest = {{'cues1_2'} {'cues2_2'} {'cues3_2'}  {'cues4_2'} {'cues5_2'}}%
-    %S.condsTest = {{'objects'}  {'scenes'} } ;
-    
-    %S.condsTest = {{'goal_1'}  {'goal_2'}  {'goal_3'} };
+    S.condsTest = {{'EA'} {'Obj'}};
     S.nwayclass = num2str(numel(S.condsTest));%stores the number classification dimensions just for reference (i.e. is this a 5-way or a 2-way/binary classification?)
     S.TestRuns = par.scansSelect.(par.task).loc;
-    %S.durTest = sum(par.(par.task).numvols(S.TestRuns)) * par.TR;
-    %S.filenames_test = vertcat(par.betasByRun{S.TestRuns});
     if strcmp(S.inputformat, 'raw')
         S.filenames_test = raw_filenames;%
     elseif strcmp(S.inputformat, 'betas')
         S.filenames_test = beta_filenames;%
     end
     S.durTest = numel(S.filenames_test) * par.TR;
+    
+elseif strcmp(S.testTask,'EAvsScrambled')
+    S.onsetsTestDir =[S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
+    S.condsTest = {{'EA'} {'EA_scrambled'}};
+    S.nwayclass = num2str(numel(S.condsTest));%stores the number classification dimensions just for reference (i.e. is this a 5-way or a 2-way/binary classification?)
+    S.TestRuns = par.scansSelect.(par.task).loc;
+    if strcmp(S.inputformat, 'raw')
+        S.filenames_test = raw_filenames;%
+    elseif strcmp(S.inputformat, 'betas')
+        S.filenames_test = beta_filenames;%
+    end
+    S.durTest = numel(S.filenames_test) * par.TR;
+    
+elseif strcmp(S.testTask,'AAvsScene')
+    S.onsetsTestDir =[S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
+    S.condsTest = {{'fakeEA'} {'fakeScene'}};
+    S.nwayclass = num2str(numel(S.condsTest));%stores the number classification dimensions just for reference (i.e. is this a 5-way or a 2-way/binary classification?)
+    S.TestRuns = par.scansSelect.(par.task).loc;
+    if strcmp(S.inputformat, 'raw')
+        S.filenames_test = raw_filenames;%
+    elseif strcmp(S.inputformat, 'betas')
+        S.filenames_test = beta_filenames;%
+    end
+    S.durTest = numel(S.filenames_test) * par.TR;
+    
+elseif strcmp(S.testTask,'AAvsObj')
+    S.onsetsTestDir =[S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
+    S.condsTest = {{'AA'} {'Obj'}};
+    S.nwayclass = num2str(numel(S.condsTest));%stores the number classification dimensions just for reference (i.e. is this a 5-way or a 2-way/binary classification?)
+    S.TestRuns = par.scansSelect.(par.task).loc;
+    if strcmp(S.inputformat, 'raw')
+        S.filenames_test = raw_filenames;%
+    elseif strcmp(S.inputformat, 'betas')
+        S.filenames_test = beta_filenames;%
+    end
+    S.durTest = numel(S.filenames_test) * par.TR;
+        
+elseif strcmp(S.testTask,'AAvsScrambled')
+    S.onsetsTestDir =[S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
+    S.condsTest = {{'AA'} {'AA_scrambled'}};
+    S.nwayclass = num2str(numel(S.condsTest));%stores the number classification dimensions just for reference (i.e. is this a 5-way or a 2-way/binary classification?)
+    S.TestRuns = par.scansSelect.(par.task).loc;
+    if strcmp(S.inputformat, 'raw')
+        S.filenames_test = raw_filenames;%
+    elseif strcmp(S.inputformat, 'betas')
+        S.filenames_test = beta_filenames;%
+    end
+    S.durTest = numel(S.filenames_test) * par.TR;
+    
+elseif strcmp(S.testTask,'FacevsScene')
+    S.onsetsTestDir =[S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
+    S.condsTest = {{'Face'} {'Scene'}};
+    S.nwayclass = num2str(numel(S.condsTest));%stores the number classification dimensions just for reference (i.e. is this a 5-way or a 2-way/binary classification?)
+    S.TestRuns = par.scansSelect.(par.task).loc;
+    if strcmp(S.inputformat, 'raw')
+        S.filenames_test = raw_filenames;%
+    elseif strcmp(S.inputformat, 'betas')
+        S.filenames_test = beta_filenames;%
+    end
+    S.durTest = numel(S.filenames_test) * par.TR;    
+    
+    elseif strcmp(S.testTask,'FacevsScenevsObj')
+    S.onsetsTestDir =[S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
+    S.condsTest = {{'Face'} {'Scene'} {'Obj'}};
+    S.nwayclass = num2str(numel(S.condsTest));%stores the number classification dimensions just for reference (i.e. is this a 5-way or a 2-way/binary classification?)
+    S.TestRuns = par.scansSelect.(par.task).loc;
+    if strcmp(S.inputformat, 'raw')
+        S.filenames_test = raw_filenames;%
+    elseif strcmp(S.inputformat, 'betas')
+        S.filenames_test = beta_filenames;%
+    end
+    S.durTest = numel(S.filenames_test) * par.TR; 
+    
 end
 
 S.condnames = S.condsTrain;
@@ -353,7 +474,7 @@ if strcmp(S.inputformat, 'betas')
             idxTr.sess(runs.(sprintf('bidx%d', r))) = {r};
         end
     end
-    idxTr.sess = cell2mat(idxTr.sess)%convert to matrix format
+    idxTr.sess = cell2mat(idxTr.sess);%convert to matrix format
     
 end
 
@@ -375,7 +496,7 @@ elseif strcmp(S.inputformat, 'betas')
 end
 
 %% Workspace Parameters - these files can be huge. In future versions, consider finding ways to pare down.
-S.use_premade_workspace = 1;
+S.use_premade_workspace = 0;
 S.workspace = fullfile(S.workspace_dir, [S.subj_id '_' S.roi_name '_' S.smoothTxt{S.funcType} '_train_' S.trainTask '_test_' S.testTask S.preprocType '.mat']);
 
 %% Pattern names
@@ -447,8 +568,8 @@ S.thisSigIntenseSelector = 'randomNFold_xval'; %which selector to use for signal
 S.zscoreIntensityVals = 1; % zscore the intensity values?
 
 %% Denoising
-%S.denoise = 0; %undergo denoising?
-%S.denoiseOpt.denoisespec = '10001'; %which parts of the glm output do we want to save?
+S.denoise = 0; %undergo denoising?
+S.denoiseOpt.denoisespec = '10001'; %which parts of the glm output do we want to save?
 
 %% Mean Signal Extraction Params
 % parameters for selecting the mean signal from a class-specific ROI for each pattern.
@@ -473,7 +594,7 @@ S.defineROIsFromANOVAFS = 0; % define ROIs using ANOVA-based feature selection, 
 %NOTE: for beta analyses, we don't average over multiple images because
 %different images = different events
 if strcmp(S.inputformat, 'raw')
-    %S.TR_weights_set = {[.0072 .2168 .3781 .2742 .1237] [.0072 .2168 .3781 .2742 .1237]}; %approximates the canonical haemodynamic response
+    %S.TR_weights_set = {{[.0072 .2168 .3781 .2742 .1237] [.0072 .2168 .3781 .2742 .1237]}}; %approximates the canonical haemodynamic response
     S.TR_weights_set = {{[0 0.25 0.5 0.25] [0 0.25 0.5 0.25]}};%use double-bracket structure in case want to set code up to run a sliding window across multiple TR bins
 elseif strcmp(S.inputformat, 'betas')
     S.TR_weights_set = {{[1] [1]}};%give full weighting to the 1 and only image corresponding to each event
