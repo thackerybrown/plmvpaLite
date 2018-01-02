@@ -1,4 +1,4 @@
-function [S idxTr idxTe par]= TIB_mvpa_params_8080(subj_id, task, TRsperRun, betaimgs)
+function [S idxTr idxTe par]= TIB_mvpa_params_8080(subj_id, task, TRsperRun, imgtype)
 % Created for PSYCH 8080, Spr 2018
 
 % establish parameters for mvpa analysis
@@ -21,11 +21,13 @@ par.substr = ['CM' subj_id{1}];
 S.subj_id = par.substr;
 
 %Task type
-par.task = task; %assign input from function call. Task phase label. For circmaze, this is 'goals' or 'plan'. For localizer (8080), this is 'Localizer'
+par.task = task; %assign input from function call. Task phase label. For circmaze, this is 'goals' or 'plan'. For localizer (8080), this is 'CM_Localizer'
 
 par.TR = 2; %TR (s)
 
-ImgDims = 3; %as of 12/31/17, code only suppoerts 3D images. %it is highly recommended that you modify to use 4D nifti files for raw BOLD data ('4'). If you have split them out into TR-by-TR, enter '3'
+ImgDims = 3; %as of 12/31/17, code only supports 3D images. %it is highly recommended that you modify to use 4D nifti files for raw BOLD data ('4'). If you have split them out into TR-by-TR, enter '3'
+
+par.readimglist = 1; %1=yes; 0 = no. Flag specifies whether to generate raw_filenames on the fly or to read in a previously-made file
 
 %Functional image scan selectors
 %par.scansSelect.goals.loc = 1:1;%***if ALL FILENAMES corresponding to ALL RUNS OF INTEREST are stored in ONE cell of raw_filenames.mat (i.e., not broken up by run), set index to 1 or 1:1. Otherwise, create indexing for elements of cell array raw_filenames.mat corresponding to task of interest (i.e. if cells runs 1:4 correspond to task 1, we want to reference {1}, {2}... in raw_filenames.mat)
@@ -33,11 +35,10 @@ ImgDims = 3; %as of 12/31/17, code only suppoerts 3D images. %it is highly recom
 par.scansSelect.CM_localizer.loc = 1:1;%***if ALL FILENAMES corresponding to ALL RUNS OF INTEREST are stored in ONE cell of raw_filenames.mat (i.e., not broken up by run), set index to 1 or 1:1. Otherwise, create indexing for elements of cell array raw_filenames.mat corresponding to task of interest (i.e. if cells runs 1:4 correspond to phase 1, we want to reference {1}, {2}... in raw_filenames.mat)
 par.scansSelect.CM_localizer.loc = 1:1;%***if ALL FILENAMES corresponding to ALL RUNS OF INTEREST are stored in ONE cell of raw_filenames.mat (i.e., not broken up by run), set index to 1 or 1:1. Otherwise, create indexing for elements of cell array raw_filenames.mat corresponding to task of interest (i.e. if cells runs 5:8 correspond to phase 2, we want to reference {5}, {6}... in raw_filenames.mat)
 
-
 %input image info
-S.inputformat = betaimgs; %assign input from function call. Either 'raw' for raw bold images or 'betas' for beta images. Selection here automatically changes some params below.
+S.inputformat = imgtype; %assign input from function call. Either 'raw' for raw bold images or 'betas' for beta images. Selection here automatically changes some params below.
 if strcmp(S.inputformat, 'raw')
-    data_imgs_to_use = 'raw_filenames.mat'; % .mat file containing names of all functional images across scan runs to be used (must exist for each subject; can be created by running raw_filenames = cellstr(SPM.xY.P) on subject's SPM.mat file; or using hacky on-the-fly code below)
+    data_imgs_to_use = 'raw_filenames.mat';
 elseif strcmp(S.inputformat, 'betas')
     data_imgs_to_use = 'beta_filenames.mat'; % analogous to raw_filenames, but with a boolean index for which betas correspond to which conditions. Created by calling TIB_generate_beta_filenames.mat below
 end
@@ -49,7 +50,6 @@ S.preprocType = 'spm'; % 'spm' for spm preprocessing, 'knk' for kendrick preproc
 %cross-validation (see section below). If you want to train on one set of
 %data (e.g., a localizer) and test on another (e.g., a retrieval task),
 %then specify different tasks or study phases
-
 S.trainTask = 'EAvsScene';%Circmaze - 'goals' or 'plan'
 S.testTask = 'EAvsScene';%Circamze - 'goals' or 'plan'
 
@@ -111,72 +111,74 @@ end
 preproc_lvl = ''; % 'a' for slice-time-only, 'u' for realigned-only, 'ua' for realign+unwarped, 'swua' for smoothed, normalized, and... you get the picture. Modify as needed if you changed SPM's prefix append defaults
 boldnames = [preproc_lvl 'run']; %name of image files with preprocessing level prefix
 
-
 if strcmp(S.inputformat, 'raw')
-    runfolds = dir(fullfile(par.funcdir, 'run_*'));%dir(fullfile(par.funcdir, 'localizer*'));%
-    for idxr = 1:length(runfolds)
-        allrawfilenames{idxr,1} = dir(fullfile(par.funcdir, runfolds(idxr).name, ['/' boldnames '*.nii']));%'/swa*.nii'));%
-        
-        
-        %if 3D images (not recommended) check if the count matches that
-        %specified for other stages of the process
-        if ImgDims == 3
-            if length(allrawfilenames{idxr})~=TRsperRun(idxr);
-                error('your specified run length does not match 3D file count')
+    if par.readimglist == 1
+        load([par.funcdir '/' data_imgs_to_use]); %loads predefined cell array
+    else %generate them on the fly
+        runfolds = dir(fullfile(par.funcdir, 'run_*'));%dir(fullfile(par.funcdir, 'localizer*'));%
+        for idxr = 1:length(runfolds)
+            allrawfilenames{idxr,1} = dir(fullfile(par.funcdir, runfolds(idxr).name, ['/' boldnames '*.nii']));%'/swa*.nii'));%
+            
+            %if 3D images (not recommended) check if the count matches that
+            %specified for other stages of the process
+            if ImgDims == 3
+                if length(allrawfilenames{idxr})~=TRsperRun(idxr);
+                    error('your specified run length does not match 3D file count')
+                end
+            end
+            
+            for idxf = 1:length(allrawfilenames{idxr})
+                allrawfilepaths{idxr,1}{idxf,1} = runfolds(idxr).name;
             end
         end
-        
-        
-        for idxf = 1:length(allrawfilenames{idxr})
-            allrawfilepaths{idxr,1}{idxf,1} = runfolds(idxr).name;
+        allrawfilenames = vertcat(allrawfilenames{:});
+        allrawfilepaths = vertcat(allrawfilepaths{:});
+        for idx = 1:length(allrawfilenames);
+            raw_filenames{idx,1} = [par.funcdir char(allrawfilepaths(idx)) '/' allrawfilenames(idx).name];
         end
-    end
-    allrawfilenames = vertcat(allrawfilenames{:});
-    allrawfilepaths = vertcat(allrawfilepaths{:});
-    for idx = 1:length(allrawfilenames);
-        raw_filenames{idx,1} = [par.funcdir char(allrawfilepaths(idx)) '/' allrawfilenames(idx).name]; 
-    end
-    
-    %files may have been read in out of order. This would be very very bad.
-    %Here, we try to confirm/fix this with a resort - but you *MUST* double
-    %check that the final file order is correct before proceeding with
-    %analysis
-    for idx = 1:length(raw_filenames)
-        %first, identify the image number from its name in full
-        %('001' from run_001.nii)
-        nifti_indices = strfind(raw_filenames{idx,1}, '.nii'); %assuming .nii, where does that fall in the string?
-        underscore_indices = strfind(raw_filenames{idx,1}, '_'); %assuming the number is preceded by '_', where are the underscores?
-        imnum = str2double(raw_filenames{idx,1}(underscore_indices(end)+1:nifti_indices(end)-1));
-        raw_filenames{idx,2} = imnum;
-        %if length(raw_filenames{idx,1}) == 100%80
-        %    raw_filenames{idx,2} = str2double(raw_filenames{idx,1}(length(raw_filenames{idx,1})-9:length(raw_filenames{idx,1})-9));
-        %else
-        %    raw_filenames{idx,2} = str2double(raw_filenames{idx,1}(length(raw_filenames{idx,1})-10:length(raw_filenames{idx,1})-9));
-        %end
         
-    end
-    
-    a = sortrows(raw_filenames, 2);
-    raw_filenames = a(:,1);
-    
-    %if the BOLD images are 3D instead of 4D (TR-by-TR; NOT recommended, but currently only option supported [12/31/17]),
-    %we need to modify indices further to avoid introducing a new sorting error
-    if ImgDims == 3
-        
+        %files may have been read in out of order. This would be very very bad.
+        %Here, we try to confirm/fix this with a resort - but you *MUST* double
+        %check that the final file order is correct before proceeding with
+        %analysis
         for idx = 1:length(raw_filenames)
-            %first, identify the RUN number from its name in full
-            runref_indices = strfind(raw_filenames{idx,1}, '/run_');
-            runidxnum = str2double(raw_filenames{idx,1}(runref_indices(1)+5:runref_indices(2)-1));
-            raw_filenames{idx,3} = runidxnum;
+            %first, identify the image number from its name in full
+            %('001' from run_001.nii)
+            nifti_indices = strfind(raw_filenames{idx,1}, '.nii'); %assuming .nii, where does that fall in the string?
+            underscore_indices = strfind(raw_filenames{idx,1}, '_'); %assuming the number is preceded by '_', where are the underscores?
+            imnum = str2double(raw_filenames{idx,1}(underscore_indices(end)+1:nifti_indices(end)-1));
+            raw_filenames{idx,2} = imnum;
+            %if length(raw_filenames{idx,1}) == 100%80
+            %    raw_filenames{idx,2} = str2double(raw_filenames{idx,1}(length(raw_filenames{idx,1})-9:length(raw_filenames{idx,1})-9));
+            %else
+            %    raw_filenames{idx,2} = str2double(raw_filenames{idx,1}(length(raw_filenames{idx,1})-10:length(raw_filenames{idx,1})-9));
+            %end
+            
         end
         
-        b = sortrows(raw_filenames, 3);
-        raw_filenames = b(:,1);
+        a = sortrows(raw_filenames, 2);
+        raw_filenames = a(:,1);
+        
+        %if the BOLD images are 3D instead of 4D (TR-by-TR; NOT recommended, but currently only option supported [12/31/17]),
+        %we need to modify indices further to avoid introducing a new sorting error
+        if ImgDims == 3
+            
+            for idx = 1:length(raw_filenames)
+                %first, identify the RUN number from its name in full
+                runref_indices = strfind(raw_filenames{idx,1}, '/run_');
+                runidxnum = str2double(raw_filenames{idx,1}(runref_indices(1)+5:runref_indices(2)-1));
+                raw_filenames{idx,3} = runidxnum;
+            end
+            
+            b = sortrows(raw_filenames, 3);
+            raw_filenames = b(:,1);
+        end
+        
+        %save raw_filenames for reference
+        savename_rawfnms=[par.funcdir 'raw_filenames.mat'];
+        save(savename_rawfnms, 'raw_filenames');
+        
     end
-    
-    %save raw_filenames for reference
-    savename_rawfnms=[par.funcdir 'raw_filenames.mat'];
-    save(savename_rawfnms, 'raw_filenames');
     
 else %if using betas...
     raw_filenames = [];
@@ -314,7 +316,7 @@ if S.xval%if we are doing nfold xval (automatically set above via a 1)
 else
     S.filenames_h{1} = S.filenames_train;
     S.filenames_h{2} = S.filenames_test;
-    S.filenames = S.filenames_h{1}%char(S.filenames_h);
+    S.filenames = S.filenames_h{1};%char(S.filenames_h);
 end
 S.img_files =  mat2cell(S.filenames, [ones(1,size(S.filenames,1))], [size(S.filenames,2)]);
 

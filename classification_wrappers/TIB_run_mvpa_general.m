@@ -1,7 +1,7 @@
-function [res, results]= TIB_run_mvpa_general(subj_array, task, TRsperRun, studyName)%, portion)
+function [res, results]= TIB_run_mvpa_general(subj_array, task, TRsperRun, studyName)
 
 
-%example call - TIB_run_mvpa_general({'001'},'CM_localizer',[114,114],'8080test') %%,1)
+%example call - TIB_run_mvpa_general({'001'},'CM_localizer',{[114,114]},'8080test')
 
 %subj_array = structural array listing strings of unique sub IDs. The code
 %at large assumes the rest of subj identifier, if any, that is not
@@ -21,16 +21,11 @@ function [res, results]= TIB_run_mvpa_general(subj_array, task, TRsperRun, study
 for b=(1:length(subj_array))
     tic; %start stopwatch to track analysis time on machine
     %% load general parameter information
-
+    
     %[S idxTr idxTe par] = TIB_mvpa_params_betas(subj_array(b), task, TRsperRun);%runs with Circmaze data
-    [S idxTr idxTe par] = TIB_mvpa_params_8080(subj_array(b), task, TRsperRun, 'raw');%runs with CM localizer data.
+    [S idxTr idxTe par] = TIB_mvpa_params_8080(subj_array(b), task, TRsperRun{b}, 'raw');%runs with CM localizer data.
     %[S idxTr idxTe par] = TIB_surrogate_mvpa_params(subj_array(b), task, TRsperRun);%runs with pseudodata
     
-%    if nargin > 4%3 %AG had 3 here... set to 4 just to keep things rolling for now with testing the script
-%        S.portion = portion;%******QUESTION for AG****what was this used for?
-%    else
-%        S.portion = [];
-    end
     S.idxTr = idxTr;
     S.idxTe = idxTe;
     S.saveName = [studyName '_' S.nwayclass 'way_' S.xvaltype '_' S.subj_id];%set name for the .mat results and data log file. Will contain all the goodies for analysis.
@@ -53,7 +48,7 @@ for b=(1:length(subj_array))
     %% Onsets
     S = TB_mvpa_onsets_and_images(S);%PM_mvpa_onsets_and_images(S);
     S.num_conds = size(S.onsets,2);
-      
+    
     
     %% Workspace stuff
     existWorkspace = exist(S.workspace);
@@ -80,7 +75,7 @@ for b=(1:length(subj_array))
             
             % convert from seconds to TRs - note, if your onsets are more
             % frequent than TRs, some trials will be lost in this step.
-            % This is a natural outcome of the rounding, and 
+            % This is a natural outcome of the rounding, and
             % probably shouldn't be "forced" since you are
             % attempting to sample patterns above your resolution. Instead
             % we run a sanity check that onsets to be used are valid for
@@ -90,7 +85,7 @@ for b=(1:length(subj_array))
                 if min(diff(S.onsets{cond})) < S.TR
                     error(['your planned onsets for cond ' num2str(cond) ' are closer in time than your TR. This is not a valid model'])
                 end
-                                
+                
                 for trial = 1: length(S.onsets{cond})
                     time_idx = round(S.onsets{cond}(trial)/S.TR) + 1; % divide by 2 and add 1 to convert back from sec to TRs (first timepoint = 0 sec; first TR = 1)
                     all_regs(cond, round(time_idx)) = 1;
@@ -123,15 +118,15 @@ for b=(1:length(subj_array))
             
             %% select active trials
             S.actives = ones(size(meta_runs_condensed));% all active patterns of interest
-                      
+            
             % index active training trials
             allTrainOns = sort([S.onsets_train_in_classifier{:}]); %<--candidate to fix bug listed below. This should get condensed somehow to = 55 in this case study (when it would otherwise be 96)
             allOns = sort([S.onsets{:}]);
             S.trainActives = ismember(allOns, allTrainOns);% all active patterns of interest used for training
-%~~~~~~~~~~~^~~~this doesn't work in the case where condensed regs/runs becomes smaller than allTrainOns due to overlapping TR timepoints. Fix!!!            
+            %~~~~~~~~~~~^~~~this doesn't work in the case where condensed regs/runs becomes smaller than allTrainOns due to overlapping TR timepoints. Fix!!!
             subj = init_object(subj,'selector','trainActives');
             subj = set_mat(subj,'selector','trainActives', S.trainActives);
-                       
+            
             subj = init_object(subj,'selector','actives');
             subj = set_mat(subj,'selector','actives', S.actives);
             
@@ -199,7 +194,7 @@ for b=(1:length(subj_array))
             % Important note
             % train patterns and onsets are always first, followed
             % by test patterns and onsets.
-                        
+            
             %create meta_runs_condensed selector
             subj = init_object(subj,'selector','meta_runs_condensed');
             subj = set_mat(subj,'selector','meta_runs_condensed', meta_runs_condensed);
@@ -270,7 +265,7 @@ for b=(1:length(subj_array))
             S.classifier_mask = subj.masks{end}.name; % use group of masks created by ANOVA
             S.classifier_mask_group = subj.masks{end}.group_name;
         end
-               
+        
         %S.class_args.penalty = S.penaltyParams(pnl);
         
         if S.extractMeanSignal
@@ -286,7 +281,7 @@ for b=(1:length(subj_array))
             save (fullfile(savepath, S.saveName2), 'res');
             clear subj
         else
-
+            
             %scrambled classification analysis
             if S.scrambleregs == 1
                 if strcmp(S.xvaltype,'nf')%if run labels have been replaced by random nfolds
@@ -309,51 +304,51 @@ for b=(1:length(subj_array))
                 
             end
             
-%                          [subj results] = cross_validation(subj,S.classifier_pattern,'conds_scrambled', ...
-%                              S.classSelector, S.classifier_mask,S.class_args, 'perfmet_functs', S.perfmet_functs);
-
-        
-        %set up importance maps.
-        if S.generate_importance_maps == 1
-            for rif = 1:length(results.iterations);
-                thisScratch = results.iterations(rif).scratchpad.w(2:end,:)';%liblinear
-                %thisScratch = results.iterations(rif).scratchpad.weights(1:end,:)';%pLR
-                results_IW{rif}.iterations(1).scratchpad.net.IW{1} = thisScratch;
+            %                          [subj results] = cross_validation(subj,S.classifier_pattern,'conds_scrambled', ...
+            %                              S.classSelector, S.classifier_mask,S.class_args, 'perfmet_functs', S.perfmet_functs);
+            
+            
+            %set up importance maps.
+            if S.generate_importance_maps == 1
+                for rif = 1:length(results.iterations);
+                    thisScratch = results.iterations(rif).scratchpad.w(2:end,:)';%liblinear
+                    %thisScratch = results.iterations(rif).scratchpad.weights(1:end,:)';%pLR
+                    results_IW{rif}.iterations(1).scratchpad.net.IW{1} = thisScratch;
+                end
             end
-        end
-        
-        
-        % generate importance maps.
-        if S.generate_importance_maps
-            TIB_generate_importance_maps(subj, results, results_IW, S)
-        end
-        
-        %save results
-        if ~(exist(S.group_mvpa_dir))
-            mkdir(S.group_mvpa_dir);
-        end
-        
-        if exist([fullfile(S.group_mvpa_dir, S.saveName) '.mat'], 'file')
-            load(fullfile(S.group_mvpa_dir, S.saveName))
-        end
-        
-        %store results
-        subjnum = str2num(subj_array{b})%convert subject number input from string to number format
-        res.subj{subjnum}.penalty(1).nVox(1).weights(1).iter{n} = results;
-        res.subj{subjnum}.penalty(1).nVox(1).weights(1).S = S;
-        res.subjArray{subjnum} = S.subj_id;
-%        res.subj{subjnum}.penalty(1).nVox(1).weights(1).iter{n}.confm = multiple_iterations_confusion(results);
-        %         res.subj{b}.penalty(1).nVox(1).weights(1).iter{n} = results;
-        %         res.subj{b}.penalty(1).nVox(1).weights(1).S = S;
-        %         res.subjArray = subj_array;       
-       
-        save (fullfile(S.group_mvpa_dir, S.saveName), 'res', '-v7.3');
-        
-        % display time classification pass took.
-        time2finish = toc/60;
-        display(['Finished ' S.subj_id ' in ' num2str(time2finish) ' minutes']);
-                
-        clear subj
+            
+            
+            % generate importance maps.
+            if S.generate_importance_maps
+                TIB_generate_importance_maps(subj, results, results_IW, S)
+            end
+            
+            %save results
+            if ~(exist(S.group_mvpa_dir))
+                mkdir(S.group_mvpa_dir);
+            end
+            
+            if exist([fullfile(S.group_mvpa_dir, S.saveName) '.mat'], 'file')
+                load(fullfile(S.group_mvpa_dir, S.saveName))
+            end
+            
+            %store results
+            subjnum = str2num(subj_array{b})%convert subject number input from string to number format
+            res.subj{subjnum}.penalty(1).nVox(1).weights(1).iter{n} = results;
+            res.subj{subjnum}.penalty(1).nVox(1).weights(1).S = S;
+            res.subjArray{subjnum} = S.subj_id;
+            %        res.subj{subjnum}.penalty(1).nVox(1).weights(1).iter{n}.confm = multiple_iterations_confusion(results);
+            %         res.subj{b}.penalty(1).nVox(1).weights(1).iter{n} = results;
+            %         res.subj{b}.penalty(1).nVox(1).weights(1).S = S;
+            %         res.subjArray = subj_array;
+            
+            save (fullfile(S.group_mvpa_dir, S.saveName), 'res', '-v7.3');
+            
+            % display time classification pass took.
+            time2finish = toc/60;
+            display(['Finished ' S.subj_id ' in ' num2str(time2finish) ' minutes']);
+            
+            clear subj
         end
     end
     %         a.iterations = []
