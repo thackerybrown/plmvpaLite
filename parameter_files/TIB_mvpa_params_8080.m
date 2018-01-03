@@ -50,8 +50,8 @@ S.preprocType = 'spm'; % 'spm' for spm preprocessing, 'knk' for kendrick preproc
 %cross-validation (see section below). If you want to train on one set of
 %data (e.g., a localizer) and test on another (e.g., a retrieval task),
 %then specify different tasks or study phases
-S.trainTask = 'EAvsScene';%Circmaze - 'goals' or 'plan'
-S.testTask = 'EAvsScene';%Circamze - 'goals' or 'plan'
+S.trainTask = 'AAvsScene';%Circmaze - 'goals' or 'plan'
+S.testTask = 'AAvsScene';%Circamze - 'goals' or 'plan'
 
 %x-validation info
 S.xvaltype = 'loo'; %set to 'loo' for leave-one-out x-validation or 'nf' for nfold using the S.nFolds defined below.
@@ -348,7 +348,7 @@ elseif strcmp(S.testTask,'EAvsScrambled')
     
 elseif strcmp(S.testTask,'AAvsScene')
     S.onsetsTestDir =[S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
-    S.condsTest = {{'fakeEA'} {'fakeScene'}};
+    S.condsTest = {{'AA'} {'Scene'}};
     S.nwayclass = num2str(numel(S.condsTest));%stores the number classification dimensions just for reference (i.e. is this a 5-way or a 2-way/binary classification?)
     S.TestRuns = par.scansSelect.(par.task).loc;
     if strcmp(S.inputformat, 'raw')
