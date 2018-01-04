@@ -10,11 +10,12 @@ function [] = rsa_CM_Localizer(Sub, Mask, TRsperRun)
 %% flags and parameters
 S.TR = 2;
 theseTRWeights = [0 0.25 0.5 0.25 0];
+weights_str = mat2str(theseTRWeights);% assign values to string for custom output file naming
+
 funcftype = '.nii';
 runs_concat = 1; %1 = typical SPM analysis; will have continuous onsets concatenated across runs. 0 = But you might not have bothered creating such a file, or in SST case we are using files from FSL. In this case, the onsets are assumed to "reset" for each run ('raw' unconcatenated onsets)
 
 gen_onsetsTR = 1; %1=yes. Typically, you'll use an onsets.mat file with tr-by-tr onsets and names (as used for a beta-series). But if you only have a traditional GLM model with one name for multile onsets, setting this flag to 1 will auto-populate unique but related names (e.g., Face_1; Face_2...)
-%sub = Sub{1};
 
 %Subject ID/number
 par.substr = ['CM' Sub{1}];
@@ -57,6 +58,16 @@ S.anat_dir = [S.expt_dir S.subj_id '/Masks'];
 maskname=[S.anat_dir '/' mask '.nii'];
 
 S.group_mvpa_dir = [S.expt_dir 'RSA_output_files'];%results .mat files are spit out in here
+
+if ~exist(S.group_mvpa_dir)
+    mkdir(S.group_mvpa_dir)
+end
+
+if ~exist([S.mvpa_dir '/RSA_data/'])
+    mkdir([S.mvpa_dir '/RSA_data/'])
+end
+
+
 
 %% extract patterns
 if runs_concat == 1
@@ -301,601 +312,96 @@ else %in debugging stage as of 1/3/2018
         save(savename2,'names','onsets','onsets_TRs','durations','runs_onsidx');
     end
 end
-%end
 
 %% create indices for patterns of interest
 
-% first index different nav trial stages
+if gen_onsetsTR == 1
+    names = names_TRs;
+end
+
+% first index different categories
 for n = 1:length(names)
-    if strfind(names{n},'ASSIGNED')%
-        assgn_idx(n)=1;
-        nav_idx(n)=0;
-        arriv_idx(n) = 0;
+    if strfind(names{n},'EA')%
+        EA_idx(n)=1;
+        AA_idx(n)=0;
+        Face_idx(n) = 0;
+        Scene_idx(n)=0;
+        Obj_idx(n)=0;
         othercond_idx(n) = 0;
-    elseif strfind(names{n},'NAVIGATE')%
-        assgn_idx(n)=0;
-        nav_idx(n)=1;
-        arriv_idx(n) = 0;
+    elseif strfind(names{n},'AA')%
+        EA_idx(n)=0;
+        AA_idx(n)=1;
+        Face_idx(n) = 0;
+        Scene_idx(n)=0;
+        Obj_idx(n)=0;
         othercond_idx(n) = 0;
-    elseif strfind(names{n},'ARRIVED')%
-        assgn_idx(n)=0;
-        nav_idx(n)=0;
-        arriv_idx(n) = 1;
+    elseif strfind(names{n},'Face')%
+        EA_idx(n)=0;
+        AA_idx(n)=0;
+        Face_idx(n) = 1;
+        Scene_idx(n)=0;
+        Obj_idx(n)=0;
+        othercond_idx(n) = 0;
+    elseif strfind(names{n},'Scene')%
+        EA_idx(n)=0;
+        AA_idx(n)=0;
+        Face_idx(n) = 0;
+        Scene_idx(n)=1;
+        Obj_idx(n)=0;
+        othercond_idx(n) = 0;
+    elseif strfind(names{n},'Obj')%
+        EA_idx(n)=0;
+        AA_idx(n)=0;
+        Face_idx(n) = 0;
+        Scene_idx(n)=0;
+        Obj_idx(n)=1;
         othercond_idx(n) = 0;
     else
         othercond_idx(n) = 1;
-        %fprintf('Error! Neither Assigned, Navigate, nor Arrived!\n')
+        %fprintf('Error! None of categories names found for this idx!\n')
         %return
     end
 end
 
 
-% now index run cond
+% but some conditions are scrambled faces, not intact. Let's index those
 for n = 1:length(names)
-    if strfind(names{n},'_habit_')%
-        habit_idx(n)=1;
-        probe_idx(n)=0;
-        
-    elseif strfind(names{n},'_shortcut_')%
-        habit_idx(n)=0;
-        probe_idx(n)=1;
-        
-        
+    if strfind(names{n},'_scrambled')%
+        scrambled_idx(n)=1;
     else
-        %othercond_idx(n) = 1;
-        fprintf('Error! Neither habit nor shortcut trials!\n')
-        return
-    end
-end
-
-
-
-% now index town
-for n = 1:length(names)
-    if strfind(names{n},'_env1_')%
-        env1_idx(n)=1;
-        env2_idx(n)=0;
-        env3_idx(n)=0;
-        env4_idx(n)=0;
-        env5_idx(n)=0;
-        env6_idx(n)=0;
-        env7_idx(n)=0;
-        env8_idx(n)=0;
-        env9_idx(n)=0;
-        env10_idx(n)=0;
-        env11_idx(n)=0;
-        env12_idx(n)=0;
-    elseif strfind(names{n},'_env2_')%
-        env1_idx(n)=0;
-        env2_idx(n)=1;
-        env3_idx(n)=0;
-        env4_idx(n)=0;
-        env5_idx(n)=0;
-        env6_idx(n)=0;
-        env7_idx(n)=0;
-        env8_idx(n)=0;
-        env9_idx(n)=0;
-        env10_idx(n)=0;
-        env11_idx(n)=0;
-        env12_idx(n)=0;
-    elseif strfind(names{n},'_env3_')%
-        env1_idx(n)=0;
-        env2_idx(n)=0;
-        env3_idx(n)=1;
-        env4_idx(n)=0;
-        env5_idx(n)=0;
-        env6_idx(n)=0;
-        env7_idx(n)=0;
-        env8_idx(n)=0;
-        env9_idx(n)=0;
-        env10_idx(n)=0;
-        env11_idx(n)=0;
-        env12_idx(n)=0;
-    elseif strfind(names{n},'_env4_')%
-        env1_idx(n)=0;
-        env2_idx(n)=0;
-        env3_idx(n)=0;
-        env4_idx(n)=1;
-        env5_idx(n)=0;
-        env6_idx(n)=0;
-        env7_idx(n)=0;
-        env8_idx(n)=0;
-        env9_idx(n)=0;
-        env10_idx(n)=0;
-        env11_idx(n)=0;
-        env12_idx(n)=0;
-    elseif strfind(names{n},'_env5_')%
-        env1_idx(n)=0;
-        env2_idx(n)=0;
-        env3_idx(n)=0;
-        env4_idx(n)=0;
-        env5_idx(n)=1;
-        env6_idx(n)=0;
-        env7_idx(n)=0;
-        env8_idx(n)=0;
-        env9_idx(n)=0;
-        env10_idx(n)=0;
-        env11_idx(n)=0;
-        env12_idx(n)=0;
-    elseif strfind(names{n},'_env6_')%
-        env1_idx(n)=0;
-        env2_idx(n)=0;
-        env3_idx(n)=0;
-        env4_idx(n)=0;
-        env5_idx(n)=0;
-        env6_idx(n)=1;
-        env7_idx(n)=0;
-        env8_idx(n)=0;
-        env9_idx(n)=0;
-        env10_idx(n)=0;
-        env11_idx(n)=0;
-        env12_idx(n)=0;
-    elseif strfind(names{n},'_env7_')%
-        env1_idx(n)=0;
-        env2_idx(n)=0;
-        env3_idx(n)=0;
-        env4_idx(n)=0;
-        env5_idx(n)=0;
-        env6_idx(n)=0;
-        env7_idx(n)=1;
-        env8_idx(n)=0;
-        env9_idx(n)=0;
-        env10_idx(n)=0;
-        env11_idx(n)=0;
-        env12_idx(n)=0;
-    elseif strfind(names{n},'_env8_')%
-        env1_idx(n)=0;
-        env2_idx(n)=0;
-        env3_idx(n)=0;
-        env4_idx(n)=0;
-        env5_idx(n)=0;
-        env6_idx(n)=0;
-        env7_idx(n)=0;
-        env8_idx(n)=1;
-        env9_idx(n)=0;
-        env10_idx(n)=0;
-        env11_idx(n)=0;
-        env12_idx(n)=0;
-    elseif strfind(names{n},'_env9_')%
-        env1_idx(n)=0;
-        env2_idx(n)=0;
-        env3_idx(n)=0;
-        env4_idx(n)=0;
-        env5_idx(n)=0;
-        env6_idx(n)=0;
-        env7_idx(n)=0;
-        env8_idx(n)=0;
-        env9_idx(n)=1;
-        env10_idx(n)=0;
-        env11_idx(n)=0;
-        env12_idx(n)=0;
-    elseif strfind(names{n},'_env10_')%
-        env1_idx(n)=0;
-        env2_idx(n)=0;
-        env3_idx(n)=0;
-        env4_idx(n)=0;
-        env5_idx(n)=0;
-        env6_idx(n)=0;
-        env7_idx(n)=0;
-        env8_idx(n)=0;
-        env9_idx(n)=0;
-        env10_idx(n)=1;
-        env11_idx(n)=0;
-        env12_idx(n)=0;
-    elseif strfind(names{n},'_env11_')%
-        env1_idx(n)=0;
-        env2_idx(n)=0;
-        env3_idx(n)=0;
-        env4_idx(n)=0;
-        env5_idx(n)=0;
-        env6_idx(n)=0;
-        env7_idx(n)=0;
-        env8_idx(n)=0;
-        env9_idx(n)=0;
-        env10_idx(n)=0;
-        env11_idx(n)=1;
-        env12_idx(n)=0;
-    elseif strfind(names{n},'_env12_')%
-        env1_idx(n)=0;
-        env2_idx(n)=0;
-        env3_idx(n)=0;
-        env4_idx(n)=0;
-        env5_idx(n)=0;
-        env6_idx(n)=0;
-        env7_idx(n)=0;
-        env8_idx(n)=0;
-        env9_idx(n)=0;
-        env10_idx(n)=0;
-        env11_idx(n)=0;
-        env12_idx(n)=1;
-        
-    else
-        %othercond_idx(n) = 1;
-        fprintf('Error! None of the towns are represented!\n')
-        return
+        scrambled_idx(n)=0;
     end
 end
 
 
 % now index repetition
-for n = 1:length(names)
-    if strfind(names{n},'_rep1')%
-        rep1_idx(n)=1;
-        rep2_idx(n)=0;
-        
-    elseif strfind(names{n},'_rep2')%
-        rep1_idx(n)=0;
-        rep2_idx(n)=1;
-        
-        
-    else
-        %othercond_idx(n) = 1;
-        fprintf('Error! Neither repetition is represented!\n')
-        return
-    end
-end
+% for n = 1:length(names)
+%     if strfind(names{n},'_rep1')%
+%         rep1_idx(n)=1;
+%         rep2_idx(n)=0;
+%
+%     elseif strfind(names{n},'_rep2')%
+%         rep1_idx(n)=0;
+%         rep2_idx(n)=1;
+%
+%     else
+%         %othercond_idx(n) = 1;
+%         fprintf('Error! Neither repetition is represented!\n')
+%         return
+%     end
+% end
 
 %~~~~~~~Find intersections of the instances to examine more specific results
-%first repetition indices
-probe_r1 = probe_idx.*rep1_idx;%
-probe_assigned_r1 = assgn_idx.*probe_r1;
-probe_nav_r1 = nav_idx.*probe_r1;
-probe_arriv_r1 = arriv_idx.*probe_r1;
+%scrambled faces
+EA_scrambled = EA_idx.*scrambled_idx;% ".*" syntax means multiply the corresponding elements of each matrix or vector
+AA_scrambled = AA_idx.*scrambled_idx;
 
-habit_assigned_r1 = assgn_idx.*habit_idx;
-habit_nav_r1 = nav_idx.*habit_idx;
-habit_arriv_r1 = arriv_idx.*habit_idx;
-
-%second repetition indices
-probe_r2 = probe_idx.*rep2_idx;%
-probe_assigned_r2 = assgn_idx.*probe_r2;
-probe_nav_r2 = nav_idx.*probe_r2;
-probe_arriv_r2 = arriv_idx.*probe_r2;
+%now we can isolate intact faces
+EA_intact = EA_idx-EA_scrambled;%
+AA_intact = AA_idx-AA_scrambled;
 
 
-% env1 specific indices
-probe_assigned_env1_r1 = probe_assigned_r1.*env1_idx;
-probe_nav_env1_r1 = probe_nav_r1.*env1_idx;
-probe_arriv_env1_r1 = probe_arriv_r1.*env1_idx;
-
-probe_assigned_env1_r2 = probe_assigned_r2.*env1_idx;
-probe_nav_env1_r2 = probe_nav_r2.*env1_idx;
-probe_arriv_env1_r2 = probe_arriv_r2.*env1_idx;
-
-habit_assigned_env1_r1 = habit_assigned_r1.*env1_idx;
-habit_nav_env1_r1 = habit_nav_r1.*env1_idx;
-habit_arriv_env1_r1 = habit_arriv_r1.*env1_idx;
-
-% env2 specific indices
-probe_assigned_env2_r1 = probe_assigned_r1.*env2_idx;
-probe_nav_env2_r1 = probe_nav_r1.*env2_idx;
-probe_arriv_env2_r1 = probe_arriv_r1.*env2_idx;
-
-probe_assigned_env2_r2 = probe_assigned_r2.*env2_idx;
-probe_nav_env2_r2 = probe_nav_r2.*env2_idx;
-probe_arriv_env2_r2 = probe_arriv_r2.*env2_idx;
-
-habit_assigned_env2_r1 = habit_assigned_r1.*env2_idx;
-habit_nav_env2_r1 = habit_nav_r1.*env2_idx;
-habit_arriv_env2_r1 = habit_arriv_r1.*env2_idx;
-
-% env3 specific indices
-probe_assigned_env3_r1 = probe_assigned_r1.*env3_idx;
-probe_nav_env3_r1 = probe_nav_r1.*env3_idx;
-probe_arriv_env3_r1 = probe_arriv_r1.*env3_idx;
-
-probe_assigned_env3_r2 = probe_assigned_r2.*env3_idx;
-probe_nav_env3_r2 = probe_nav_r2.*env3_idx;
-probe_arriv_env3_r2 = probe_arriv_r2.*env3_idx;
-
-habit_assigned_env3_r1 = habit_assigned_r1.*env3_idx;
-habit_nav_env3_r1 = habit_nav_r1.*env3_idx;
-habit_arriv_env3_r1 = habit_arriv_r1.*env3_idx;
-
-% env4 specific indices
-probe_assigned_env4_r1 = probe_assigned_r1.*env4_idx;
-probe_nav_env4_r1 = probe_nav_r1.*env4_idx;
-probe_arriv_env4_r1 = probe_arriv_r1.*env4_idx;
-
-probe_assigned_env4_r2 = probe_assigned_r2.*env4_idx;
-probe_nav_env4_r2 = probe_nav_r2.*env4_idx;
-probe_arriv_env4_r2 = probe_arriv_r2.*env4_idx;
-
-habit_assigned_env4_r1 = habit_assigned_r1.*env4_idx;
-habit_nav_env4_r1 = habit_nav_r1.*env4_idx;
-habit_arriv_env4_r1 = habit_arriv_r1.*env4_idx;
-
-% env5 specific indices
-probe_assigned_env5_r1 = probe_assigned_r1.*env5_idx;
-probe_nav_env5_r1 = probe_nav_r1.*env5_idx;
-probe_arriv_env5_r1 = probe_arriv_r1.*env5_idx;
-
-probe_assigned_env5_r2 = probe_assigned_r2.*env5_idx;
-probe_nav_env5_r2 = probe_nav_r2.*env5_idx;
-probe_arriv_env5_r2 = probe_arriv_r2.*env5_idx;
-
-habit_assigned_env5_r1 = habit_assigned_r1.*env5_idx;
-habit_nav_env5_r1 = habit_nav_r1.*env5_idx;
-habit_arriv_env5_r1 = habit_arriv_r1.*env5_idx;
-
-% env6 specific indices
-probe_assigned_env6_r1 = probe_assigned_r1.*env6_idx;
-probe_nav_env6_r1 = probe_nav_r1.*env6_idx;
-probe_arriv_env6_r1 = probe_arriv_r1.*env6_idx;
-
-probe_assigned_env6_r2 = probe_assigned_r2.*env6_idx;
-probe_nav_env6_r2 = probe_nav_r2.*env6_idx;
-probe_arriv_env6_r2 = probe_arriv_r2.*env6_idx;
-
-habit_assigned_env6_r1 = habit_assigned_r1.*env6_idx;
-habit_nav_env6_r1 = habit_nav_r1.*env6_idx;
-habit_arriv_env6_r1 = habit_arriv_r1.*env6_idx;
-
-% env7 specific indices
-probe_assigned_env7_r1 = probe_assigned_r1.*env7_idx;
-probe_nav_env7_r1 = probe_nav_r1.*env7_idx;
-probe_arriv_env7_r1 = probe_arriv_r1.*env7_idx;
-
-probe_assigned_env7_r2 = probe_assigned_r2.*env7_idx;
-probe_nav_env7_r2 = probe_nav_r2.*env7_idx;
-probe_arriv_env7_r2 = probe_arriv_r2.*env7_idx;
-
-habit_assigned_env7_r1 = habit_assigned_r1.*env7_idx;
-habit_nav_env7_r1 = habit_nav_r1.*env7_idx;
-habit_arriv_env7_r1 = habit_arriv_r1.*env7_idx;
-
-% env8 specific indices
-probe_assigned_env8_r1 = probe_assigned_r1.*env8_idx;
-probe_nav_env8_r1 = probe_nav_r1.*env8_idx;
-probe_arriv_env8_r1 = probe_arriv_r1.*env8_idx;
-
-probe_assigned_env8_r2 = probe_assigned_r2.*env8_idx;
-probe_nav_env8_r2 = probe_nav_r2.*env8_idx;
-probe_arriv_env8_r2 = probe_arriv_r2.*env8_idx;
-
-habit_assigned_env8_r1 = habit_assigned_r1.*env8_idx;
-habit_nav_env8_r1 = habit_nav_r1.*env8_idx;
-habit_arriv_env8_r1 = habit_arriv_r1.*env8_idx;
-
-% env9 specific indices
-probe_assigned_env9_r1 = probe_assigned_r1.*env9_idx;
-probe_nav_env9_r1 = probe_nav_r1.*env9_idx;
-probe_arriv_env9_r1 = probe_arriv_r1.*env9_idx;
-
-probe_assigned_env9_r2 = probe_assigned_r2.*env9_idx;
-probe_nav_env9_r2 = probe_nav_r2.*env9_idx;
-probe_arriv_env9_r2 = probe_arriv_r2.*env9_idx;
-
-habit_assigned_env9_r1 = habit_assigned_r1.*env9_idx;
-habit_nav_env9_r1 = habit_nav_r1.*env9_idx;
-habit_arriv_env9_r1 = habit_arriv_r1.*env9_idx;
-
-% env10 specific indices
-probe_assigned_env10_r1 = probe_assigned_r1.*env10_idx;
-probe_nav_env10_r1 = probe_nav_r1.*env10_idx;
-probe_arriv_env10_r1 = probe_arriv_r1.*env10_idx;
-
-probe_assigned_env10_r2 = probe_assigned_r2.*env10_idx;
-probe_nav_env10_r2 = probe_nav_r2.*env10_idx;
-probe_arriv_env10_r2 = probe_arriv_r2.*env10_idx;
-
-habit_assigned_env10_r1 = habit_assigned_r1.*env10_idx;
-habit_nav_env10_r1 = habit_nav_r1.*env10_idx;
-habit_arriv_env10_r1 = habit_arriv_r1.*env10_idx;
-
-% env11 specific indices
-probe_assigned_env11_r1 = probe_assigned_r1.*env11_idx;
-probe_nav_env11_r1 = probe_nav_r1.*env11_idx;
-probe_arriv_env11_r1 = probe_arriv_r1.*env11_idx;
-
-probe_assigned_env11_r2 = probe_assigned_r2.*env11_idx;
-probe_nav_env11_r2 = probe_nav_r2.*env11_idx;
-probe_arriv_env11_r2 = probe_arriv_r2.*env11_idx;
-
-habit_assigned_env11_r1 = habit_assigned_r1.*env11_idx;
-habit_nav_env11_r1 = habit_nav_r1.*env11_idx;
-habit_arriv_env11_r1 = habit_arriv_r1.*env11_idx;
-
-% env12 specific indices
-probe_assigned_env12_r1 = probe_assigned_r1.*env12_idx;
-probe_nav_env12_r1 = probe_nav_r1.*env12_idx;
-probe_arriv_env12_r1 = probe_arriv_r1.*env12_idx;
-
-probe_assigned_env12_r2 = probe_assigned_r2.*env12_idx;
-probe_nav_env12_r2 = probe_nav_r2.*env12_idx;
-probe_arriv_env12_r2 = probe_arriv_r2.*env12_idx;
-
-habit_assigned_env12_r1 = habit_assigned_r1.*env12_idx;
-habit_nav_env12_r1 = habit_nav_r1.*env12_idx;
-habit_arriv_env12_r1 = habit_arriv_r1.*env12_idx;
-
-
-
-
-%% convert indices to logicals
-% fut=logical(fut);
-% curr=logical(curr);
-%
-%
-% probe_r1 = probe_idx.*rep1_idx;%
-% probe_assigned_r1 = assgn_idx.*probe_r1;
-% probe_nav_r1 = nav_idx.*probe_r1;
-% probe_arriv_r1 = arriv_idx.*probe_r1;
-%
-% habit_assigned_r1 = assgn_idx.*habit_idx;
-% habit_nav_r1 = nav_idx.*habit_idx;
-% habit_arriv_r1 = arriv_idx.*habit_idx;
-%
-% %second repetition indices
-% probe_r2 = probe_idx.*rep2_idx;%
-% probe_assigned_r2 = assgn_idx.*probe_r2;
-% probe_nav_r2 = nav_idx.*probe_r2;
-% probe_arriv_r2 = arriv_idx.*probe_r2;
-%
-%
-% % env1 specific indices
-% probe_assigned_env1_r1 = probe_assigned_r1.*env1_idx;
-% probe_nav_env1_r1 = probe_nav_r1.*env1_idx;
-% probe_arriv_env1_r1 = probe_arriv_r1.*env1_idx;
-%
-% probe_assigned_env1_r2 = probe_assigned_r2.*env1_idx;
-% probe_nav_env1_r2 = probe_nav_r2.*env1_idx;
-% probe_arriv_env1_r2 = probe_arriv_r2.*env1_idx;
-%
-% habit_assigned_env1_r1 = habit_assigned_r1.*env1_idx;
-% habit_nav_env1_r1 = habit_nav_r1.*env1_idx;
-% habit_arriv_env1_r1 = habit_arriv_r1.*env1_idx;
-%
-% % env2 specific indices
-% probe_assigned_env2_r1 = probe_assigned_r1.*env2_idx;
-% probe_nav_env2_r1 = probe_nav_r1.*env2_idx;
-% probe_arriv_env2_r1 = probe_arriv_r1.*env2_idx;
-%
-% probe_assigned_env2_r2 = probe_assigned_r2.*env2_idx;
-% probe_nav_env2_r2 = probe_nav_r2.*env2_idx;
-% probe_arriv_env2_r2 = probe_arriv_r2.*env2_idx;
-%
-% habit_assigned_env2_r1 = habit_assigned_r1.*env2_idx;
-% habit_nav_env2_r1 = habit_nav_r1.*env2_idx;
-% habit_arriv_env2_r1 = habit_arriv_r1.*env2_idx;
-%
-% % env3 specific indices
-% probe_assigned_env3_r1 = probe_assigned_r1.*env3_idx;
-% probe_nav_env3_r1 = probe_nav_r1.*env3_idx;
-% probe_arriv_env3_r1 = probe_arriv_r1.*env3_idx;
-%
-% probe_assigned_env3_r2 = probe_assigned_r2.*env3_idx;
-% probe_nav_env3_r2 = probe_nav_r2.*env3_idx;
-% probe_arriv_env3_r2 = probe_arriv_r2.*env3_idx;
-%
-% habit_assigned_env3_r1 = habit_assigned_r1.*env3_idx;
-% habit_nav_env3_r1 = habit_nav_r1.*env3_idx;
-% habit_arriv_env3_r1 = habit_arriv_r1.*env3_idx;
-%
-% % env4 specific indices
-% probe_assigned_env4_r1 = probe_assigned_r1.*env4_idx;
-% probe_nav_env4_r1 = probe_nav_r1.*env4_idx;
-% probe_arriv_env4_r1 = probe_arriv_r1.*env4_idx;
-%
-% probe_assigned_env4_r2 = probe_assigned_r2.*env4_idx;
-% probe_nav_env4_r2 = probe_nav_r2.*env4_idx;
-% probe_arriv_env4_r2 = probe_arriv_r2.*env4_idx;
-%
-% habit_assigned_env4_r1 = habit_assigned_r1.*env4_idx;
-% habit_nav_env4_r1 = habit_nav_r1.*env4_idx;
-% habit_arriv_env4_r1 = habit_arriv_r1.*env4_idx;
-%
-% % env5 specific indices
-% probe_assigned_env5_r1 = probe_assigned_r1.*env5_idx;
-% probe_nav_env5_r1 = probe_nav_r1.*env5_idx;
-% probe_arriv_env5_r1 = probe_arriv_r1.*env5_idx;
-%
-% probe_assigned_env5_r2 = probe_assigned_r2.*env5_idx;
-% probe_nav_env5_r2 = probe_nav_r2.*env5_idx;
-% probe_arriv_env5_r2 = probe_arriv_r2.*env5_idx;
-%
-% habit_assigned_env5_r1 = habit_assigned_r1.*env5_idx;
-% habit_nav_env5_r1 = habit_nav_r1.*env5_idx;
-% habit_arriv_env5_r1 = habit_arriv_r1.*env5_idx;
-%
-% % env6 specific indices
-% probe_assigned_env6_r1 = probe_assigned_r1.*env6_idx;
-% probe_nav_env6_r1 = probe_nav_r1.*env6_idx;
-% probe_arriv_env6_r1 = probe_arriv_r1.*env6_idx;
-%
-% probe_assigned_env6_r2 = probe_assigned_r2.*env6_idx;
-% probe_nav_env6_r2 = probe_nav_r2.*env6_idx;
-% probe_arriv_env6_r2 = probe_arriv_r2.*env6_idx;
-%
-% habit_assigned_env6_r1 = habit_assigned_r1.*env6_idx;
-% habit_nav_env6_r1 = habit_nav_r1.*env6_idx;
-% habit_arriv_env6_r1 = habit_arriv_r1.*env6_idx;
-%
-% % env7 specific indices
-% probe_assigned_env7_r1 = probe_assigned_r1.*env7_idx;
-% probe_nav_env7_r1 = probe_nav_r1.*env7_idx;
-% probe_arriv_env7_r1 = probe_arriv_r1.*env7_idx;
-%
-% probe_assigned_env7_r2 = probe_assigned_r2.*env7_idx;
-% probe_nav_env7_r2 = probe_nav_r2.*env7_idx;
-% probe_arriv_env7_r2 = probe_arriv_r2.*env7_idx;
-%
-% habit_assigned_env7_r1 = habit_assigned_r1.*env7_idx;
-% habit_nav_env7_r1 = habit_nav_r1.*env7_idx;
-% habit_arriv_env7_r1 = habit_arriv_r1.*env7_idx;
-%
-% % env8 specific indices
-% probe_assigned_env8_r1 = probe_assigned_r1.*env8_idx;
-% probe_nav_env8_r1 = probe_nav_r1.*env8_idx;
-% probe_arriv_env8_r1 = probe_arriv_r1.*env8_idx;
-%
-% probe_assigned_env8_r2 = probe_assigned_r2.*env8_idx;
-% probe_nav_env8_r2 = logical()
-% probe_arriv_env8_r2 = logical()
-%
-% habit_assigned_env8_r1 = logical()
-% habit_nav_env8_r1 = logical()
-% habit_arriv_env8_r1 = logical()
-%
-% % env9 specific indices
-% probe_assigned_env9_r1 = logical()
-% probe_nav_env9_r1 = logical()
-% probe_arriv_env9_r1 = logical()
-%
-% probe_assigned_env9_r2 = logical()
-% probe_nav_env9_r2 = logical()
-% probe_arriv_env9_r2 = logical()
-%
-% habit_assigned_env9_r1 = logical()
-% habit_nav_env9_r1 = logical()
-% habit_arriv_env9_r1 = logical()
-%
-% % env10 specific indices
-% probe_assigned_env10_r1 = logical()
-% probe_nav_env10_r1 = logical()
-% probe_arriv_env10_r1 = logical()
-%
-% probe_assigned_env10_r2 = logical()
-% probe_nav_env10_r2 = logical()
-% probe_arriv_env10_r2 = logical()
-%
-% habit_assigned_env10_r1 = logical()
-% habit_nav_env10_r1 = logical()
-% habit_arriv_env10_r1 = logical()
-%
-% % env11 specific indices
-% probe_assigned_env11_r1 = logical()
-% probe_nav_env11_r1 = logical()
-% probe_arriv_env11_r1 = logical()
-%
-% probe_assigned_env11_r2 = logical()
-% probe_nav_env11_r2 = logical()
-% probe_arriv_env11_r2 = logical()
-%
-% habit_assigned_env11_r1 = logical()
-% habit_nav_env11_r1 = logical()
-% habit_arriv_env11_r1 = logical()
-%
-% % env12 specific indices
-% probe_assigned_env12_r1 = logical()
-% probe_nav_env12_r1 = logical()
-% probe_arriv_env12_r1 = logical()
-%
-% probe_assigned_env12_r2 = logical()
-% probe_nav_env12_r2 = logical()
-% probe_arriv_env12_r2 = logical()
-%
-% habit_assigned_env12_r1 = logical()
-% habit_nav_env12_r1 = logical()
-% habit_arriv_env12_r1 = logical()
-
-
-
-
-
-
-
-%sanity checks
+%% sanity checks
 % if sum(ea_ex) ~= sum(ea_ex2)
 %     disp('Trials from 1st and 2nd do not match');
 %     return
@@ -940,21 +446,21 @@ habit_arriv_env12_r1 = habit_arriv_r1.*env12_idx;
 %% create correlation matrix
 
 %optional - toss values below a certain number as well (e.g., maybe a zero
-%is equivalent to a NaN for your study.
-% !! Currently hard-coded for only 2 images !!
-% threshpats = 1; % 1 = YES
-% if threshpats == 1
-%     thresh = 5;
-%     x1 = find(rmat(:,1)>thresh);
-%     x2 = find(rmat(:,2)>thresh);
-%     z = union(x1,x2); %keep only indices shared between patterns
-%     rmatthresh = rmat(z,:)
-%     %rmatthresh = rmat(x2,:)
-%     cm = corr(rmatthresh);
-% else
-
-
-
+%is equivalent to a NaN for your study. Say you are using a mask on "raw"
+%BOLD data that does nothing to account for signal drop-out and extra-brain
+%voxels are zeros instead of NaNs - here we can fix that
+threshpats = 1; % 1 = YES
+if threshpats == 1
+    thresh = 0.01*mean(mean(rmat_condensed'));%you come up with your scheme - this example will threshold out anything <99% of the average (quite liberal thresholding)
+    x1 =[]; %vector of filtered intensity values
+    for p = 1:length(rmat_condensed(1,:))
+        x1 = [x1 (rmat_condensed(:,p)>thresh)];
+    end
+    t = mean(x1');% average across columns - anything less than 1 indicates there are some zeros
+    t1 = t'>=1; %threshold once more to voxels that had signal passing our threshold for EVERY pattern
+    
+    rmat_condensed = rmat_condensed(t1,:);
+end
 
 
 cm = corr(rmat_condensed);
@@ -968,270 +474,90 @@ cm(find(~triu(cm,1))) = NaN; % nan out correlations that are redundant
 %only one half of the matrix. in this case use the full matrix (NaN
 %diagonal still)
 
-
-%cm = (cm-(nanmean(cm(:))))/nanstd(cm(:)); %convert to z-scores against mean
-
 cm2 = corr(rmat_condensed); %another correlation matrix
 cm2(cm2==1)=nan; %nan out the diagonal
 
+%assign to res struct for easy saving
+res.cm = cm;
+res.cm2 = cm2;
 
 %% global similarity measures
-probe_assigned_r1_w_probe_assigned_r1 = cm(logical(probe_assigned_r1),logical(probe_assigned_r1));
-probe_assigned_r1_w_probe_assigned_r1_mean = nanmean(probe_assigned_r1_w_probe_assigned_r1(:));
+res.EA_w_EA = cm(logical(EA_intact),logical(EA_intact));
+res.EA_w_EA_mean = nanmean(res.EA_w_EA(:));
 
-probe_nav_r1_w_probe_nav_r1 = cm(logical(probe_nav_r1),logical(probe_nav_r1));
-probe_nav_r1_w_probe_nav_r1_mean = nanmean(probe_nav_r1_w_probe_nav_r1(:));
+res.AA_w_AA = cm(logical(AA_intact),logical(AA_intact));
+res.AA_w_AA_mean = nanmean(res.AA_w_AA(:));
 
-probe_arriv_r1_w_probe_arriv_r1 = cm(logical(probe_arriv_r1),logical(probe_arriv_r1));
-probe_arriv_r1_w_probe_arriv_r1_mean = nanmean(probe_arriv_r1_w_probe_arriv_r1(:));
+res.EA_w_AA = cm2(logical(EA_intact),logical(AA_intact));
+res.EA_w_AA_mean = nanmean(res.EA_w_AA(:));
 
-habit_assigned_r1_w_habit_assigned_r1 = cm(logical(habit_assigned_r1),logical(habit_assigned_r1));
-habit_assigned_r1_w_habit_assigned_r1_mean = nanmean(habit_assigned_r1_w_habit_assigned_r1(:));
-
-habit_nav_r1_w_habit_nav_r1 = cm(logical(habit_nav_r1),logical(habit_nav_r1));
-habit_nav_r1_w_habit_nav_r1_mean = nanmean(habit_nav_r1_w_habit_nav_r1(:));
-
-habit_arriv_r1_w_habit_arriv_r1 = cm(logical(habit_arriv_r1),logical(habit_arriv_r1));
-habit_arriv_r1_w_habit_arriv_r1_mean = nanmean(habit_arriv_r1_w_habit_arriv_r1(:));
-
-%second repetition indices
-probe_assigned_r2_w_probe_assigned_r2 = cm(logical(probe_assigned_r2),logical(probe_assigned_r2));
-probe_assigned_r2_w_probe_assigned_r2_mean = nanmean(probe_assigned_r2_w_probe_assigned_r2(:));
-
-probe_nav_r2_w_probe_nav_r2 = cm(logical(probe_nav_r2),logical(probe_nav_r2));
-probe_nav_r2_w_probe_nav_r2_mean = nanmean(probe_nav_r2_w_probe_nav_r2(:));
-
-probe_arriv_r2_w_probe_arriv_r2 = cm(logical(probe_arriv_r2),logical(probe_arriv_r2));
-probe_arriv_r2_w_probe_arriv_r2_mean = nanmean(probe_arriv_r2_w_probe_arriv_r2(:));
-
-%% stability item/town specific effects
-
-if strcmp(sub,'20') %hard coded in repair for sub 20 who had only one rep of 10-12, and 3 reps of 4-6
-    probe_assigned_env10_r1 = probe_assigned_env10_r2;
-    probe_assigned_env11_r1 = probe_assigned_env11_r2;
-    probe_assigned_env12_r1 = probe_assigned_env12_r2;
-    
-    probe_nav_env10_r1 = probe_nav_env10_r2;
-    probe_nav_env11_r1 = probe_nav_env11_r2;
-    probe_nav_env12_r1 = probe_nav_env12_r2;
-    
-    probe_arriv_env10_r1 = probe_arriv_env10_r2;
-    probe_arriv_env11_r1 = probe_arriv_env11_r2;
-    probe_arriv_env12_r1 = probe_arriv_env12_r2;
-    
-    
-    testo = zeros(size(probe_assigned_env4_r1));
-    [~,i] = unique(probe_assigned_env4_r1, 'first');
-    testo(i(2)) = 1;
-    probe_assigned_env4_r1 = testo;
-    
-    testo = zeros(size(probe_assigned_env5_r1));
-    [~,i] = unique(probe_assigned_env5_r1, 'first');
-    testo(i(2)) = 1;
-    probe_assigned_env5_r1 = testo;
-    
-    testo = zeros(size(probe_assigned_env6_r1));
-    [~,i] = unique(probe_assigned_env6_r1, 'first');
-    testo(i(2)) = 1;
-    probe_assigned_env6_r1 = testo;
-    
-    
-    testo = zeros(size(probe_nav_env4_r1));
-    [~,i] = unique(probe_nav_env4_r1, 'first');
-    testo(i(2)) = 1;
-    probe_nav_env4_r1 = testo;
-    
-    testo = zeros(size(probe_nav_env5_r1));
-    [~,i] = unique(probe_nav_env5_r1, 'first');
-    testo(i(2)) = 1;
-    probe_nav_env5_r1 = testo;
-    
-    testo = zeros(size(probe_nav_env6_r1));
-    [~,i] = unique(probe_nav_env6_r1, 'first');
-    testo(i(2)) = 1;
-    probe_nav_env6_r1 = testo;
-    
-    
-    testo = zeros(size(probe_arriv_env4_r1));
-    [~,i] = unique(probe_arriv_env4_r1, 'first');
-    testo(i(2)) = 1;
-    probe_arriv_env4_r1 = testo;
-    
-    testo = zeros(size(probe_arriv_env5_r1));
-    [~,i] = unique(probe_arriv_env5_r1, 'first');
-    testo(i(2)) = 1;
-    probe_arriv_env5_r1 = testo;
-    
-    testo = zeros(size(probe_arriv_env6_r1));
-    [~,i] = unique(probe_arriv_env6_r1, 'first');
-    testo(i(2)) = 1;
-    probe_arriv_env6_r1 = testo;
-    
-    
-    
-end
-
-%within type (probe r1 with probe r2)
-probe_assigned_r1_w_probe_assigned_r2_repst = [cm2(logical(probe_assigned_env1_r1),logical(probe_assigned_env1_r2)) cm2(logical(probe_assigned_env2_r1),logical(probe_assigned_env2_r2)) cm2(logical(probe_assigned_env3_r1),logical(probe_assigned_env3_r2)) cm2(logical(probe_assigned_env4_r1),logical(probe_assigned_env4_r2)) cm2(logical(probe_assigned_env5_r1),logical(probe_assigned_env5_r2)) cm2(logical(probe_assigned_env6_r1),logical(probe_assigned_env6_r2)) cm2(logical(probe_assigned_env7_r1),logical(probe_assigned_env7_r2)) cm2(logical(probe_assigned_env8_r1),logical(probe_assigned_env8_r2)) cm2(logical(probe_assigned_env9_r1),logical(probe_assigned_env9_r2)) cm2(logical(probe_assigned_env10_r1),logical(probe_assigned_env10_r2)) cm2(logical(probe_assigned_env11_r1),logical(probe_assigned_env11_r2)) cm2(logical(probe_assigned_env12_r1),logical(probe_assigned_env12_r2))];
-probe_assigned_r1_w_probe_assigned_r2_repst_mean = nanmean(probe_assigned_r1_w_probe_assigned_r2_repst(:));
-
-probe_assigned_r1_w_probe_assigned_r2_repstcon = [cm2(logical(probe_assigned_env1_r1),logical(probe_assigned_r2-probe_assigned_env1_r2)) cm2(logical(probe_assigned_env2_r1),logical(probe_assigned_r2-probe_assigned_env2_r2)) cm2(logical(probe_assigned_env3_r1),logical(probe_assigned_r2-probe_assigned_env3_r2)) cm2(logical(probe_assigned_env4_r1),logical(probe_assigned_r2-probe_assigned_env4_r2)) cm2(logical(probe_assigned_env5_r1),logical(probe_assigned_r2-probe_assigned_env5_r2)) cm2(logical(probe_assigned_env6_r1),logical(probe_assigned_r2-probe_assigned_env6_r2)) cm2(logical(probe_assigned_env7_r1),logical(probe_assigned_r2-probe_assigned_env7_r2)) cm2(logical(probe_assigned_env8_r1),logical(probe_assigned_r2-probe_assigned_env8_r2)) cm2(logical(probe_assigned_env9_r1),logical(probe_assigned_r2-probe_assigned_env9_r2)) cm2(logical(probe_assigned_env10_r1),logical(probe_assigned_r2-probe_assigned_env10_r2)) cm2(logical(probe_assigned_env11_r1),logical(probe_assigned_r2-probe_assigned_env11_r2)) cm2(logical(probe_assigned_env12_r1),logical(probe_assigned_r2-probe_assigned_env12_r2))];
-probe_assigned_r1_w_probe_assigned_r2_repstcon_mean = nanmean(probe_assigned_r1_w_probe_assigned_r2_repstcon(:));
-
-probe_assigned_r2_w_probe_assigned_r1_repstcon = [cm2(logical(probe_assigned_env1_r2),logical(probe_assigned_r1-probe_assigned_env1_r1)) cm2(logical(probe_assigned_env2_r2),logical(probe_assigned_r1-probe_assigned_env2_r1)) cm2(logical(probe_assigned_env3_r2),logical(probe_assigned_r1-probe_assigned_env3_r1)) cm2(logical(probe_assigned_env4_r2),logical(probe_assigned_r1-probe_assigned_env4_r1)) cm2(logical(probe_assigned_env5_r2),logical(probe_assigned_r1-probe_assigned_env5_r1)) cm2(logical(probe_assigned_env6_r2),logical(probe_assigned_r1-probe_assigned_env6_r1)) cm2(logical(probe_assigned_env7_r2),logical(probe_assigned_r1-probe_assigned_env7_r1)) cm2(logical(probe_assigned_env8_r2),logical(probe_assigned_r1-probe_assigned_env8_r1)) cm2(logical(probe_assigned_env9_r2),logical(probe_assigned_r1-probe_assigned_env9_r1)) cm2(logical(probe_assigned_env10_r2),logical(probe_assigned_r1-probe_assigned_env10_r1)) cm2(logical(probe_assigned_env11_r2),logical(probe_assigned_r1-probe_assigned_env11_r1)) cm2(logical(probe_assigned_env12_r2),logical(probe_assigned_r1-probe_assigned_env12_r1))];
-probe_assigned_r2_w_probe_assigned_r1_repstcon_mean = nanmean(probe_assigned_r2_w_probe_assigned_r1_repstcon(:));
+res.EA_w_Scene = cm2(logical(EA_intact),logical(Scene_idx));
+res.EA_w_Scene_mean = nanmean(res.EA_w_Scene(:));
 
 
-
-%nav
-probe_nav_r1_w_probe_nav_r2_repst = [cm2(logical(probe_nav_env1_r1),logical(probe_nav_env1_r2)) cm2(logical(probe_nav_env2_r1),logical(probe_nav_env2_r2)) cm2(logical(probe_nav_env3_r1),logical(probe_nav_env3_r2)) cm2(logical(probe_nav_env4_r1),logical(probe_nav_env4_r2)) cm2(logical(probe_nav_env5_r1),logical(probe_nav_env5_r2)) cm2(logical(probe_nav_env6_r1),logical(probe_nav_env6_r2)) cm2(logical(probe_nav_env7_r1),logical(probe_nav_env7_r2)) cm2(logical(probe_nav_env8_r1),logical(probe_nav_env8_r2)) cm2(logical(probe_nav_env9_r1),logical(probe_nav_env9_r2)) cm2(logical(probe_nav_env10_r1),logical(probe_nav_env10_r2)) cm2(logical(probe_nav_env11_r1),logical(probe_nav_env11_r2)) cm2(logical(probe_nav_env12_r1),logical(probe_nav_env12_r2))];
-probe_nav_r1_w_probe_nav_r2_repst_mean = nanmean(probe_nav_r1_w_probe_nav_r2_repst(:));
-
-probe_nav_r1_w_probe_nav_r2_repstcon = [cm2(logical(probe_nav_env1_r1),logical(probe_nav_r2-probe_nav_env1_r2)) cm2(logical(probe_nav_env2_r1),logical(probe_nav_r2-probe_nav_env2_r2)) cm2(logical(probe_nav_env3_r1),logical(probe_nav_r2-probe_nav_env3_r2)) cm2(logical(probe_nav_env4_r1),logical(probe_nav_r2-probe_nav_env4_r2)) cm2(logical(probe_nav_env5_r1),logical(probe_nav_r2-probe_nav_env5_r2)) cm2(logical(probe_nav_env6_r1),logical(probe_nav_r2-probe_nav_env6_r2)) cm2(logical(probe_nav_env7_r1),logical(probe_nav_r2-probe_nav_env7_r2)) cm2(logical(probe_nav_env8_r1),logical(probe_nav_r2-probe_nav_env8_r2)) cm2(logical(probe_nav_env9_r1),logical(probe_nav_r2-probe_nav_env9_r2)) cm2(logical(probe_nav_env10_r1),logical(probe_nav_r2-probe_nav_env10_r2)) cm2(logical(probe_nav_env11_r1),logical(probe_nav_r2-probe_nav_env11_r2)) cm2(logical(probe_nav_env12_r1),logical(probe_nav_r2-probe_nav_env12_r2))];
-probe_nav_r1_w_probe_nav_r2_repstcon_mean = nanmean(probe_nav_r1_w_probe_nav_r2_repstcon(:));
-
-
-probe_nav_r2_w_probe_nav_r1_repstcon = [cm2(logical(probe_nav_env1_r2),logical(probe_nav_r1-probe_nav_env1_r1)) cm2(logical(probe_nav_env2_r2),logical(probe_nav_r1-probe_nav_env2_r1)) cm2(logical(probe_nav_env3_r2),logical(probe_nav_r1-probe_nav_env3_r1)) cm2(logical(probe_nav_env4_r2),logical(probe_nav_r1-probe_nav_env4_r1)) cm2(logical(probe_nav_env5_r2),logical(probe_nav_r1-probe_nav_env5_r1)) cm2(logical(probe_nav_env6_r2),logical(probe_nav_r1-probe_nav_env6_r1)) cm2(logical(probe_nav_env7_r2),logical(probe_nav_r1-probe_nav_env7_r1)) cm2(logical(probe_nav_env8_r2),logical(probe_nav_r1-probe_nav_env8_r1)) cm2(logical(probe_nav_env9_r2),logical(probe_nav_r1-probe_nav_env9_r1)) cm2(logical(probe_nav_env10_r2),logical(probe_nav_r1-probe_nav_env10_r1)) cm2(logical(probe_nav_env11_r2),logical(probe_nav_r1-probe_nav_env11_r1)) cm2(logical(probe_nav_env12_r2),logical(probe_nav_r1-probe_nav_env12_r1))];
-probe_nav_r2_w_probe_nav_r1_repstcon_mean = nanmean(probe_nav_r2_w_probe_nav_r1_repstcon(:));
-
-
-%arriv
-probe_arriv_r1_w_probe_arriv_r2_repst = [cm2(logical(probe_arriv_env1_r1),logical(probe_arriv_env1_r2)) cm2(logical(probe_arriv_env2_r1),logical(probe_arriv_env2_r2)) cm2(logical(probe_arriv_env3_r1),logical(probe_arriv_env3_r2)) cm2(logical(probe_arriv_env4_r1),logical(probe_arriv_env4_r2)) cm2(logical(probe_arriv_env5_r1),logical(probe_arriv_env5_r2)) cm2(logical(probe_arriv_env6_r1),logical(probe_arriv_env6_r2)) cm2(logical(probe_arriv_env7_r1),logical(probe_arriv_env7_r2)) cm2(logical(probe_arriv_env8_r1),logical(probe_arriv_env8_r2)) cm2(logical(probe_arriv_env9_r1),logical(probe_arriv_env9_r2)) cm2(logical(probe_arriv_env10_r1),logical(probe_arriv_env10_r2)) cm2(logical(probe_arriv_env11_r1),logical(probe_arriv_env11_r2)) cm2(logical(probe_arriv_env12_r1),logical(probe_arriv_env12_r2))];
-probe_arriv_r1_w_probe_arriv_r2_repst_mean = nanmean(probe_arriv_r1_w_probe_arriv_r2_repst(:));
-
-probe_arriv_r1_w_probe_arriv_r2_repstcon = [cm2(logical(probe_arriv_env1_r1),logical(probe_arriv_r2-probe_arriv_env1_r2)) cm2(logical(probe_arriv_env2_r1),logical(probe_arriv_r2-probe_arriv_env2_r2)) cm2(logical(probe_arriv_env3_r1),logical(probe_arriv_r2-probe_arriv_env3_r2)) cm2(logical(probe_arriv_env4_r1),logical(probe_arriv_r2-probe_arriv_env4_r2)) cm2(logical(probe_arriv_env5_r1),logical(probe_arriv_r2-probe_arriv_env5_r2)) cm2(logical(probe_arriv_env6_r1),logical(probe_arriv_r2-probe_arriv_env6_r2)) cm2(logical(probe_arriv_env7_r1),logical(probe_arriv_r2-probe_arriv_env7_r2)) cm2(logical(probe_arriv_env8_r1),logical(probe_arriv_r2-probe_arriv_env8_r2)) cm2(logical(probe_arriv_env9_r1),logical(probe_arriv_r2-probe_arriv_env9_r2)) cm2(logical(probe_arriv_env10_r1),logical(probe_arriv_r2-probe_arriv_env10_r2)) cm2(logical(probe_arriv_env11_r1),logical(probe_arriv_r2-probe_arriv_env11_r2)) cm2(logical(probe_arriv_env12_r1),logical(probe_arriv_r2-probe_arriv_env12_r2))];
-probe_arriv_r1_w_probe_arriv_r2_repstcon_mean = nanmean(probe_arriv_r1_w_probe_arriv_r2_repstcon(:));
-
-probe_arriv_r2_w_probe_arriv_r1_repstcon = [cm2(logical(probe_arriv_env1_r2),logical(probe_arriv_r1-probe_arriv_env1_r1)) cm2(logical(probe_arriv_env2_r2),logical(probe_arriv_r1-probe_arriv_env2_r1)) cm2(logical(probe_arriv_env3_r2),logical(probe_arriv_r1-probe_arriv_env3_r1)) cm2(logical(probe_arriv_env4_r2),logical(probe_arriv_r1-probe_arriv_env4_r1)) cm2(logical(probe_arriv_env5_r2),logical(probe_arriv_r1-probe_arriv_env5_r1)) cm2(logical(probe_arriv_env6_r2),logical(probe_arriv_r1-probe_arriv_env6_r1)) cm2(logical(probe_arriv_env7_r2),logical(probe_arriv_r1-probe_arriv_env7_r1)) cm2(logical(probe_arriv_env8_r2),logical(probe_arriv_r1-probe_arriv_env8_r1)) cm2(logical(probe_arriv_env9_r2),logical(probe_arriv_r1-probe_arriv_env9_r1)) cm2(logical(probe_arriv_env10_r2),logical(probe_arriv_r1-probe_arriv_env10_r1)) cm2(logical(probe_arriv_env11_r2),logical(probe_arriv_r1-probe_arriv_env11_r1)) cm2(logical(probe_arriv_env12_r2),logical(probe_arriv_r1-probe_arriv_env12_r1))];
-probe_arriv_r2_w_probe_arriv_r1_repstcon_mean = nanmean(probe_arriv_r2_w_probe_arriv_r1_repstcon(:));
-
-
-%across type (probe with habit), r1 with habit
-probe_assigned_r1_w_habit_assigned_r1_repst = [cm2(logical(probe_assigned_env1_r1),logical(habit_assigned_env1_r1)) cm2(logical(probe_assigned_env2_r1),logical(habit_assigned_env2_r1)) cm2(logical(probe_assigned_env3_r1),logical(habit_assigned_env3_r1)) cm2(logical(probe_assigned_env4_r1),logical(habit_assigned_env4_r1)) cm2(logical(probe_assigned_env5_r1),logical(habit_assigned_env5_r1)) cm2(logical(probe_assigned_env6_r1),logical(habit_assigned_env6_r1)) cm2(logical(probe_assigned_env7_r1),logical(habit_assigned_env7_r1)) cm2(logical(probe_assigned_env8_r1),logical(habit_assigned_env8_r1)) cm2(logical(probe_assigned_env9_r1),logical(habit_assigned_env9_r1)) cm2(logical(probe_assigned_env10_r1),logical(habit_assigned_env10_r1)) cm2(logical(probe_assigned_env11_r1),logical(habit_assigned_env11_r1)) cm2(logical(probe_assigned_env12_r1),logical(habit_assigned_env12_r1))];
-probe_assigned_r1_w_habit_assigned_r1_repst_mean = nanmean(probe_assigned_r1_w_habit_assigned_r1_repst(:));
-
-probe_assigned_r1_w_habit_assigned_r1_repstcon = [cm2(logical(probe_assigned_env1_r1),logical(habit_assigned_r1-habit_assigned_env1_r1)) cm2(logical(probe_assigned_env2_r1),logical(habit_assigned_r1-habit_assigned_env2_r1)) cm2(logical(probe_assigned_env3_r1),logical(habit_assigned_r1-habit_assigned_env3_r1)) cm2(logical(probe_assigned_env4_r1),logical(habit_assigned_r1-habit_assigned_env4_r1)) cm2(logical(probe_assigned_env5_r1),logical(habit_assigned_r1-habit_assigned_env5_r1)) cm2(logical(probe_assigned_env6_r1),logical(habit_assigned_r1-habit_assigned_env6_r1)) cm2(logical(probe_assigned_env7_r1),logical(habit_assigned_r1-habit_assigned_env7_r1)) cm2(logical(probe_assigned_env8_r1),logical(habit_assigned_r1-habit_assigned_env8_r1)) cm2(logical(probe_assigned_env9_r1),logical(habit_assigned_r1-habit_assigned_env9_r1)) cm2(logical(probe_assigned_env10_r1),logical(habit_assigned_r1-habit_assigned_env10_r1)) cm2(logical(probe_assigned_env11_r1),logical(habit_assigned_r1-habit_assigned_env11_r1)) cm2(logical(probe_assigned_env12_r1),logical(habit_assigned_r1-habit_assigned_env12_r1))];
-probe_assigned_r1_w_habit_assigned_r1_repstcon_mean = nanmean(probe_assigned_r1_w_habit_assigned_r1_repstcon(:));
-
-
-%nav
-probe_nav_r1_w_habit_nav_r1_repst = [cm2(logical(probe_nav_env1_r1),logical(habit_nav_env1_r1)) cm2(logical(probe_nav_env2_r1),logical(habit_nav_env2_r1)) cm2(logical(probe_nav_env3_r1),logical(habit_nav_env3_r1)) cm2(logical(probe_nav_env4_r1),logical(habit_nav_env4_r1)) cm2(logical(probe_nav_env5_r1),logical(habit_nav_env5_r1)) cm2(logical(probe_nav_env6_r1),logical(habit_nav_env6_r1)) cm2(logical(probe_nav_env7_r1),logical(habit_nav_env7_r1)) cm2(logical(probe_nav_env8_r1),logical(habit_nav_env8_r1)) cm2(logical(probe_nav_env9_r1),logical(habit_nav_env9_r1)) cm2(logical(probe_nav_env10_r1),logical(habit_nav_env10_r1)) cm2(logical(probe_nav_env11_r1),logical(habit_nav_env11_r1)) cm2(logical(probe_nav_env12_r1),logical(habit_nav_env12_r1))];
-probe_nav_r1_w_habit_nav_r1_repst_mean = nanmean(probe_nav_r1_w_habit_nav_r1_repst(:));
-
-probe_nav_r1_w_habit_nav_r1_repstcon = [cm2(logical(probe_nav_env1_r1),logical(habit_nav_r1-habit_nav_env1_r1)) cm2(logical(probe_nav_env2_r1),logical(habit_nav_r1-habit_nav_env2_r1)) cm2(logical(probe_nav_env3_r1),logical(habit_nav_r1-habit_nav_env3_r1)) cm2(logical(probe_nav_env4_r1),logical(habit_nav_r1-habit_nav_env4_r1)) cm2(logical(probe_nav_env5_r1),logical(habit_nav_r1-habit_nav_env5_r1)) cm2(logical(probe_nav_env6_r1),logical(habit_nav_r1-habit_nav_env6_r1)) cm2(logical(probe_nav_env7_r1),logical(habit_nav_r1-habit_nav_env7_r1)) cm2(logical(probe_nav_env8_r1),logical(habit_nav_r1-habit_nav_env8_r1)) cm2(logical(probe_nav_env9_r1),logical(habit_nav_r1-habit_nav_env9_r1)) cm2(logical(probe_nav_env10_r1),logical(habit_nav_r1-habit_nav_env10_r1)) cm2(logical(probe_nav_env11_r1),logical(habit_nav_r1-habit_nav_env11_r1)) cm2(logical(probe_nav_env12_r1),logical(habit_nav_r1-habit_nav_env12_r1))];
-probe_nav_r1_w_habit_nav_r1_repstcon_mean = nanmean(probe_nav_r1_w_habit_nav_r1_repstcon(:));
-
-
-%arrive
-probe_arriv_r1_w_habit_arriv_r1_repst = [cm2(logical(probe_arriv_env1_r1),logical(habit_arriv_env1_r1)) cm2(logical(probe_arriv_env2_r1),logical(habit_arriv_env2_r1)) cm2(logical(probe_arriv_env3_r1),logical(habit_arriv_env3_r1)) cm2(logical(probe_arriv_env4_r1),logical(habit_arriv_env4_r1)) cm2(logical(probe_arriv_env5_r1),logical(habit_arriv_env5_r1)) cm2(logical(probe_arriv_env6_r1),logical(habit_arriv_env6_r1)) cm2(logical(probe_arriv_env7_r1),logical(habit_arriv_env7_r1)) cm2(logical(probe_arriv_env8_r1),logical(habit_arriv_env8_r1)) cm2(logical(probe_arriv_env9_r1),logical(habit_arriv_env9_r1)) cm2(logical(probe_arriv_env10_r1),logical(habit_arriv_env10_r1)) cm2(logical(probe_arriv_env11_r1),logical(habit_arriv_env11_r1)) cm2(logical(probe_arriv_env12_r1),logical(habit_arriv_env12_r1))];
-probe_arriv_r1_w_habit_arriv_r1_repst_mean = nanmean(probe_arriv_r1_w_habit_arriv_r1_repst(:));
-
-probe_arriv_r1_w_habit_arriv_r1_repstcon = [cm2(logical(probe_arriv_env1_r1),logical(habit_arriv_r1-habit_arriv_env1_r1)) cm2(logical(probe_arriv_env2_r1),logical(habit_arriv_r1-habit_arriv_env2_r1)) cm2(logical(probe_arriv_env3_r1),logical(habit_arriv_r1-habit_arriv_env3_r1)) cm2(logical(probe_arriv_env4_r1),logical(habit_arriv_r1-habit_arriv_env4_r1)) cm2(logical(probe_arriv_env5_r1),logical(habit_arriv_r1-habit_arriv_env5_r1)) cm2(logical(probe_arriv_env6_r1),logical(habit_arriv_r1-habit_arriv_env6_r1)) cm2(logical(probe_arriv_env7_r1),logical(habit_arriv_r1-habit_arriv_env7_r1)) cm2(logical(probe_arriv_env8_r1),logical(habit_arriv_r1-habit_arriv_env8_r1)) cm2(logical(probe_arriv_env9_r1),logical(habit_arriv_r1-habit_arriv_env9_r1)) cm2(logical(probe_arriv_env10_r1),logical(habit_arriv_r1-habit_arriv_env10_r1)) cm2(logical(probe_arriv_env11_r1),logical(habit_arriv_r1-habit_arriv_env11_r1)) cm2(logical(probe_arriv_env12_r1),logical(habit_arriv_r1-habit_arriv_env12_r1))];
-probe_arriv_r1_w_habit_arriv_r1_repstcon_mean = nanmean(probe_arriv_r1_w_habit_arriv_r1_repstcon(:));
-
-
-
-%across type (probe with habit), r2 with habit
-probe_assigned_r2_w_habit_assigned_r1_repst = [cm2(logical(probe_assigned_env1_r2),logical(habit_assigned_env1_r1)) cm2(logical(probe_assigned_env2_r2),logical(habit_assigned_env2_r1)) cm2(logical(probe_assigned_env3_r2),logical(habit_assigned_env3_r1)) cm2(logical(probe_assigned_env4_r2),logical(habit_assigned_env4_r1)) cm2(logical(probe_assigned_env5_r2),logical(habit_assigned_env5_r1)) cm2(logical(probe_assigned_env6_r2),logical(habit_assigned_env6_r1)) cm2(logical(probe_assigned_env7_r2),logical(habit_assigned_env7_r1)) cm2(logical(probe_assigned_env8_r2),logical(habit_assigned_env8_r1)) cm2(logical(probe_assigned_env9_r2),logical(habit_assigned_env9_r1)) cm2(logical(probe_assigned_env10_r2),logical(habit_assigned_env10_r1)) cm2(logical(probe_assigned_env11_r2),logical(habit_assigned_env11_r1)) cm2(logical(probe_assigned_env12_r2),logical(habit_assigned_env12_r1))];
-probe_assigned_r2_w_habit_assigned_r1_repst_mean = nanmean(probe_assigned_r2_w_habit_assigned_r1_repst(:));
-
-probe_assigned_r2_w_habit_assigned_r1_repstcon = [cm2(logical(probe_assigned_env1_r2),logical(habit_assigned_r1-habit_assigned_env1_r1)) cm2(logical(probe_assigned_env2_r2),logical(habit_assigned_r1-habit_assigned_env2_r1)) cm2(logical(probe_assigned_env3_r2),logical(habit_assigned_r1-habit_assigned_env3_r1)) cm2(logical(probe_assigned_env4_r2),logical(habit_assigned_r1-habit_assigned_env4_r1)) cm2(logical(probe_assigned_env5_r2),logical(habit_assigned_r1-habit_assigned_env5_r1)) cm2(logical(probe_assigned_env6_r2),logical(habit_assigned_r1-habit_assigned_env6_r1)) cm2(logical(probe_assigned_env7_r2),logical(habit_assigned_r1-habit_assigned_env7_r1)) cm2(logical(probe_assigned_env8_r2),logical(habit_assigned_r1-habit_assigned_env8_r1)) cm2(logical(probe_assigned_env9_r2),logical(habit_assigned_r1-habit_assigned_env9_r1)) cm2(logical(probe_assigned_env10_r2),logical(habit_assigned_r1-habit_assigned_env10_r1)) cm2(logical(probe_assigned_env11_r2),logical(habit_assigned_r1-habit_assigned_env11_r1)) cm2(logical(probe_assigned_env12_r2),logical(habit_assigned_r1-habit_assigned_env12_r1))];
-probe_assigned_r2_w_habit_assigned_r1_repstcon_mean = nanmean(probe_assigned_r2_w_habit_assigned_r1_repstcon(:));
-
-
-%nav
-probe_nav_r2_w_habit_nav_r1_repst = [cm2(logical(probe_nav_env1_r2),logical(habit_nav_env1_r1)) cm2(logical(probe_nav_env2_r2),logical(habit_nav_env2_r1)) cm2(logical(probe_nav_env3_r2),logical(habit_nav_env3_r1)) cm2(logical(probe_nav_env4_r2),logical(habit_nav_env4_r1)) cm2(logical(probe_nav_env5_r2),logical(habit_nav_env5_r1)) cm2(logical(probe_nav_env6_r2),logical(habit_nav_env6_r1)) cm2(logical(probe_nav_env7_r2),logical(habit_nav_env7_r1)) cm2(logical(probe_nav_env8_r2),logical(habit_nav_env8_r1)) cm2(logical(probe_nav_env9_r2),logical(habit_nav_env9_r1)) cm2(logical(probe_nav_env10_r2),logical(habit_nav_env10_r1)) cm2(logical(probe_nav_env11_r2),logical(habit_nav_env11_r1)) cm2(logical(probe_nav_env12_r2),logical(habit_nav_env12_r1))];
-probe_nav_r2_w_habit_nav_r1_repst_mean = nanmean(probe_nav_r2_w_habit_nav_r1_repst(:));
-
-probe_nav_r2_w_habit_nav_r1_repstcon = [cm2(logical(probe_nav_env1_r2),logical(habit_nav_r1-habit_nav_env1_r1)) cm2(logical(probe_nav_env2_r2),logical(habit_nav_r1-habit_nav_env2_r1)) cm2(logical(probe_nav_env3_r2),logical(habit_nav_r1-habit_nav_env3_r1)) cm2(logical(probe_nav_env4_r2),logical(habit_nav_r1-habit_nav_env4_r1)) cm2(logical(probe_nav_env5_r2),logical(habit_nav_r1-habit_nav_env5_r1)) cm2(logical(probe_nav_env6_r2),logical(habit_nav_r1-habit_nav_env6_r1)) cm2(logical(probe_nav_env7_r2),logical(habit_nav_r1-habit_nav_env7_r1)) cm2(logical(probe_nav_env8_r2),logical(habit_nav_r1-habit_nav_env8_r1)) cm2(logical(probe_nav_env9_r2),logical(habit_nav_r1-habit_nav_env9_r1)) cm2(logical(probe_nav_env10_r2),logical(habit_nav_r1-habit_nav_env10_r1)) cm2(logical(probe_nav_env11_r2),logical(habit_nav_r1-habit_nav_env11_r1)) cm2(logical(probe_nav_env12_r2),logical(habit_nav_r1-habit_nav_env12_r1))];
-probe_nav_r2_w_habit_nav_r1_repstcon_mean = nanmean(probe_nav_r2_w_habit_nav_r1_repstcon(:));
-
-
-%arrive
-probe_arriv_r2_w_habit_arriv_r1_repst = [cm2(logical(probe_arriv_env1_r2),logical(habit_arriv_env1_r1)) cm2(logical(probe_arriv_env2_r2),logical(habit_arriv_env2_r1)) cm2(logical(probe_arriv_env3_r2),logical(habit_arriv_env3_r1)) cm2(logical(probe_arriv_env4_r2),logical(habit_arriv_env4_r1)) cm2(logical(probe_arriv_env5_r2),logical(habit_arriv_env5_r1)) cm2(logical(probe_arriv_env6_r2),logical(habit_arriv_env6_r1)) cm2(logical(probe_arriv_env7_r2),logical(habit_arriv_env7_r1)) cm2(logical(probe_arriv_env8_r2),logical(habit_arriv_env8_r1)) cm2(logical(probe_arriv_env9_r2),logical(habit_arriv_env9_r1)) cm2(logical(probe_arriv_env10_r2),logical(habit_arriv_env10_r1)) cm2(logical(probe_arriv_env11_r2),logical(habit_arriv_env11_r1)) cm2(logical(probe_arriv_env12_r2),logical(habit_arriv_env12_r1))];
-probe_arriv_r2_w_habit_arriv_r1_repst_mean = nanmean(probe_arriv_r2_w_habit_arriv_r1_repst(:));
-
-probe_arriv_r2_w_habit_arriv_r1_repstcon = [cm2(logical(probe_arriv_env1_r2),logical(habit_arriv_r1-habit_arriv_env1_r1)) cm2(logical(probe_arriv_env2_r2),logical(habit_arriv_r1-habit_arriv_env2_r1)) cm2(logical(probe_arriv_env3_r2),logical(habit_arriv_r1-habit_arriv_env3_r1)) cm2(logical(probe_arriv_env4_r2),logical(habit_arriv_r1-habit_arriv_env4_r1)) cm2(logical(probe_arriv_env5_r2),logical(habit_arriv_r1-habit_arriv_env5_r1)) cm2(logical(probe_arriv_env6_r2),logical(habit_arriv_r1-habit_arriv_env6_r1)) cm2(logical(probe_arriv_env7_r2),logical(habit_arriv_r1-habit_arriv_env7_r1)) cm2(logical(probe_arriv_env8_r2),logical(habit_arriv_r1-habit_arriv_env8_r1)) cm2(logical(probe_arriv_env9_r2),logical(habit_arriv_r1-habit_arriv_env9_r1)) cm2(logical(probe_arriv_env10_r2),logical(habit_arriv_r1-habit_arriv_env10_r1)) cm2(logical(probe_arriv_env11_r2),logical(habit_arriv_r1-habit_arriv_env11_r1)) cm2(logical(probe_arriv_env12_r2),logical(habit_arriv_r1-habit_arriv_env12_r1))];
-probe_arriv_r2_w_habit_arriv_r1_repstcon_mean = nanmean(probe_arriv_r2_w_habit_arriv_r1_repstcon(:));
-
-
-
-
-%% reinstatement analysis
-%probe r1 with arrive
-probe_assigned_r1_w_probe_arriv_r1_repst = [cm2(logical(probe_assigned_env1_r1),logical(probe_arriv_env1_r1)) cm2(logical(probe_assigned_env2_r1),logical(probe_arriv_env2_r1)) cm2(logical(probe_assigned_env3_r1),logical(probe_arriv_env3_r1)) cm2(logical(probe_assigned_env4_r1),logical(probe_arriv_env4_r1)) cm2(logical(probe_assigned_env5_r1),logical(probe_arriv_env5_r1)) cm2(logical(probe_assigned_env6_r1),logical(probe_arriv_env6_r1)) cm2(logical(probe_assigned_env7_r1),logical(probe_arriv_env7_r1)) cm2(logical(probe_assigned_env8_r1),logical(probe_arriv_env8_r1)) cm2(logical(probe_assigned_env9_r1),logical(probe_arriv_env9_r1)) cm2(logical(probe_assigned_env10_r1),logical(probe_arriv_env10_r1)) cm2(logical(probe_assigned_env11_r1),logical(probe_arriv_env11_r1)) cm2(logical(probe_assigned_env12_r1),logical(probe_arriv_env12_r1))];
-probe_assigned_r1_w_probe_arriv_r1_repst_mean = nanmean(probe_assigned_r1_w_probe_arriv_r1_repst(:));
-
-
-probe_assigned_r1_w_habit_arriv_r1_repst = [cm2(logical(probe_assigned_env1_r1),logical(habit_arriv_env1_r1)) cm2(logical(probe_assigned_env2_r1),logical(habit_arriv_env2_r1)) cm2(logical(probe_assigned_env3_r1),logical(habit_arriv_env3_r1)) cm2(logical(probe_assigned_env4_r1),logical(habit_arriv_env4_r1)) cm2(logical(probe_assigned_env5_r1),logical(habit_arriv_env5_r1)) cm2(logical(probe_assigned_env6_r1),logical(habit_arriv_env6_r1)) cm2(logical(probe_assigned_env7_r1),logical(habit_arriv_env7_r1)) cm2(logical(probe_assigned_env8_r1),logical(habit_arriv_env8_r1)) cm2(logical(probe_assigned_env9_r1),logical(habit_arriv_env9_r1)) cm2(logical(probe_assigned_env10_r1),logical(habit_arriv_env10_r1)) cm2(logical(probe_assigned_env11_r1),logical(habit_arriv_env11_r1)) cm2(logical(probe_assigned_env12_r1),logical(habit_arriv_env12_r1))];
-probe_assigned_r1_w_habit_arriv_r1_repst_mean = nanmean(probe_assigned_r1_w_habit_arriv_r1_repst(:));
-
-
-probe_assigned_r1_w_probe_arriv_r1_repstcon = [cm2(logical(probe_assigned_env1_r1),logical(probe_arriv_r1-probe_arriv_env1_r1)) cm2(logical(probe_assigned_env2_r1),logical(probe_arriv_r1-probe_arriv_env2_r1)) cm2(logical(probe_assigned_env3_r1),logical(probe_arriv_r1-probe_arriv_env3_r1)) cm2(logical(probe_assigned_env4_r1),logical(probe_arriv_r1-probe_arriv_env4_r1)) cm2(logical(probe_assigned_env5_r1),logical(probe_arriv_r1-probe_arriv_env5_r1)) cm2(logical(probe_assigned_env6_r1),logical(probe_arriv_r1-probe_arriv_env6_r1)) cm2(logical(probe_assigned_env7_r1),logical(probe_arriv_r1-probe_arriv_env7_r1)) cm2(logical(probe_assigned_env8_r1),logical(probe_arriv_r1-probe_arriv_env8_r1)) cm2(logical(probe_assigned_env9_r1),logical(probe_arriv_r1-probe_arriv_env9_r1)) cm2(logical(probe_assigned_env10_r1),logical(probe_arriv_r1-probe_arriv_env10_r1)) cm2(logical(probe_assigned_env11_r1),logical(probe_arriv_r1-probe_arriv_env11_r1)) cm2(logical(probe_assigned_env12_r1),logical(probe_arriv_r1-probe_arriv_env12_r1))];
-probe_assigned_r1_w_probe_arriv_r1_repstcon_mean = nanmean(probe_assigned_r1_w_probe_arriv_r1_repstcon(:));
-
-
-%nav
-probe_nav_r1_w_probe_arriv_r1_repst = [cm2(logical(probe_nav_env1_r1),logical(probe_arriv_env1_r1)) cm2(logical(probe_nav_env2_r1),logical(probe_arriv_env2_r1)) cm2(logical(probe_nav_env3_r1),logical(probe_arriv_env3_r1)) cm2(logical(probe_nav_env4_r1),logical(probe_arriv_env4_r1)) cm2(logical(probe_nav_env5_r1),logical(probe_arriv_env5_r1)) cm2(logical(probe_nav_env6_r1),logical(probe_arriv_env6_r1)) cm2(logical(probe_nav_env7_r1),logical(probe_arriv_env7_r1)) cm2(logical(probe_nav_env8_r1),logical(probe_arriv_env8_r1)) cm2(logical(probe_nav_env9_r1),logical(probe_arriv_env9_r1)) cm2(logical(probe_nav_env10_r1),logical(probe_arriv_env10_r1)) cm2(logical(probe_nav_env11_r1),logical(probe_arriv_env11_r1)) cm2(logical(probe_nav_env12_r1),logical(probe_arriv_env12_r1))];
-probe_nav_r1_w_probe_arriv_r1_repst_mean = nanmean(probe_nav_r1_w_probe_arriv_r1_repst(:));
-
-
-probe_nav_r1_w_habit_arriv_r1_repst = [cm2(logical(probe_nav_env1_r1),logical(habit_arriv_env1_r1)) cm2(logical(probe_nav_env2_r1),logical(habit_arriv_env2_r1)) cm2(logical(probe_nav_env3_r1),logical(habit_arriv_env3_r1)) cm2(logical(probe_nav_env4_r1),logical(habit_arriv_env4_r1)) cm2(logical(probe_nav_env5_r1),logical(habit_arriv_env5_r1)) cm2(logical(probe_nav_env6_r1),logical(habit_arriv_env6_r1)) cm2(logical(probe_nav_env7_r1),logical(habit_arriv_env7_r1)) cm2(logical(probe_nav_env8_r1),logical(habit_arriv_env8_r1)) cm2(logical(probe_nav_env9_r1),logical(habit_arriv_env9_r1)) cm2(logical(probe_nav_env10_r1),logical(habit_arriv_env10_r1)) cm2(logical(probe_nav_env11_r1),logical(habit_arriv_env11_r1)) cm2(logical(probe_nav_env12_r1),logical(habit_arriv_env12_r1))];
-probe_nav_r1_w_habit_arriv_r1_repst_mean = nanmean(probe_nav_r1_w_habit_arriv_r1_repst(:));
-
-
-probe_nav_r1_w_probe_arriv_r1_repstcon = [cm2(logical(probe_nav_env1_r1),logical(probe_arriv_r1-probe_arriv_env1_r1)) cm2(logical(probe_nav_env2_r1),logical(probe_arriv_r1-probe_arriv_env2_r1)) cm2(logical(probe_nav_env3_r1),logical(probe_arriv_r1-probe_arriv_env3_r1)) cm2(logical(probe_nav_env4_r1),logical(probe_arriv_r1-probe_arriv_env4_r1)) cm2(logical(probe_nav_env5_r1),logical(probe_arriv_r1-probe_arriv_env5_r1)) cm2(logical(probe_nav_env6_r1),logical(probe_arriv_r1-probe_arriv_env6_r1)) cm2(logical(probe_nav_env7_r1),logical(probe_arriv_r1-probe_arriv_env7_r1)) cm2(logical(probe_nav_env8_r1),logical(probe_arriv_r1-probe_arriv_env8_r1)) cm2(logical(probe_nav_env9_r1),logical(probe_arriv_r1-probe_arriv_env9_r1)) cm2(logical(probe_nav_env10_r1),logical(probe_arriv_r1-probe_arriv_env10_r1)) cm2(logical(probe_nav_env11_r1),logical(probe_arriv_r1-probe_arriv_env11_r1)) cm2(logical(probe_nav_env12_r1),logical(probe_arriv_r1-probe_arriv_env12_r1))];
-probe_nav_r1_w_probe_arriv_r1_repstcon_mean = nanmean(probe_nav_r1_w_probe_arriv_r1_repstcon(:));
-
-%probe r2 with arrive
-probe_assigned_r2_w_probe_arriv_r2_repst = [cm2(logical(probe_assigned_env1_r2),logical(probe_arriv_env1_r2)) cm2(logical(probe_assigned_env2_r2),logical(probe_arriv_env2_r2)) cm2(logical(probe_assigned_env3_r2),logical(probe_arriv_env3_r2)) cm2(logical(probe_assigned_env4_r2),logical(probe_arriv_env4_r2)) cm2(logical(probe_assigned_env5_r2),logical(probe_arriv_env5_r2)) cm2(logical(probe_assigned_env6_r2),logical(probe_arriv_env6_r2)) cm2(logical(probe_assigned_env7_r2),logical(probe_arriv_env7_r2)) cm2(logical(probe_assigned_env8_r2),logical(probe_arriv_env8_r2)) cm2(logical(probe_assigned_env9_r2),logical(probe_arriv_env9_r2)) cm2(logical(probe_assigned_env10_r2),logical(probe_arriv_env10_r2)) cm2(logical(probe_assigned_env11_r2),logical(probe_arriv_env11_r2)) cm2(logical(probe_assigned_env12_r2),logical(probe_arriv_env12_r2))];
-probe_assigned_r2_w_probe_arriv_r2_repst_mean = nanmean(probe_assigned_r2_w_probe_arriv_r2_repst(:));
-
-probe_assigned_r2_w_probe_arriv_r2_repstcon = [cm2(logical(probe_assigned_env1_r2),logical(probe_arriv_r2-probe_arriv_env1_r2)) cm2(logical(probe_assigned_env2_r2),logical(probe_arriv_r2-probe_arriv_env2_r2)) cm2(logical(probe_assigned_env3_r2),logical(probe_arriv_r2-probe_arriv_env3_r2)) cm2(logical(probe_assigned_env4_r2),logical(probe_arriv_r2-probe_arriv_env4_r2)) cm2(logical(probe_assigned_env5_r2),logical(probe_arriv_r2-probe_arriv_env5_r2)) cm2(logical(probe_assigned_env6_r2),logical(probe_arriv_r2-probe_arriv_env6_r2)) cm2(logical(probe_assigned_env7_r2),logical(probe_arriv_r2-probe_arriv_env7_r2)) cm2(logical(probe_assigned_env8_r2),logical(probe_arriv_r2-probe_arriv_env8_r2)) cm2(logical(probe_assigned_env9_r2),logical(probe_arriv_r2-probe_arriv_env9_r2)) cm2(logical(probe_assigned_env10_r2),logical(probe_arriv_r2-probe_arriv_env10_r2)) cm2(logical(probe_assigned_env11_r2),logical(probe_arriv_r2-probe_arriv_env11_r2)) cm2(logical(probe_assigned_env12_r2),logical(probe_arriv_r2-probe_arriv_env12_r2))];
-probe_assigned_r2_w_probe_arriv_r2_repstcon_mean = nanmean(probe_assigned_r2_w_probe_arriv_r2_repstcon(:));
-
-
-%nav
-probe_nav_r2_w_probe_arriv_r2_repst = [cm2(logical(probe_nav_env1_r2),logical(probe_arriv_env1_r2)) cm2(logical(probe_nav_env2_r2),logical(probe_arriv_env2_r2)) cm2(logical(probe_nav_env3_r2),logical(probe_arriv_env3_r2)) cm2(logical(probe_nav_env4_r2),logical(probe_arriv_env4_r2)) cm2(logical(probe_nav_env5_r2),logical(probe_arriv_env5_r2)) cm2(logical(probe_nav_env6_r2),logical(probe_arriv_env6_r2)) cm2(logical(probe_nav_env7_r2),logical(probe_arriv_env7_r2)) cm2(logical(probe_nav_env8_r2),logical(probe_arriv_env8_r2)) cm2(logical(probe_nav_env9_r2),logical(probe_arriv_env9_r2)) cm2(logical(probe_nav_env10_r2),logical(probe_arriv_env10_r2)) cm2(logical(probe_nav_env11_r2),logical(probe_arriv_env11_r2)) cm2(logical(probe_nav_env12_r2),logical(probe_arriv_env12_r2))];
-probe_nav_r2_w_probe_arriv_r2_repst_mean = nanmean(probe_nav_r2_w_probe_arriv_r2_repst(:));
-
-probe_nav_r2_w_probe_arriv_r2_repstcon = [cm2(logical(probe_nav_env1_r2),logical(probe_arriv_r2-probe_arriv_env1_r2)) cm2(logical(probe_nav_env2_r2),logical(probe_arriv_r2-probe_arriv_env2_r2)) cm2(logical(probe_nav_env3_r2),logical(probe_arriv_r2-probe_arriv_env3_r2)) cm2(logical(probe_nav_env4_r2),logical(probe_arriv_r2-probe_arriv_env4_r2)) cm2(logical(probe_nav_env5_r2),logical(probe_arriv_r2-probe_arriv_env5_r2)) cm2(logical(probe_nav_env6_r2),logical(probe_arriv_r2-probe_arriv_env6_r2)) cm2(logical(probe_nav_env7_r2),logical(probe_arriv_r2-probe_arriv_env7_r2)) cm2(logical(probe_nav_env8_r2),logical(probe_arriv_r2-probe_arriv_env8_r2)) cm2(logical(probe_nav_env9_r2),logical(probe_arriv_r2-probe_arriv_env9_r2)) cm2(logical(probe_nav_env10_r2),logical(probe_arriv_r2-probe_arriv_env10_r2)) cm2(logical(probe_nav_env11_r2),logical(probe_arriv_r2-probe_arriv_env11_r2)) cm2(logical(probe_nav_env12_r2),logical(probe_arriv_r2-probe_arriv_env12_r2))];
-probe_nav_r2_w_probe_arriv_r2_repstcon_mean = nanmean(probe_nav_r2_w_probe_arriv_r2_repstcon(:));
-
-
+% %% stability item/town specific effects
+%
+% %within type (probe r1 with probe r2)
+% probe_assigned_r1_w_probe_assigned_r2_repst = [cm2(logical(probe_assigned_env1_r1),logical(probe_assigned_env1_r2)) cm2(logical(probe_assigned_env2_r1),logical(probe_assigned_env2_r2)) cm2(logical(probe_assigned_env3_r1),logical(probe_assigned_env3_r2)) cm2(logical(probe_assigned_env4_r1),logical(probe_assigned_env4_r2)) cm2(logical(probe_assigned_env5_r1),logical(probe_assigned_env5_r2)) cm2(logical(probe_assigned_env6_r1),logical(probe_assigned_env6_r2)) cm2(logical(probe_assigned_env7_r1),logical(probe_assigned_env7_r2)) cm2(logical(probe_assigned_env8_r1),logical(probe_assigned_env8_r2)) cm2(logical(probe_assigned_env9_r1),logical(probe_assigned_env9_r2)) cm2(logical(probe_assigned_env10_r1),logical(probe_assigned_env10_r2)) cm2(logical(probe_assigned_env11_r1),logical(probe_assigned_env11_r2)) cm2(logical(probe_assigned_env12_r1),logical(probe_assigned_env12_r2))];
+% probe_assigned_r1_w_probe_assigned_r2_repst_mean = nanmean(probe_assigned_r1_w_probe_assigned_r2_repst(:));
+%
+% probe_assigned_r1_w_probe_assigned_r2_repstcon = [cm2(logical(probe_assigned_env1_r1),logical(probe_assigned_r2-probe_assigned_env1_r2)) cm2(logical(probe_assigned_env2_r1),logical(probe_assigned_r2-probe_assigned_env2_r2)) cm2(logical(probe_assigned_env3_r1),logical(probe_assigned_r2-probe_assigned_env3_r2)) cm2(logical(probe_assigned_env4_r1),logical(probe_assigned_r2-probe_assigned_env4_r2)) cm2(logical(probe_assigned_env5_r1),logical(probe_assigned_r2-probe_assigned_env5_r2)) cm2(logical(probe_assigned_env6_r1),logical(probe_assigned_r2-probe_assigned_env6_r2)) cm2(logical(probe_assigned_env7_r1),logical(probe_assigned_r2-probe_assigned_env7_r2)) cm2(logical(probe_assigned_env8_r1),logical(probe_assigned_r2-probe_assigned_env8_r2)) cm2(logical(probe_assigned_env9_r1),logical(probe_assigned_r2-probe_assigned_env9_r2)) cm2(logical(probe_assigned_env10_r1),logical(probe_assigned_r2-probe_assigned_env10_r2)) cm2(logical(probe_assigned_env11_r1),logical(probe_assigned_r2-probe_assigned_env11_r2)) cm2(logical(probe_assigned_env12_r1),logical(probe_assigned_r2-probe_assigned_env12_r2))];
+% probe_assigned_r1_w_probe_assigned_r2_repstcon_mean = nanmean(probe_assigned_r1_w_probe_assigned_r2_repstcon(:));
+%
+% probe_assigned_r2_w_probe_assigned_r1_repstcon = [cm2(logical(probe_assigned_env1_r2),logical(probe_assigned_r1-probe_assigned_env1_r1)) cm2(logical(probe_assigned_env2_r2),logical(probe_assigned_r1-probe_assigned_env2_r1)) cm2(logical(probe_assigned_env3_r2),logical(probe_assigned_r1-probe_assigned_env3_r1)) cm2(logical(probe_assigned_env4_r2),logical(probe_assigned_r1-probe_assigned_env4_r1)) cm2(logical(probe_assigned_env5_r2),logical(probe_assigned_r1-probe_assigned_env5_r1)) cm2(logical(probe_assigned_env6_r2),logical(probe_assigned_r1-probe_assigned_env6_r1)) cm2(logical(probe_assigned_env7_r2),logical(probe_assigned_r1-probe_assigned_env7_r1)) cm2(logical(probe_assigned_env8_r2),logical(probe_assigned_r1-probe_assigned_env8_r1)) cm2(logical(probe_assigned_env9_r2),logical(probe_assigned_r1-probe_assigned_env9_r1)) cm2(logical(probe_assigned_env10_r2),logical(probe_assigned_r1-probe_assigned_env10_r1)) cm2(logical(probe_assigned_env11_r2),logical(probe_assigned_r1-probe_assigned_env11_r1)) cm2(logical(probe_assigned_env12_r2),logical(probe_assigned_r1-probe_assigned_env12_r1))];
+% probe_assigned_r2_w_probe_assigned_r1_repstcon_mean = nanmean(probe_assigned_r2_w_probe_assigned_r1_repstcon(:));
+%
+%
+% %across type (probe with habit), r1 with habit
+% probe_assigned_r1_w_habit_assigned_r1_repst = [cm2(logical(probe_assigned_env1_r1),logical(habit_assigned_env1_r1)) cm2(logical(probe_assigned_env2_r1),logical(habit_assigned_env2_r1)) cm2(logical(probe_assigned_env3_r1),logical(habit_assigned_env3_r1)) cm2(logical(probe_assigned_env4_r1),logical(habit_assigned_env4_r1)) cm2(logical(probe_assigned_env5_r1),logical(habit_assigned_env5_r1)) cm2(logical(probe_assigned_env6_r1),logical(habit_assigned_env6_r1)) cm2(logical(probe_assigned_env7_r1),logical(habit_assigned_env7_r1)) cm2(logical(probe_assigned_env8_r1),logical(habit_assigned_env8_r1)) cm2(logical(probe_assigned_env9_r1),logical(habit_assigned_env9_r1)) cm2(logical(probe_assigned_env10_r1),logical(habit_assigned_env10_r1)) cm2(logical(probe_assigned_env11_r1),logical(habit_assigned_env11_r1)) cm2(logical(probe_assigned_env12_r1),logical(habit_assigned_env12_r1))];
+% probe_assigned_r1_w_habit_assigned_r1_repst_mean = nanmean(probe_assigned_r1_w_habit_assigned_r1_repst(:));
+%
+% probe_assigned_r1_w_habit_assigned_r1_repstcon = [cm2(logical(probe_assigned_env1_r1),logical(habit_assigned_r1-habit_assigned_env1_r1)) cm2(logical(probe_assigned_env2_r1),logical(habit_assigned_r1-habit_assigned_env2_r1)) cm2(logical(probe_assigned_env3_r1),logical(habit_assigned_r1-habit_assigned_env3_r1)) cm2(logical(probe_assigned_env4_r1),logical(habit_assigned_r1-habit_assigned_env4_r1)) cm2(logical(probe_assigned_env5_r1),logical(habit_assigned_r1-habit_assigned_env5_r1)) cm2(logical(probe_assigned_env6_r1),logical(habit_assigned_r1-habit_assigned_env6_r1)) cm2(logical(probe_assigned_env7_r1),logical(habit_assigned_r1-habit_assigned_env7_r1)) cm2(logical(probe_assigned_env8_r1),logical(habit_assigned_r1-habit_assigned_env8_r1)) cm2(logical(probe_assigned_env9_r1),logical(habit_assigned_r1-habit_assigned_env9_r1)) cm2(logical(probe_assigned_env10_r1),logical(habit_assigned_r1-habit_assigned_env10_r1)) cm2(logical(probe_assigned_env11_r1),logical(habit_assigned_r1-habit_assigned_env11_r1)) cm2(logical(probe_assigned_env12_r1),logical(habit_assigned_r1-habit_assigned_env12_r1))];
+% probe_assigned_r1_w_habit_assigned_r1_repstcon_mean = nanmean(probe_assigned_r1_w_habit_assigned_r1_repstcon(:));
+%
+% %% reinstatement analysis
+% %probe r1 with arrive
+% probe_assigned_r1_w_probe_arriv_r1_repst = [cm2(logical(probe_assigned_env1_r1),logical(probe_arriv_env1_r1)) cm2(logical(probe_assigned_env2_r1),logical(probe_arriv_env2_r1)) cm2(logical(probe_assigned_env3_r1),logical(probe_arriv_env3_r1)) cm2(logical(probe_assigned_env4_r1),logical(probe_arriv_env4_r1)) cm2(logical(probe_assigned_env5_r1),logical(probe_arriv_env5_r1)) cm2(logical(probe_assigned_env6_r1),logical(probe_arriv_env6_r1)) cm2(logical(probe_assigned_env7_r1),logical(probe_arriv_env7_r1)) cm2(logical(probe_assigned_env8_r1),logical(probe_arriv_env8_r1)) cm2(logical(probe_assigned_env9_r1),logical(probe_arriv_env9_r1)) cm2(logical(probe_assigned_env10_r1),logical(probe_arriv_env10_r1)) cm2(logical(probe_assigned_env11_r1),logical(probe_arriv_env11_r1)) cm2(logical(probe_assigned_env12_r1),logical(probe_arriv_env12_r1))];
+% probe_assigned_r1_w_probe_arriv_r1_repst_mean = nanmean(probe_assigned_r1_w_probe_arriv_r1_repst(:));
+%
+% probe_assigned_r1_w_habit_arriv_r1_repst = [cm2(logical(probe_assigned_env1_r1),logical(habit_arriv_env1_r1)) cm2(logical(probe_assigned_env2_r1),logical(habit_arriv_env2_r1)) cm2(logical(probe_assigned_env3_r1),logical(habit_arriv_env3_r1)) cm2(logical(probe_assigned_env4_r1),logical(habit_arriv_env4_r1)) cm2(logical(probe_assigned_env5_r1),logical(habit_arriv_env5_r1)) cm2(logical(probe_assigned_env6_r1),logical(habit_arriv_env6_r1)) cm2(logical(probe_assigned_env7_r1),logical(habit_arriv_env7_r1)) cm2(logical(probe_assigned_env8_r1),logical(habit_arriv_env8_r1)) cm2(logical(probe_assigned_env9_r1),logical(habit_arriv_env9_r1)) cm2(logical(probe_assigned_env10_r1),logical(habit_arriv_env10_r1)) cm2(logical(probe_assigned_env11_r1),logical(habit_arriv_env11_r1)) cm2(logical(probe_assigned_env12_r1),logical(habit_arriv_env12_r1))];
+% probe_assigned_r1_w_habit_arriv_r1_repst_mean = nanmean(probe_assigned_r1_w_habit_arriv_r1_repst(:));
+%
+% probe_assigned_r1_w_probe_arriv_r1_repstcon = [cm2(logical(probe_assigned_env1_r1),logical(probe_arriv_r1-probe_arriv_env1_r1)) cm2(logical(probe_assigned_env2_r1),logical(probe_arriv_r1-probe_arriv_env2_r1)) cm2(logical(probe_assigned_env3_r1),logical(probe_arriv_r1-probe_arriv_env3_r1)) cm2(logical(probe_assigned_env4_r1),logical(probe_arriv_r1-probe_arriv_env4_r1)) cm2(logical(probe_assigned_env5_r1),logical(probe_arriv_r1-probe_arriv_env5_r1)) cm2(logical(probe_assigned_env6_r1),logical(probe_arriv_r1-probe_arriv_env6_r1)) cm2(logical(probe_assigned_env7_r1),logical(probe_arriv_r1-probe_arriv_env7_r1)) cm2(logical(probe_assigned_env8_r1),logical(probe_arriv_r1-probe_arriv_env8_r1)) cm2(logical(probe_assigned_env9_r1),logical(probe_arriv_r1-probe_arriv_env9_r1)) cm2(logical(probe_assigned_env10_r1),logical(probe_arriv_r1-probe_arriv_env10_r1)) cm2(logical(probe_assigned_env11_r1),logical(probe_arriv_r1-probe_arriv_env11_r1)) cm2(logical(probe_assigned_env12_r1),logical(probe_arriv_r1-probe_arriv_env12_r1))];
+% probe_assigned_r1_w_probe_arriv_r1_repstcon_mean = nanmean(probe_assigned_r1_w_probe_arriv_r1_repstcon(:));
 
 %% univariate control
 
 meanbetas = nanmean(rmat_condensed(:,:));%get mean beta values from the ROI for each regressor
 
 
-probe_assigned_r1_mbeta = meanbetas(logical(probe_assigned_r1));
-probe_assigned_r1_mbeta_mean = nanmean(probe_assigned_r1_mbeta(:));
-
-probe_nav_r1_mbeta = meanbetas(logical(probe_nav_r1));
-probe_nav_r1_mbeta_mean = nanmean(probe_nav_r1_mbeta(:));
-
-probe_arriv_r1_mbeta = meanbetas(logical(probe_arriv_r1));
-probe_arriv_r1_mbeta_mean = nanmean(probe_arriv_r1_mbeta(:));
-
-habit_assigned_r1_mbeta = meanbetas(logical(habit_assigned_r1));
-habit_assigned_r1_mbeta_mean = nanmean(habit_assigned_r1_mbeta(:));
-
-habit_nav_r1_mbeta = meanbetas(logical(habit_nav_r1));
-habit_nav_r1_mbeta_mean = nanmean(habit_nav_r1_mbeta(:));
-
-habit_arriv_r1_mbeta = meanbetas(logical(habit_arriv_r1));
-habit_arriv_r1_mbeta_mean = nanmean(habit_arriv_r1_mbeta(:));
-
-%second repetition indices
-probe_assigned_r2_mbeta = meanbetas(logical(probe_assigned_r2));
-probe_assigned_r2_mbeta_mean = nanmean(probe_assigned_r2_mbeta(:));
-
-probe_nav_r2_mbeta = meanbetas(logical(probe_nav_r2));
-probe_nav_r2_mbeta_mean = nanmean(probe_nav_r2_mbeta(:));
-
-probe_arriv_r2_mbeta = meanbetas(logical(probe_arriv_r2));
-probe_arriv_r2_mbeta_mean = nanmean(probe_arriv_r2_mbeta(:));
+% probe_assigned_r1_mbeta = meanbetas(logical(probe_assigned_r1));
+% probe_assigned_r1_mbeta_mean = nanmean(probe_assigned_r1_mbeta(:));
+%
+% probe_nav_r1_mbeta = meanbetas(logical(probe_nav_r1));
+% probe_nav_r1_mbeta_mean = nanmean(probe_nav_r1_mbeta(:));
+%
+% probe_arriv_r1_mbeta = meanbetas(logical(probe_arriv_r1));
+% probe_arriv_r1_mbeta_mean = nanmean(probe_arriv_r1_mbeta(:));
+%
+% habit_assigned_r1_mbeta = meanbetas(logical(habit_assigned_r1));
+% habit_assigned_r1_mbeta_mean = nanmean(habit_assigned_r1_mbeta(:));
+%
+% habit_nav_r1_mbeta = meanbetas(logical(habit_nav_r1));
+% habit_nav_r1_mbeta_mean = nanmean(habit_nav_r1_mbeta(:));
+%
+% habit_arriv_r1_mbeta = meanbetas(logical(habit_arriv_r1));
+% habit_arriv_r1_mbeta_mean = nanmean(habit_arriv_r1_mbeta(:));
+%
+% %second repetition indices
+% probe_assigned_r2_mbeta = meanbetas(logical(probe_assigned_r2));
+% probe_assigned_r2_mbeta_mean = nanmean(probe_assigned_r2_mbeta(:));
+%
+% probe_nav_r2_mbeta = meanbetas(logical(probe_nav_r2));
+% probe_nav_r2_mbeta_mean = nanmean(probe_nav_r2_mbeta(:));
+%
+% probe_arriv_r2_mbeta = meanbetas(logical(probe_arriv_r2));
+% probe_arriv_r2_mbeta_mean = nanmean(probe_arriv_r2_mbeta(:));
 
 
 %probe_assigned_r1_w_probe_assigned_r1 = cm(logical(probe_assigned_r1),logical(probe_assigned_r1));
@@ -1260,41 +586,34 @@ probe_arriv_r2_mbeta_mean = nanmean(probe_arriv_r2_mbeta(:));
 %fish = 0.5*log((1+CM2)./(1-CM2))
 
 %plot matrices of interest
-% subplot(3,2,1), imagesc(cm2(logical(probe_assigned_r1),logical(probe_assigned_r2)));
-% title('p_a1 with p_a2')
-% colormap('jet'); % set the colorscheme
-% colorbar; % enable colorbar
-% subplot(3,2,2), imagesc(cm2(logical(probe_assigned_r1),logical(habit_assigned_r1)));
-% title('p_a1 with h_a1')
-% colorbar; % enable colorbar
-% %
-% subplot(3,2,3), imagesc(cm2(logical(probe_assigned_r2),logical(habit_assigned_r1)));
-% title('p_a2 with h_a1')
-% colorbar; % enable colorbar
-% subplot(3,2,4), imagesc(cm(aa_ex_corr2,aa_ex_corr2));
-% title('aa_r with aa_r 2nd rep')
-% colorbar; % enable colorbar
-%
-% subplot(3,2,5), imagesc(cm2(ea_ex2,ea_ex));
-% title('ea_1st with ea_2nd')
-% colorbar; % enable colorbar
-% subplot(3,2,6), imagesc(cm2(aa_ex2,aa_ex));
-% title('aa_1st with aa_2nd')
-% colorbar; % enable colorbar
-%
-% figure
-% %plot hintons of matrices of interest
-% subplot(1,2,1), hintonDiagram(ea_r_with_ea_r, 1, 0);
-% subplot(1,2,2), hintonDiagram(aa_r_with_aa_r, 1, 0);
 
+subplot(2,2,1), imagesc(cm);
+title('Within-cond corrmat')
+colormap('hot'); % set the colorscheme
+colorbar; % enable colorbar
+
+subplot(2,2,2), imagesc(cm2);
+title('Overall corrmat')
+colormap('hot'); % set the colorscheme
+colorbar; % enable colorbar
+
+subplot(2,2,3), imagesc(cm(logical(EA_intact),logical(EA_intact)));
+title('EA with EA across blocks and runs')
+colormap('hot'); % set the colorscheme
+colorbar; % enable colorbar
+
+subplot(2,2,4), imagesc(cm2(logical(EA_intact),logical(AA_intact)));
+title('EA with AA across blocks and runs')
+colormap('hot'); % set the colorscheme
+colorbar; % enable colorbar
+
+% save plot
+plot_savename = [S.group_mvpa_dir '/Rcorrs_' S.subj_id '_' mask '_' weights_str '_' S.exp_name '_corrmats.png'];
+saveas(gcf,plot_savename);
 
 %% Save data
-%savename = ['Rcorrs_cm' sub '_' mask '_FutwCurr.mat'];
-savename = ['Rcorrs_cm' sub '_' mask '_towncorrs.mat'];
-
-%savename = ['Zcorrs_CM' sub '_' mask '.mat'];
-%savename = ['corrs_CM' sub '_COUNTERMEASURES_' mask '.mat']
-save(savename, 'probe_assigned_r1_w_probe_assigned_r1', 'probe_assigned_r1_w_probe_assigned_r1_mean', 'probe_nav_r1_w_probe_nav_r1', 'probe_nav_r1_w_probe_nav_r1_mean', 'probe_arriv_r1_w_probe_arriv_r1', 'probe_arriv_r1_w_probe_arriv_r1_mean', 'habit_assigned_r1_w_habit_assigned_r1', 'habit_assigned_r1_w_habit_assigned_r1_mean', 'habit_nav_r1_w_habit_nav_r1', 'habit_nav_r1_w_habit_nav_r1_mean', 'habit_arriv_r1_w_habit_arriv_r1', 'habit_arriv_r1_w_habit_arriv_r1_mean', 'probe_assigned_r2_w_probe_assigned_r2', 'probe_assigned_r2_w_probe_assigned_r2_mean', 'probe_nav_r2_w_probe_nav_r2', 'probe_nav_r2_w_probe_nav_r2_mean', 'probe_arriv_r2_w_probe_arriv_r2', 'probe_arriv_r2_w_probe_arriv_r2_mean', 'probe_assigned_r1_w_probe_assigned_r2_repst', 'probe_assigned_r1_w_probe_assigned_r2_repst_mean', 'probe_assigned_r1_w_probe_assigned_r2_repstcon', 'probe_assigned_r1_w_probe_assigned_r2_repstcon_mean', 'probe_nav_r1_w_probe_nav_r2_repst', 'probe_nav_r1_w_probe_nav_r2_repst_mean', 'probe_nav_r1_w_probe_nav_r2_repstcon', 'probe_nav_r1_w_probe_nav_r2_repstcon_mean', 'probe_arriv_r1_w_probe_arriv_r2_repst', 'probe_arriv_r1_w_probe_arriv_r2_repst_mean', 'probe_arriv_r1_w_probe_arriv_r2_repstcon', 'probe_arriv_r1_w_probe_arriv_r2_repstcon_mean', 'probe_assigned_r1_w_habit_assigned_r1_repst', 'probe_assigned_r1_w_habit_assigned_r1_repst_mean', 'probe_assigned_r1_w_habit_assigned_r1_repstcon', 'probe_assigned_r1_w_habit_assigned_r1_repstcon_mean', 'probe_nav_r1_w_habit_nav_r1_repst', 'probe_nav_r1_w_habit_nav_r1_repst_mean', 'probe_nav_r1_w_habit_nav_r1_repstcon', 'probe_nav_r1_w_habit_nav_r1_repstcon_mean', 'probe_arriv_r1_w_habit_arriv_r1_repst', 'probe_arriv_r1_w_habit_arriv_r1_repst_mean', 'probe_arriv_r1_w_habit_arriv_r1_repstcon', 'probe_arriv_r1_w_habit_arriv_r1_repstcon_mean', 'probe_assigned_r2_w_habit_assigned_r1_repst', 'probe_assigned_r2_w_habit_assigned_r1_repst_mean', 'probe_assigned_r2_w_habit_assigned_r1_repstcon', 'probe_assigned_r2_w_habit_assigned_r1_repstcon_mean', 'probe_nav_r2_w_habit_nav_r1_repst', 'probe_nav_r2_w_habit_nav_r1_repst_mean', 'probe_nav_r2_w_habit_nav_r1_repstcon', 'probe_nav_r2_w_habit_nav_r1_repstcon_mean', 'probe_arriv_r2_w_habit_arriv_r1_repst', 'probe_arriv_r2_w_habit_arriv_r1_repst_mean', 'probe_arriv_r2_w_habit_arriv_r1_repstcon', 'probe_arriv_r2_w_habit_arriv_r1_repstcon_mean', 'probe_assigned_r1_w_probe_arriv_r1_repst', 'probe_assigned_r1_w_probe_arriv_r1_repst_mean', 'probe_assigned_r1_w_probe_arriv_r1_repstcon', 'probe_assigned_r1_w_probe_arriv_r1_repstcon_mean', 'probe_nav_r1_w_probe_arriv_r1_repst', 'probe_nav_r1_w_probe_arriv_r1_repst_mean', 'probe_nav_r1_w_probe_arriv_r1_repstcon', 'probe_nav_r1_w_probe_arriv_r1_repstcon_mean', 'probe_assigned_r2_w_probe_arriv_r2_repst', 'probe_assigned_r2_w_probe_arriv_r2_repst_mean', 'probe_assigned_r2_w_probe_arriv_r2_repstcon', 'probe_assigned_r2_w_probe_arriv_r2_repstcon_mean', 'probe_nav_r2_w_probe_arriv_r2_repst', 'probe_nav_r2_w_probe_arriv_r2_repst_mean', 'probe_nav_r2_w_probe_arriv_r2_repstcon', 'probe_nav_r2_w_probe_arriv_r2_repstcon_mean', 'probe_assigned_r1_mbeta', 'probe_assigned_r1_mbeta_mean', 'probe_nav_r1_mbeta', 'probe_nav_r1_mbeta_mean', 'probe_arriv_r1_mbeta', 'probe_arriv_r1_mbeta_mean', 'habit_assigned_r1_mbeta', 'habit_assigned_r1_mbeta_mean', 'habit_nav_r1_mbeta', 'habit_nav_r1_mbeta_mean', 'habit_arriv_r1_mbeta', 'habit_arriv_r1_mbeta_mean', 'probe_assigned_r2_mbeta', 'probe_assigned_r2_mbeta_mean', 'probe_nav_r2_mbeta', 'probe_nav_r2_mbeta_mean', 'probe_arriv_r2_mbeta', 'probe_arriv_r2_mbeta_mean', 'probe_assigned_r2_w_probe_assigned_r1_repstcon', 'probe_assigned_r2_w_probe_assigned_r1_repstcon_mean', 'probe_nav_r2_w_probe_nav_r1_repstcon', 'probe_nav_r2_w_probe_nav_r1_repstcon_mean', 'probe_arriv_r2_w_probe_arriv_r1_repstcon', 'probe_arriv_r2_w_probe_arriv_r1_repstcon_mean', 'probe_assigned_r1_w_habit_arriv_r1_repst', 'probe_assigned_r1_w_habit_arriv_r1_repst_mean', 'probe_nav_r1_w_habit_arriv_r1_repst', 'probe_nav_r1_w_habit_arriv_r1_repst_mean');
+savename = [S.group_mvpa_dir '/Rcorrs_' S.subj_id '_' mask '_' weights_str '_' S.exp_name '.mat'];
+save(savename, 'res');
 
 
 
