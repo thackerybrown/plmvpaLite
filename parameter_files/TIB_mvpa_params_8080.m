@@ -50,8 +50,8 @@ S.preprocType = 'spm'; % 'spm' for spm preprocessing, 'knk' for kendrick preproc
 %cross-validation (see section below). If you want to train on one set of
 %data (e.g., a localizer) and test on another (e.g., a retrieval task),
 %then specify different tasks or study phases
-S.trainTask = 'AAvsScene';%Circmaze - 'goals' or 'plan'
-S.testTask = 'AAvsScene';%Circamze - 'goals' or 'plan'
+S.trainTask = 'EAvsScene';%Circmaze - 'goals' or 'plan'
+S.testTask = 'EAvsScene';%Circamze - 'goals' or 'plan'
 
 %x-validation info
 S.xvaltype = 'loo'; %set to 'loo' for leave-one-out x-validation or 'nf' for nfold using the S.nFolds defined below.
@@ -482,7 +482,8 @@ end
 %% Volume Parameters
 S.vol_info = spm_vol(fullfile(par.funcdir, 'run_01', 'run_01_006.nii')); %get functional data resolution info for spm .img writing
 
-S.roi_name = 'NativeGM_BOLDres.nii';
+S.roi_name = 'HVisCtx_1.nii';
+%S.roi_name = 'NativeGM_BOLDres.nii';
 S.roi_file = [S.expt_dir S.subj_id '/Masks/' S.roi_name]; %this is the large-scale ROI (could be wholebrain) that workspace info is calculated for. Saves time to have this volume include any sub-volumes you are interested in (e.g. MTL if you plan on looking in hippo and phc separately)
 
 %Apply another mask to the primary data loaded in the workspace. [] = no secondary mask.

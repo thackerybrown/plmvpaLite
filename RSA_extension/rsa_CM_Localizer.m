@@ -14,8 +14,10 @@ weights_str = mat2str(theseTRWeights);% assign values to string for custom outpu
 
 funcftype = '.nii';
 runs_concat = 1; %1 = typical SPM analysis; will have continuous onsets concatenated across runs. 0 = But you might not have bothered creating such a file, or in SST case we are using files from FSL. In this case, the onsets are assumed to "reset" for each run ('raw' unconcatenated onsets)
+use_exist_workspace = 0; %1=yes. Load existing pattern workspaces and onsets files. Saves time, but turn off if want to manually re-do pattern generation.
 
-gen_onsetsTR = 1; %1=yes. Typically, you'll use an onsets.mat file with tr-by-tr onsets and names (as used for a beta-series). But if you only have a traditional GLM model with one name for multile onsets, setting this flag to 1 will auto-populate unique but related names (e.g., Face_1; Face_2...)
+gen_onsetsTR = 1; %1=yes. Typically, you'll use an onsets.mat file with tr-by-tr onsets and names (as used for a beta-series). But if you only have a traditional GLM model with one name for multiple onsets, setting this flag to 1 will auto-populate unique but related names (e.g., Face_1; Face_2...)
+runzscore = 1;%1=yes. Standard but controversial preprocessing.
 
 %Subject ID/number
 par.substr = ['CM' Sub{1}];
@@ -30,7 +32,7 @@ S.inputformat = 'raw'; % are we working with BOLDs/timeseries ('raw') or with be
 S.onsets_filename = [S.subj_id '_localizer_onsets_test'];
 
 %specify preprocessing level of BOLDs
-preproc_lvl = ''; % 'a' for slice-time-only, 'u' for realigned-only, 'ua' for realign+unwarped, 'swua' for smoothed, normalized, and... you get the picture. Modify as needed if you changed SPM's prefix append defaults
+preproc_lvl = 'a'; % 'a' for slice-time-only, 'u' for realigned-only, 'ua' for realign+unwarped, 'swua' for smoothed, normalized, and... you get the picture. Modify as needed if you changed SPM's prefix append defaults
 boldnames = [preproc_lvl 'run']; %name of image files with preprocessing level prefix
 
 ImgDims = 3; %if working with timeseries, it is highly recommended that you use 4D nifti files ('4'). If you have split them out into TR-by-TR, or are working with betas, enter '3'
@@ -68,7 +70,6 @@ if ~exist([S.mvpa_dir '/RSA_data/'])
 end
 
 
-
 %% extract patterns
 if runs_concat == 1
     %load onsets
@@ -82,18 +83,17 @@ if runs_concat == 1
     
     %before loading and preprocessing all the pattern data, we can see if its
     %already there for analysis
-    if exist([S.mvpa_dir '/RSA_data/' S.subj_id '_' mask '_condensedpats.mat']);
+    if use_exist_workspace && exist([S.mvpa_dir '/RSA_data/' S.subj_id '_' mask '_condensedpats.mat']);
         load([S.mvpa_dir '/RSA_data/' S.subj_id '_' mask '_condensedpats.mat']);
         load([S.mvpa_dir '/RSA_data/' S.subj_id '_onsets_expanded.mat']);
     else
         
         %% load in pattern data
-        if ImgDims == 4
+        if ImgDims == 4 %in development
             
             a = [];
             
-        elseif ImgDims == 3
-            
+        elseif ImgDims == 3   
             
             runfolds = dir(fullfile(par.funcdir, 'run_*'));%dir(fullfile(par.funcdir, 'localizer*'));%
             for idxr = 1:length(runfolds)
@@ -144,13 +144,13 @@ if runs_concat == 1
             for idx = 1:length(raw_filenames)
                 %first, identify the RUN number from its name in full
                 runref_indices = strfind(raw_filenames{idx,1}, '/run_');
-                runidxnum = str2double(raw_filenames{idx,1}(runref_indices(1)+5:runref_indices(2)-1));
+                runidxnum = str2double(raw_filenames{idx,1}(runref_indices(1)+5:runref_indices(1)+6));%runref_indices(2)-1)); %%Warning - this coding assumes the run numbers do not exceed double digits
                 raw_filenames{idx,3} = runidxnum;
             end
             
             b = sortrows(raw_filenames, 3);
             raw_filenames = b(:,1);
-            
+            run_sel = b(:,3);%store run numbers for reference
             imgslength = length(raw_filenames);
             
             %% iterate through 3D frames to extract all patterns
@@ -164,6 +164,23 @@ if runs_concat == 1
                 
             end
             
+            %% optional preprocessing
+            if runzscore == 1
+                run_sel = cell2mat(run_sel);
+                
+                pat_t = [];
+                
+                for r = 1:length(TRsperRun) %for each run
+                    activepats = rmat_t(:,logical(run_sel==r));%filter patterns to current run
+                    if size(activepats,2)~=TRsperRun(r)
+                        error('Your pattern count doesnt match current run length');
+                    end
+                    
+                    pat_t = [pat_t zscore_mvpa(activepats,2)];%2 = z-score within rows (within-voxels)
+                end
+                
+                rmat_t = pat_t;
+            end
             %% now compute a mean pattern for __ TRs surrounding the onset
             
             for n = 1:length(names)
@@ -254,16 +271,13 @@ else %in debugging stage as of 1/3/2018
                 
                 names_t = names(cell2mat(runs_onsidx)==rnum);%filter to current run
                 onsets_t = onsets(cell2mat(runs_onsidx)==rnum);%filter to current run
-                %['ASSIGNED_habit_env4_rep' num2str(rnum)]
-                
-                
+                %['ASSIGNED_habit_env4_rep' num2str(rnum)]        
                 
                 %%      now compute a mean pattern for __ TRs surrounding the onset
                 
                 % convert onsets to TRs
                 for n = 1:length(names_t)
-                    
-                    
+                                 
                     time_idx = floor(onsets_t{n}/S.TR) + 1;
                     enoughTRs_h = (time_idx + (length(theseTRWeights)-1)) <= runlength;
                     lengthdiff = runlength - time_idx; %calculate how many more TRs there are beyond the onset
@@ -286,8 +300,7 @@ else %in debugging stage as of 1/3/2018
                     %in our MVPA analysis
                     
                     %create weighted mean pattern for that onset
-                    for nvoxr = 1:length(rmat_t)
-                        
+                    for nvoxr = 1:length(rmat_t)         
                         tempvals = theseTRWeights2.*rmat_t(nvoxr,time_idx:time_idx+(length(theseTRWeights2)-1));
                         rmat_condensed_t(nvoxr,n) = squeeze(sum(tempvals));
                     end
@@ -363,7 +376,6 @@ for n = 1:length(names)
     end
 end
 
-
 % but some conditions are scrambled faces, not intact. Let's index those
 for n = 1:length(names)
     if strfind(names{n},'_scrambled')%
@@ -372,24 +384,6 @@ for n = 1:length(names)
         scrambled_idx(n)=0;
     end
 end
-
-
-% now index repetition
-% for n = 1:length(names)
-%     if strfind(names{n},'_rep1')%
-%         rep1_idx(n)=1;
-%         rep2_idx(n)=0;
-%
-%     elseif strfind(names{n},'_rep2')%
-%         rep1_idx(n)=0;
-%         rep2_idx(n)=1;
-%
-%     else
-%         %othercond_idx(n) = 1;
-%         fprintf('Error! Neither repetition is represented!\n')
-%         return
-%     end
-% end
 
 %~~~~~~~Find intersections of the instances to examine more specific results
 %scrambled faces
@@ -449,7 +443,7 @@ AA_intact = AA_idx-AA_scrambled;
 %is equivalent to a NaN for your study. Say you are using a mask on "raw"
 %BOLD data that does nothing to account for signal drop-out and extra-brain
 %voxels are zeros instead of NaNs - here we can fix that
-threshpats = 1; % 1 = YES
+threshpats = 0; % 1 = YES
 if threshpats == 1
     thresh = 0.01*mean(mean(rmat_condensed'));%you come up with your scheme - this example will threshold out anything <99% of the average (quite liberal thresholding)
     x1 =[]; %vector of filtered intensity values
@@ -461,7 +455,6 @@ if threshpats == 1
     
     rmat_condensed = rmat_condensed(t1,:);
 end
-
 
 cm = corr(rmat_condensed);
 cm(find(~triu(cm,1))) = NaN; % nan out correlations that are redundant
@@ -581,10 +574,10 @@ meanbetas = nanmean(rmat_condensed(:,:));%get mean beta values from the ROI for 
 % r_ea_betawstab_inc = corr(ea1_ea2_f_actdiff', ea1_ea2_f);
 % r_aa_betawstab_inc = corr(aa1_aa2_f_actdiff', aa1_aa2_f);
 
-%% Plots
 %fisher's z
 %fish = 0.5*log((1+CM2)./(1-CM2))
 
+%% Plots
 %plot matrices of interest
 
 subplot(2,2,1), imagesc(cm);
@@ -602,8 +595,8 @@ title('EA with EA across blocks and runs')
 colormap('hot'); % set the colorscheme
 colorbar; % enable colorbar
 
-subplot(2,2,4), imagesc(cm2(logical(EA_intact),logical(AA_intact)));
-title('EA with AA across blocks and runs')
+subplot(2,2,4), imagesc(cm2(logical(EA_intact),logical(Scene_idx)));
+title('EA with Scene across blocks and runs')
 colormap('hot'); % set the colorscheme
 colorbar; % enable colorbar
 
