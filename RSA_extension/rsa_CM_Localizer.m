@@ -9,14 +9,15 @@ function [] = rsa_CM_Localizer(Sub, Mask, TRsperRun)
 
 %% flags and parameters
 S.TR = 2;
-theseTRWeights = [0 0.25 0.5 0.25 0];
+theseTRWeights = [0 0 .2 .2 .2 .2 .2];%[0 0.25 0.5 0.25 0];
 weights_str = mat2str(theseTRWeights);% assign values to string for custom output file naming
 
 funcftype = '.nii';
 runs_concat = 1; %1 = typical SPM analysis; will have continuous onsets concatenated across runs. 0 = But you might not have bothered creating such a file, or in SST case we are using files from FSL. In this case, the onsets are assumed to "reset" for each run ('raw' unconcatenated onsets)
-use_exist_workspace = 0; %1=yes. Load existing pattern workspaces and onsets files. Saves time, but turn off if want to manually re-do pattern generation.
+use_exist_workspace = 0; %1=yes. Load existing pattern workspaces and onsets files. Saves time, but turn off if want to manually re-do pattern extraction and generation.
 
 gen_onsetsTR = 1; %1=yes. Typically, you'll use an onsets.mat file with tr-by-tr onsets and names (as used for a beta-series). But if you only have a traditional GLM model with one name for multiple onsets, setting this flag to 1 will auto-populate unique but related names (e.g., Face_1; Face_2...)
+runhpfilt = 1;%1=yes. Standard
 runzscore = 1;%1=yes. Standard but controversial preprocessing.
 
 %Subject ID/number
@@ -29,10 +30,10 @@ study_prefix = 'CM';
 
 S.inputformat = 'raw'; % are we working with BOLDs/timeseries ('raw') or with beta maps ('betas')?
 
-S.onsets_filename = [S.subj_id '_localizer_onsets_test'];
+S.onsets_filename = [S.subj_id '_localizer_onsets_test_short'];
 
 %specify preprocessing level of BOLDs
-preproc_lvl = 'a'; % 'a' for slice-time-only, 'u' for realigned-only, 'ua' for realign+unwarped, 'swua' for smoothed, normalized, and... you get the picture. Modify as needed if you changed SPM's prefix append defaults
+preproc_lvl = ''; % 'a' for slice-time-only, 'u' for realigned-only, 'ua' for realign+unwarped, 'swua' for smoothed, normalized, and... you get the picture. Modify as needed if you changed SPM's prefix append defaults
 boldnames = [preproc_lvl 'run']; %name of image files with preprocessing level prefix
 
 ImgDims = 3; %if working with timeseries, it is highly recommended that you use 4D nifti files ('4'). If you have split them out into TR-by-TR, or are working with betas, enter '3'
@@ -75,11 +76,16 @@ if runs_concat == 1
     %load onsets
     load([S.mvpa_dir S.onsets_filename]);
     
+    %ditch unneeded indices. NOTE: this is custom for class example
+    names = names(1:7);
+    onsets = onsets(1:7);
+    durations = durations(1:7);
     %runs = [1 2]; %indicate number of runs and which ones to target with analysis
     
     rmat_condensed = [];
     onsets_TRs = [];
     names_TRs = [];%filled in if gen_onsetsTR == 1
+    runsel_TRs = [];
     
     %before loading and preprocessing all the pattern data, we can see if its
     %already there for analysis
@@ -164,9 +170,22 @@ if runs_concat == 1
                 
             end
             
+            run_sel = cell2mat(run_sel);
             %% optional preprocessing
+            
+            % hp filter the data - recommended
+            if runhpfilt == 1
+                rmat_t = hp_filter(rmat_t,run_sel',100,2)';%2=2s TR
+                
+                %plot for exploration
+                cm_t = corr(rmat_t);
+                subplot(2,1,1), imagesc(cm_t);
+                title('hp_filt corrmat')
+                colormap('hot'); % set the colorscheme
+            end
+            
+            % zscore within runs
             if runzscore == 1
-                run_sel = cell2mat(run_sel);
                 
                 pat_t = [];
                 
@@ -180,9 +199,16 @@ if runs_concat == 1
                 end
                 
                 rmat_t = pat_t;
+                
+                %plot for exploration
+                cm_t2 = corr(rmat_t);
+                subplot(2,1,2), imagesc(cm_t2);
+                title('hp_filt_z corrmat')
+                colormap('hot'); % set the colorscheme
             end
+                        
             %% now compute a mean pattern for __ TRs surrounding the onset
-            
+ 
             for n = 1:length(names)
                 
                 
@@ -197,19 +223,56 @@ if runs_concat == 1
                     %tempvals = [];
                     for tidx = 1:length(time_idx)
                         tempvals = theseTRWeights2.*rmat_t(nvoxr,time_idx(tidx):time_idx(tidx)+(length(theseTRWeights2)-1));
-                        condmat_condensed_t(nvoxr,tidx) = squeeze(sum(tempvals));
+                        condmat_condensed_t{nvoxr,time_idx(tidx)} = squeeze(sum(tempvals));
                     end
                 end
-                rmat_condensed = [rmat_condensed condmat_condensed_t];
+                %rmat_condensed = [rmat_condensed condmat_condensed_t];
                 
-                if gen_onsetsTR == 1
+                if gen_onsetsTR == 1 %if we need to split our names out by individual events
                     for tidx = 1:length(time_idx)
-                        tempnames{tidx} = [names{n} '_' num2str(tidx)];
+                        tempnames{time_idx(tidx)} = [names{n} '_' num2str(tidx)];
+                        temprunsel{time_idx(tidx)} = run_sel(time_idx(tidx));
                     end
                 end
                 
-                names_TRs = [names_TRs tempnames];
+                %runsel_TRs = [runsel_TRs temprunsel];
+                %names_TRs = [names_TRs tempnames];
             end
+            
+            filt = any(~cellfun('isempty', condmat_condensed_t),1);
+            rmat_condensed = cell2mat(condmat_condensed_t(:,filt));
+            runsel_TRs = temprunsel(:,filt);
+            names_TRs = tempnames(:,filt);
+            
+%             for n = 1:length(names)
+%                 
+%                 
+%                 time_idx = floor(onsets{n}/S.TR) + 1;%convert onsets to TRs
+%                 
+%                 onsets_TR{n} = time_idx; %sort(horzcat(onsets_t{n}, onsets_t{n}{idxThisCond}(enoughTRs_h)));%put the onsets for cond{i} into an array,
+%                 
+%                 theseTRWeights2 = theseTRWeights;
+%                 
+%                 %create weighted mean pattern for that onset
+%                 for nvoxr = 1:length(rmat_t)
+%                     %tempvals = [];
+%                     for tidx = 1:length(time_idx)
+%                         tempvals = theseTRWeights2.*rmat_t(nvoxr,time_idx(tidx):time_idx(tidx)+(length(theseTRWeights2)-1));
+%                         condmat_condensed_t(nvoxr,tidx) = squeeze(sum(tempvals));
+%                     end
+%                 end
+%                 rmat_condensed = [rmat_condensed condmat_condensed_t];
+%                 
+%                 if gen_onsetsTR == 1 %if we need to split our names out by individual events
+%                     for tidx = 1:length(time_idx)
+%                         tempnames{tidx} = [names{n} '_' num2str(tidx)];
+%                         temprunsel{tidx} = run_sel(time_idx(tidx));
+%                     end
+%                 end
+%                 
+%                 runsel_TRs = [runsel_TRs temprunsel];
+%                 names_TRs = [names_TRs tempnames];
+%             end
         end
         
         
@@ -347,28 +410,21 @@ for n = 1:length(names)
         Face_idx(n) = 0;
         Scene_idx(n)=0;
         Obj_idx(n)=0;
-        othercond_idx(n) = 0;
-    elseif strfind(names{n},'Face')%
-        EA_idx(n)=0;
-        AA_idx(n)=0;
-        Face_idx(n) = 1;
-        Scene_idx(n)=0;
-        Obj_idx(n)=0;
-        othercond_idx(n) = 0;
+        othercond_idx(n) = 0;       
     elseif strfind(names{n},'Scene')%
         EA_idx(n)=0;
         AA_idx(n)=0;
         Face_idx(n) = 0;
         Scene_idx(n)=1;
         Obj_idx(n)=0;
-        othercond_idx(n) = 0;
+        othercond_idx(n) = 0;       
     elseif strfind(names{n},'Obj')%
         EA_idx(n)=0;
         AA_idx(n)=0;
         Face_idx(n) = 0;
         Scene_idx(n)=0;
         Obj_idx(n)=1;
-        othercond_idx(n) = 0;
+        othercond_idx(n) = 0;       
     else
         othercond_idx(n) = 1;
         %fprintf('Error! None of categories names found for this idx!\n')
@@ -384,6 +440,8 @@ for n = 1:length(names)
         scrambled_idx(n)=0;
     end
 end
+
+scrambled_idx = scrambled_idx(1:length(EA_idx));%ensure this vector doesn't exceed length of face vector
 
 %~~~~~~~Find intersections of the instances to examine more specific results
 %scrambled faces
@@ -425,17 +483,6 @@ AA_intact = AA_idx-AA_scrambled;
 %     disp('Trials from 1st and 2nd do not match');
 %     return
 % end
-
-% create vox x stim matrix of beta values
-% for i=1:length(tmp)
-%
-%     [b,r] = MAP_getROI(maskname, betamaps{i}, 'vox', 0, '');
-%     bmat(:,i) = b{1}; % returns all voxels, whether or not they have NaNs
-%     rmat(:,i) = r; % returns voxels excluding NaNs
-%     meanbetas = nanmean(bmat(:,:));%get mean beta values from the ROI for each regressor
-% end
-
-
 
 %% create correlation matrix
 
@@ -487,6 +534,9 @@ res.EA_w_AA_mean = nanmean(res.EA_w_AA(:));
 res.EA_w_Scene = cm2(logical(EA_intact),logical(Scene_idx));
 res.EA_w_Scene_mean = nanmean(res.EA_w_Scene(:));
 
+%
+%cm_r1=cm(logical(cell2mat(runsel_TRs)==1),logical(cell2mat(runsel_TRs)==1));
+%cm2_r1=cm2(logical(cell2mat(runsel_TRs)==1),logical(cell2mat(runsel_TRs)==1));
 
 % %% stability item/town specific effects
 %
@@ -579,30 +629,100 @@ meanbetas = nanmean(rmat_condensed(:,:));%get mean beta values from the ROI for 
 
 %% Plots
 %plot matrices of interest
-
+figure;
 subplot(2,2,1), imagesc(cm);
 title('Within-cond corrmat')
-colormap('hot'); % set the colorscheme
+colormap('jet'); % set the colorscheme
+caxis([-1 1])
 colorbar; % enable colorbar
 
 subplot(2,2,2), imagesc(cm2);
 title('Overall corrmat')
-colormap('hot'); % set the colorscheme
+colormap('jet'); % set the colorscheme
+caxis([-1 1])
 colorbar; % enable colorbar
 
 subplot(2,2,3), imagesc(cm(logical(EA_intact),logical(EA_intact)));
 title('EA with EA across blocks and runs')
-colormap('hot'); % set the colorscheme
+colormap('jet'); % set the colorscheme
+caxis([-1 1])
 colorbar; % enable colorbar
 
 subplot(2,2,4), imagesc(cm2(logical(EA_intact),logical(Scene_idx)));
 title('EA with Scene across blocks and runs')
-colormap('hot'); % set the colorscheme
+colormap('jet'); % set the colorscheme
+caxis([-1 1])
 colorbar; % enable colorbar
 
 % save plot
 plot_savename = [S.group_mvpa_dir '/Rcorrs_' S.subj_id '_' mask '_' weights_str '_' S.exp_name '_corrmats.png'];
 saveas(gcf,plot_savename);
+
+
+%% hierarchical clustering analysis
+cm3 = corr(rmat_condensed);%generate a corrmat without NaNs
+%cm3_r1=cm3(logical(cell2mat(runsel_TRs)==1),logical(cell2mat(runsel_TRs)==1));
+cm4 = 1-cm3;%generate DISsimilarity matrix - some clustering algorithms assume distance, not proximity, is the significance of the numbers in the matrix
+
+res.cm4=cm4;%store in res structure for posterity
+
+%visualize the dissimilarity matrix
+figure;
+subplot(2,1,1),imagesc(cm4);
+colormap('jet');
+colorbar;
+set(gca, 'YTicklabel', names, 'YTick', [1:length(names)]);
+
+%create vectore of distances between instances in the cm
+distm = pdist(cm4,'correlation');% tell matlab metric is pearson r
+Z1 = linkage(distm,'average');%compute dendrogram, using average distance within clusters for agglomeration
+
+%color code select original classes to help evaluate clustering?
+colorcode = 1;
+if colorcode == 1
+    xz(1:size(names'),1) = {[0 0 0]};%create dendrogram condition colors (default = [0 0 0], black)
+    xz(logical(AA_intact)) = {[1 0 0]};
+    xz(logical(EA_intact)) = {[0 1 0]};
+    xz(logical(Scene_idx)) = {[0 0 1]};
+    xz(logical(Obj_idx)) = {[1 0 1]};
+    %h = cell2mat(userOptions.conditionColours)
+    userOptions.conditionColours = cell2mat(xz);
+end
+
+% compute dendrogram
+subplot(2,1,2),[H_ignore T_ignore labelReordering] = dendrogram(Z1,0,'labels',names,'Orientation','left');%display dendrogram. 0 = show all items in correlation structure (default would limit to 30 clusters)
+
+if colorcode == 1
+    color_t = xz(labelReordering)
+    hold on;
+    x = xlim(gca);
+    for condition = 1:size(cm4,1)%size(squareRDM(cm4), 1)
+        plot(x(1), condition, 'o', 'MarkerFaceColor', color_t{condition, :}, 'MarkerEdgeColor', 'none', 'MarkerSize', 8);
+    end%for:condition
+end
+
+% save plot
+plot_savename = [S.group_mvpa_dir '/Rcorrs_' S.subj_id '_' mask '_' weights_str '_' S.exp_name '_hierarchicalclustering.png'];
+saveas(gcf,plot_savename);
+
+% explor which classes belong to clusters at level __ in the dendrogram
+clustlvl = 3;%define level of dendrogram to inspect. E.g., 3 means the leavel from the top where there are 3 clusters
+cl_content{clustlvl} = cluster(Z1,'maxclust',clustlvl); %what are the items in cluster level 'cutoff'?
+names_cl1 = names(cl_content{clustlvl}==1); % which classes are in cluster 1 at this level of the dendrogram? 
+
+%% examine correlation structure between two specific classes
+testinds = EA_intact+Scene_idx;
+custlbls = names(logical(testinds));
+rmat_condensed_short = rmat_condensed(:,logical(testinds));
+cm_2c = corr(rmat_condensed_short);
+figure;
+imagesc(cm_2c);
+colormap('jet');
+caxis([-1 1]);
+colorbar;
+set(gca, 'XTicklabel', custlbls, 'XTick', [1:length(custlbls)]);
+set(gca, 'YTicklabel', custlbls, 'YTick', [1:length(custlbls)]);
+res.cm_2c = cm_2c;
 
 %% Save data
 savename = [S.group_mvpa_dir '/Rcorrs_' S.subj_id '_' mask '_' weights_str '_' S.exp_name '.mat'];
@@ -612,4 +732,27 @@ save(savename, 'res');
 
 
 
+end
+
+function data = hp_filter(pat,sel,cutoff,tr)
+
+% max(sel) amounts to the maximum number of runs there could
+% be. any values in the runs selector that are <= 0 will be ignored
+% by the for loop. won't mind if you're lacking a particular run in
+% the middle either
+
+nRuns = max(sel);
+data  = pat';	% transposition required for spm_filter
+
+for r = 1:nRuns
+    progress(r,nRuns);
+    this_run = sel==r; % select current run
+    
+    K(r).row = find(this_run == 1);
+    K(r).RT  = tr;
+    K(r).HParam = cutoff;
+    
+    data = spm_filter(K,data);
+    
+end
 end

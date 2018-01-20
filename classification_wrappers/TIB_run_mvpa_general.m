@@ -292,7 +292,7 @@ for b=(1:length(subj_array))
                 [subj results] = cross_validation(subj,S.classifier_pattern,'conds_scrambled', ...
                     S.classSelector, S.classifier_mask,S.class_args, 'perfmet_functs', S.perfmet_functs);
                 
-                %classify with correct (unscrambled) class labels
+            %classify with correct (unscrambled) class labels
             elseif S.scrambleregs == 0
                 if S.class_args.nVox>0 %if we are using data-derived feature selection (e.g. top n voxels) we feed in the mask grp name such that each x-val iteration gets its own, non-biased, masked set of data
                     [subj results] = cross_validation(subj,S.classifier_pattern,'conds', ...
