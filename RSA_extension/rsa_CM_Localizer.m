@@ -25,7 +25,7 @@ par.substr = ['CM' Sub{1}];
 S.subj_id = par.substr;
 
 mask = Mask;
-S.exp_name = 'CM_Localizer';
+S.exp_name = 'CM_localizer';
 study_prefix = 'CM';
 
 S.inputformat = 'raw'; % are we working with BOLDs/timeseries ('raw') or with beta maps ('betas')?
