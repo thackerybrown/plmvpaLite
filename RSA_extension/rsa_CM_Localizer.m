@@ -18,7 +18,7 @@ use_exist_workspace = 0; %1=yes. Load existing pattern workspaces and onsets fil
 
 gen_onsetsTR = 1; %1=yes. Typically, you'll use an onsets.mat file with tr-by-tr onsets and names (as used for a beta-series). But if you only have a traditional GLM model with one name for multiple onsets, setting this flag to 1 will auto-populate unique but related names (e.g., Face_1; Face_2...)
 runhpfilt = 1;%1=yes. Standard
-runzscore = 1;%1=yes. Standard but controversial preprocessing.
+runzscore = 0;%1=yes. Standard but controversial preprocessing.
 
 %Subject ID/number
 par.substr = ['CM' Sub{1}];
@@ -28,7 +28,7 @@ mask = Mask;
 S.exp_name = 'CM_localizer';
 study_prefix = 'CM';
 
-S.inputformat = 'betas';%'raw'; % are we working with BOLDs/timeseries ('raw') or with beta maps ('betas')?
+S.inputformat = 'raw'; % are we working with BOLDs/timeseries ('raw') or with beta maps ('betas')?
 
 S.onsets_filename = [S.subj_id '_localizer_onsets_test_short'];
 
@@ -37,8 +37,8 @@ preproc_lvl = ''; % 'a' for slice-time-only, 'u' for realigned-only, 'ua' for re
 boldnames = [preproc_lvl 'run']; %name of image files with preprocessing level prefix
 
 %specify beta filename unique identifiers (often simply 'beta')
-betanames = 'event'; %name shared across image files to help ensure only those are read. For LSS, often code renames betas according to conditions and events, so this could be set to read in only a specific condition type, or to load in all events ('event' - all patterns as you normally would)
-LStype = 'LSS'; %LSS or LSA will divert code to different accordingly named beta folders
+betanames = 'beta'; %name shared across image files to help ensure only those are read. For LSS, often code renames betas according to conditions and events, so this could be set to read in only a specific condition type, or to load in all events ('event' - all patterns as you normally would)
+LStype = 'LSA'; %LSS or LSA will divert code to different accordingly named beta folders
 
 ImgDims = 3; %if working with timeseries, it is highly recommended that you use 4D nifti files ('4'). If you have split them out into TR-by-TR, or are working with betas, enter '3'
 
@@ -462,6 +462,8 @@ for n = 1:length(names)
     end
 end
 
+run1s = logical(cell2mat(runsel_TRs)==1);
+
 % but some conditions are scrambled faces, not intact. Let's index those
 for n = 1:length(names)
     if strfind(names{n},'_scrambled')%
@@ -564,6 +566,8 @@ res.EA_w_AA_mean = nanmean(res.EA_w_AA(:));
 res.EA_w_Scene = cm2(logical(EA_intact),logical(Scene_idx));
 res.EA_w_Scene_mean = nanmean(res.EA_w_Scene(:));
 
+res.EA_w_Obj = cm2(logical(EA_intact),logical(Obj_idx));
+res.EA_w_Obj_mean = nanmean(res.EA_w_Obj(:));
 %
 %cm_r1=cm(logical(cell2mat(runsel_TRs)==1),logical(cell2mat(runsel_TRs)==1));
 %cm2_r1=cm2(logical(cell2mat(runsel_TRs)==1),logical(cell2mat(runsel_TRs)==1));
@@ -661,27 +665,27 @@ meanbetas = nanmean(rmat_condensed(:,:));%get mean activity values from the ROI 
 %plot matrices of interest
 figure;
 subplot(2,2,1), imagesc(cm);
-title('Within-cond corrmat')
+title('Within-cond corrmat');
 colormap('jet'); % set the colorscheme
-caxis([-1 1])
+caxis([-1 1]);
 colorbar; % enable colorbar
 
 subplot(2,2,2), imagesc(cm2);
-title('Overall corrmat')
+title('Overall corrmat');
 colormap('jet'); % set the colorscheme
-caxis([-1 1])
+caxis([-1 1]);
 colorbar; % enable colorbar
 
 subplot(2,2,3), imagesc(cm(logical(EA_intact),logical(EA_intact)));
-title('EA with EA across blocks and runs')
+title('EA with EA across blocks and runs');
 colormap('jet'); % set the colorscheme
-caxis([-1 1])
+caxis([-1 1]);
 colorbar; % enable colorbar
 
 subplot(2,2,4), imagesc(cm2(logical(EA_intact),logical(Scene_idx)));
-title('EA with Scene across blocks and runs')
+title('EA with Scene across blocks and runs');
 colormap('jet'); % set the colorscheme
-caxis([-1 1])
+caxis([-1 1]);
 colorbar; % enable colorbar
 
 % save plot
@@ -723,7 +727,7 @@ end
 subplot(2,1,2),[H_ignore T_ignore labelReordering] = dendrogram(Z1,0,'labels',names,'Orientation','left');%display dendrogram. 0 = show all items in correlation structure (default would limit to 30 clusters)
 
 if colorcode == 1
-    color_t = xz(labelReordering)
+    color_t = xz(labelReordering);
     hold on;
     x = xlim(gca);
     for condition = 1:size(cm4,1)%size(squareRDM(cm4), 1)
@@ -754,13 +758,12 @@ set(gca, 'XTicklabel', custlbls, 'XTick', [1:length(custlbls)]);
 set(gca, 'YTicklabel', custlbls, 'YTick', [1:length(custlbls)]);
 res.cm_2c = cm_2c;
 
+%% Test models of similarity structure
+modfits = CMmodelcomparison(cm2,EA_intact,AA_intact,Obj_idx,othercond_idx,Scene_idx,scrambled_idx);
+
 %% Save data
 savename = [S.group_mvpa_dir '/Rcorrs_' S.subj_id '_' mask '_' weights_str '_' S.exp_name '.mat'];
 save(savename, 'res');
-
-
-
-
 
 end
 
@@ -785,4 +788,253 @@ for r = 1:nRuns
     data = spm_filter(K,data);
     
 end
+end
+
+function modfits = CMmodelcomparison(cm,idx1,idx2,idx3,idx4,idx5,idx6)
+%% construct Four sample CM models 
+%normally, these would be built from some theoretical or computational models of how information is organized in the
+%brain's perceptual, mnemonic, etc, systems
+
+cm2 = cm;
+EA_intact = idx1;
+AA_intact = idx2;
+Obj_idx = idx3;
+othercond_idx = idx4;
+Scene_idx = idx5;
+scrambled_idx = idx6;
+
+cm2_testo1 = cm2;% model 1 - "all faces and objects are "items" to this area - scenes are scenes, and distinct from objects"
+cm2_testo1(logical(EA_intact),logical(EA_intact))=0.5;
+cm2_testo1(logical(AA_intact),logical(AA_intact))=0.5;
+cm2_testo1(logical(Obj_idx),logical(Obj_idx))=0.5;
+cm2_testo1(logical(EA_intact),logical(AA_intact))=0.5;
+cm2_testo1(logical(EA_intact),logical(Obj_idx))=0.5;
+cm2_testo1(logical(AA_intact),logical(Obj_idx))=0.5;
+cm2_testo1(logical(AA_intact),logical(EA_intact))=0.5;
+cm2_testo1(logical(Obj_idx),logical(EA_intact))=0.5;
+cm2_testo1(logical(Obj_idx),logical(AA_intact))=0.5;
+
+cm2_testo1(logical(othercond_idx),logical(othercond_idx))=0.5;
+
+cm2_testo1(logical(othercond_idx),logical(EA_intact))=0.5;
+cm2_testo1(logical(othercond_idx),logical(AA_intact))=0.5;
+cm2_testo1(logical(othercond_idx),logical(Obj_idx))=0.5;
+cm2_testo1(logical(EA_intact),logical(othercond_idx))=0.5;
+cm2_testo1(logical(AA_intact),logical(othercond_idx))=0.5;
+cm2_testo1(logical(Obj_idx),logical(othercond_idx))=0.5;
+
+cm2_testo1(logical(Scene_idx),logical(Scene_idx))=0.5;
+
+cm2_testo1(logical(EA_intact),logical(Scene_idx))=0.1;
+cm2_testo1(logical(AA_intact),logical(Scene_idx))=0.1;
+cm2_testo1(logical(Obj_idx),logical(Scene_idx))=0.1;
+cm2_testo1(logical(Scene_idx),logical(EA_intact))=0.1;
+cm2_testo1(logical(Scene_idx),logical(AA_intact))=0.1;
+cm2_testo1(logical(Scene_idx),logical(Obj_idx))=0.1;
+cm2_testo1(logical(othercond_idx),logical(Scene_idx))=0.1;
+cm2_testo1(logical(Scene_idx),logical(othercond_idx))=0.1;
+
+cm2_testo1(logical(scrambled_idx),logical(scrambled_idx))=0.1;
+
+cm2_testo1(logical(Scene_idx),logical(scrambled_idx))=0.1;
+cm2_testo1(logical(Obj_idx),logical(scrambled_idx))=0.1;
+cm2_testo1(logical(EA_intact),logical(scrambled_idx))=0.1;
+cm2_testo1(logical(AA_intact),logical(scrambled_idx))=0.1;
+cm2_testo1(logical(othercond_idx),logical(scrambled_idx))=0.1;
+cm2_testo1(logical(scrambled_idx),logical(Scene_idx))=0.1;
+cm2_testo1(logical(scrambled_idx),logical(Obj_idx))=0.1;
+cm2_testo1(logical(scrambled_idx),logical(EA_intact))=0.1;
+cm2_testo1(logical(scrambled_idx),logical(AA_intact))=0.1;
+cm2_testo1(logical(scrambled_idx),logical(othercond_idx))=0.1;
+%set diagonal back to NaN
+cm2_testo1(logical(eye(size(cm2_testo1)))) = NaN;
+
+cm2_testo2 = cm2;% model 2 - "faces > bodies > inanimate objects gradient - scenes are scenes, and distinct from items"
+cm2_testo2(logical(EA_intact),logical(EA_intact))=0.5;
+cm2_testo2(logical(AA_intact),logical(AA_intact))=0.5;
+cm2_testo2(logical(Obj_idx),logical(Obj_idx))=0.5;
+cm2_testo2(logical(EA_intact),logical(AA_intact))=0.5;
+cm2_testo2(logical(EA_intact),logical(Obj_idx))=0.25;
+cm2_testo2(logical(AA_intact),logical(Obj_idx))=0.25;
+cm2_testo2(logical(AA_intact),logical(EA_intact))=0.5;
+cm2_testo2(logical(Obj_idx),logical(EA_intact))=0.25;
+cm2_testo2(logical(Obj_idx),logical(AA_intact))=0.25;
+
+cm2_testo2(logical(othercond_idx),logical(othercond_idx))=0.5;
+
+cm2_testo2(logical(othercond_idx),logical(EA_intact))=0.35;
+cm2_testo2(logical(othercond_idx),logical(AA_intact))=0.35;
+cm2_testo2(logical(othercond_idx),logical(Obj_idx))=0.25;
+cm2_testo2(logical(EA_intact),logical(othercond_idx))=0.35;
+cm2_testo2(logical(AA_intact),logical(othercond_idx))=0.35;
+cm2_testo2(logical(Obj_idx),logical(othercond_idx))=0.25;
+
+cm2_testo2(logical(Scene_idx),logical(Scene_idx))=0.5;
+
+cm2_testo2(logical(EA_intact),logical(Scene_idx))=0.1;
+cm2_testo2(logical(AA_intact),logical(Scene_idx))=0.1;
+cm2_testo2(logical(Obj_idx),logical(Scene_idx))=0.15;
+cm2_testo2(logical(Scene_idx),logical(EA_intact))=0.1;
+cm2_testo2(logical(Scene_idx),logical(AA_intact))=0.1;
+cm2_testo2(logical(Scene_idx),logical(Obj_idx))=0.15;
+cm2_testo2(logical(othercond_idx),logical(Scene_idx))=0.1;
+cm2_testo2(logical(Scene_idx),logical(othercond_idx))=0.1;
+
+cm2_testo2(logical(scrambled_idx),logical(scrambled_idx))=0.1;
+
+cm2_testo2(logical(Scene_idx),logical(scrambled_idx))=0.1;
+cm2_testo2(logical(Obj_idx),logical(scrambled_idx))=0.1;
+cm2_testo2(logical(EA_intact),logical(scrambled_idx))=0.1;
+cm2_testo2(logical(AA_intact),logical(scrambled_idx))=0.1;
+cm2_testo2(logical(othercond_idx),logical(scrambled_idx))=0.1;
+cm2_testo2(logical(scrambled_idx),logical(Scene_idx))=0.1;
+cm2_testo2(logical(scrambled_idx),logical(Obj_idx))=0.1;
+cm2_testo2(logical(scrambled_idx),logical(EA_intact))=0.1;
+cm2_testo2(logical(scrambled_idx),logical(AA_intact))=0.1;
+cm2_testo2(logical(scrambled_idx),logical(othercond_idx))=0.1;
+%set diagonal back to NaN
+cm2_testo2(logical(eye(size(cm2_testo2)))) = NaN;
+
+
+%compare with vectorized unique correlations of cm2
+truem = cm2(triu(true(size(cm2)),1));
+testm1 = cm2_testo1(triu(true(size(cm2_testo1)),1));
+[modfits.r_trvste1 modfits.p_trvste1] = corr(truem,testm1,'Type','Spearman');
+
+testm2 = cm2_testo2(triu(true(size(cm2_testo2)),1));
+[modfits.r_trvste2 modfits.p_trvste2] = corr(truem,testm2,'Type','Spearman');
+%at the group level, you can use statistics like Wilcoxin signed-rank test
+%to test for significance of specific model-CM mappings
+
+%% create variant with two categorical predictors for "encoding" regression test (see Mur et al., 2013)
+%construct two sample CM models - normally, these would be built from some
+%theoretical or computational models of how information is organized in the
+%brain's perceptual, mnemonic, etc, systems
+cm2_testo3 = cm2;% model 3 - categorical animate-inanimate
+cm2_testo3(logical(EA_intact),logical(EA_intact))=1;
+cm2_testo3(logical(AA_intact),logical(AA_intact))=1;
+cm2_testo3(logical(Obj_idx),logical(Obj_idx))=1;
+cm2_testo3(logical(EA_intact),logical(AA_intact))=1;
+cm2_testo3(logical(EA_intact),logical(Obj_idx))=-1;
+cm2_testo3(logical(AA_intact),logical(Obj_idx))=-1;
+cm2_testo3(logical(AA_intact),logical(EA_intact))=1;
+cm2_testo3(logical(Obj_idx),logical(EA_intact))=-1;
+cm2_testo3(logical(Obj_idx),logical(AA_intact))=-1;
+
+cm2_testo3(logical(othercond_idx),logical(othercond_idx))=1;
+
+cm2_testo3(logical(othercond_idx),logical(EA_intact))=1;
+cm2_testo3(logical(othercond_idx),logical(AA_intact))=1;
+cm2_testo3(logical(othercond_idx),logical(Obj_idx))=-1;
+cm2_testo3(logical(EA_intact),logical(othercond_idx))=1;
+cm2_testo3(logical(AA_intact),logical(othercond_idx))=1;
+cm2_testo3(logical(Obj_idx),logical(othercond_idx))=-1;
+
+cm2_testo3(logical(Scene_idx),logical(Scene_idx))=1;
+
+cm2_testo3(logical(EA_intact),logical(Scene_idx))=-1;
+cm2_testo3(logical(AA_intact),logical(Scene_idx))=-1;
+cm2_testo3(logical(Obj_idx),logical(Scene_idx))=1;
+cm2_testo3(logical(Scene_idx),logical(EA_intact))=-1;
+cm2_testo3(logical(Scene_idx),logical(AA_intact))=-1;
+cm2_testo3(logical(Scene_idx),logical(Obj_idx))=1;
+cm2_testo3(logical(othercond_idx),logical(Scene_idx))=-1;
+cm2_testo3(logical(Scene_idx),logical(othercond_idx))=-1;
+
+cm2_testo3(logical(scrambled_idx),logical(scrambled_idx))=1;
+
+cm2_testo3(logical(Scene_idx),logical(scrambled_idx))=0;
+cm2_testo3(logical(Obj_idx),logical(scrambled_idx))=0;
+cm2_testo3(logical(EA_intact),logical(scrambled_idx))=0;
+cm2_testo3(logical(AA_intact),logical(scrambled_idx))=0;
+cm2_testo3(logical(othercond_idx),logical(scrambled_idx))=0;
+cm2_testo3(logical(scrambled_idx),logical(Scene_idx))=0;
+cm2_testo3(logical(scrambled_idx),logical(Obj_idx))=0;
+cm2_testo3(logical(scrambled_idx),logical(EA_intact))=0;
+cm2_testo3(logical(scrambled_idx),logical(AA_intact))=0;
+cm2_testo3(logical(scrambled_idx),logical(othercond_idx))=0;
+%set diagonal back to NaN
+cm2_testo3(logical(eye(size(cm2_testo3)))) = NaN;
+
+
+cm2_testo4 = cm2;% model 4 - categorical scene-"item" (face,body,object)
+cm2_testo4(logical(EA_intact),logical(EA_intact))=1;
+cm2_testo4(logical(AA_intact),logical(AA_intact))=1;
+cm2_testo4(logical(Obj_idx),logical(Obj_idx))=1;
+cm2_testo4(logical(EA_intact),logical(AA_intact))=1;
+cm2_testo4(logical(EA_intact),logical(Obj_idx))=1;
+cm2_testo4(logical(AA_intact),logical(Obj_idx))=1;
+cm2_testo4(logical(AA_intact),logical(EA_intact))=1;
+cm2_testo4(logical(Obj_idx),logical(EA_intact))=1;
+cm2_testo4(logical(Obj_idx),logical(AA_intact))=1;
+
+cm2_testo4(logical(othercond_idx),logical(othercond_idx))=1;
+
+cm2_testo4(logical(othercond_idx),logical(EA_intact))=1;
+cm2_testo4(logical(othercond_idx),logical(AA_intact))=1;
+cm2_testo4(logical(othercond_idx),logical(Obj_idx))=1;
+cm2_testo4(logical(EA_intact),logical(othercond_idx))=1;
+cm2_testo4(logical(AA_intact),logical(othercond_idx))=1;
+cm2_testo4(logical(Obj_idx),logical(othercond_idx))=1;
+
+cm2_testo4(logical(Scene_idx),logical(Scene_idx))=1;
+
+cm2_testo4(logical(EA_intact),logical(Scene_idx))=-1;
+cm2_testo4(logical(AA_intact),logical(Scene_idx))=-1;
+cm2_testo4(logical(Obj_idx),logical(Scene_idx))=-1;
+cm2_testo4(logical(Scene_idx),logical(EA_intact))=-1;
+cm2_testo4(logical(Scene_idx),logical(AA_intact))=-1;
+cm2_testo4(logical(Scene_idx),logical(Obj_idx))=-1;
+cm2_testo4(logical(othercond_idx),logical(Scene_idx))=-1;
+cm2_testo4(logical(Scene_idx),logical(othercond_idx))=-1;
+
+cm2_testo4(logical(scrambled_idx),logical(scrambled_idx))=1;
+
+cm2_testo4(logical(Scene_idx),logical(scrambled_idx))=0;
+cm2_testo4(logical(Obj_idx),logical(scrambled_idx))=0;
+cm2_testo4(logical(EA_intact),logical(scrambled_idx))=0;
+cm2_testo4(logical(AA_intact),logical(scrambled_idx))=0;
+cm2_testo4(logical(othercond_idx),logical(scrambled_idx))=0;
+cm2_testo4(logical(scrambled_idx),logical(Scene_idx))=0;
+cm2_testo4(logical(scrambled_idx),logical(Obj_idx))=0;
+cm2_testo4(logical(scrambled_idx),logical(EA_intact))=0;
+cm2_testo4(logical(scrambled_idx),logical(AA_intact))=0;
+cm2_testo4(logical(scrambled_idx),logical(othercond_idx))=0;
+%set diagonal back to NaN
+cm2_testo4(logical(eye(size(cm2_testo3)))) = NaN;
+
+testm3 = cm2_testo3(triu(true(size(cm2_testo3)),1));
+testm4 = cm2_testo4(triu(true(size(cm2_testo4)),1));
+
+modpredicts = horzcat(testm3,testm4);
+%add constant term to modpredicts for valid F and P stats
+modpredicts(:,3)=1;%matlab assumes there's a constant column of 1
+
+[modfits.b,bint,r,rint,modfits.stats] = regress(truem,modpredicts);%for this example, run a simple multiple regression.
+
+figure;
+subplot(2,2,1), imagesc(cm2_testo1);
+title('complex model1')
+colormap('jet'); % set the colorscheme
+caxis([-1 1])
+colorbar; % enable colorbar
+
+subplot(2,2,2), imagesc(cm2_testo2);
+title('complex model2')
+colormap('jet'); % set the colorscheme
+caxis([-1 1])
+colorbar; % enable colorbar
+
+subplot(2,2,3), imagesc(cm2_testo3);
+title('animate-inanimate')
+colormap('jet'); % set the colorscheme
+caxis([-1 1])
+colorbar; % enable colorbar
+
+subplot(2,2,4), imagesc(cm2_testo4);
+title('item-scene')
+colormap('jet'); % set the colorscheme
+caxis([-1 1])
+colorbar; % enable colorbar
+
 end
