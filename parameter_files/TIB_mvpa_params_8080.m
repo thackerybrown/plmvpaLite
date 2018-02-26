@@ -482,8 +482,8 @@ end
 %% Volume Parameters
 S.vol_info = spm_vol(fullfile(par.funcdir, 'run_01', 'run_01_006.nii')); %get functional data resolution info for spm .img writing
 
-S.roi_name = 'HVisCtx_1.nii';
-%S.roi_name = 'NativeGM_BOLDres.nii';
+%S.roi_name = 'HVisCtx_1.nii';
+S.roi_name = 'NativeGM_BOLDres.nii';
 S.roi_file = [S.expt_dir S.subj_id '/Masks/' S.roi_name]; %this is the large-scale ROI (could be wholebrain) that workspace info is calculated for. Saves time to have this volume include any sub-volumes you are interested in (e.g. MTL if you plan on looking in hippo and phc separately)
 
 %Apply another mask to the primary data loaded in the workspace. [] = no secondary mask.
@@ -613,7 +613,7 @@ S.nFolds = 24; % number of cross validation iterations - only used for nFold (as
 
 S.class_args.nVox = 0; % number of voxels to select with feature selection e.g. [1000 5000 10000]
 S.class_args.fseltype = 'topn'; % feature selection format: top N vox (topn) or random N vox (rand)?
-S.class_args.libLin = '-q -s 0 -B 1'; %arguments for liblinear
+S.class_args.libLin = '-q -s 0 -B 1'; %arguments for liblinear; -s 0 = L2; -s 6 = L1
 S.class_args.libsvm = '-q -s 0 -t 2 -d 3'; % arguments for libsvm
 S.class_args.constant = true; % include a constant term?
 S.class_args.prefitWeights = true;
@@ -621,6 +621,6 @@ S.class_args.chooseOptimalPenalty = 0; % 1 = yes. cycle through cost parameters 
 S.class_args.penaltyRange = [.001 .005 .01 .05 .1 .5 1 5 10 50 100 500 1000 50000]; % a vector "[]" of cost parameters to cycle through
 S.class_args.radialBasisSelection = [];%[.00001 .0001 .001 .01 .1 1 10];
 S.class_args.nFoldsPenaltySelection = 10; % number of cross validation folds for penalty parameter selection.
-S.class_args.penalty = 0.000001; %uncomment if not using optimal penalty. Typical value is 1. If using sample data provided with plmvpaLite, start with 0.000001 to see how minimal regularization harms performance.
+S.class_args.penalty = 0.0000001; %uncomment if not using optimal penalty. Typical value is 1. If using sample data provided with plmvpaLite, start with 0.000001 to see how minimal regularization harms performance.
 %establishment
 end

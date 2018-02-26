@@ -18,7 +18,7 @@ use_exist_workspace = 0; %1=yes. Load existing pattern workspaces and onsets fil
 
 gen_onsetsTR = 1; %1=yes. Typically, you'll use an onsets.mat file with tr-by-tr onsets and names (as used for a beta-series). But if you only have a traditional GLM model with one name for multiple onsets, setting this flag to 1 will auto-populate unique but related names (e.g., Face_1; Face_2...)
 runhpfilt = 1;%1=yes. Standard
-runzscore = 0;%1=yes. Standard but controversial preprocessing.
+runzscore = 1;%1=yes. Standard but controversial preprocessing.
 
 %Subject ID/number
 par.substr = ['CM' Sub{1}];
