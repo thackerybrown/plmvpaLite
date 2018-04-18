@@ -119,7 +119,7 @@ if ~exist('mvpa_workspace')
     % clean up workspace
     subj = remove_mat(subj,'pattern','spiral_d_hp');
     
-    save_cmd = ['save ' subj_id '_spiral_d_hp_z_' roi_file(1:end-4) '_' datetime '.mat'];
+    save_cmd = ['save ' subj_id '_spiral_d_hp_z_' roi_file(1:end-4) '_' mvpa_datetime '.mat'];
     eval(save_cmd); 
 
 else
@@ -282,9 +282,9 @@ if generate_importance_maps == 1;  % NO ANOVA VERSION
         immap1 = immap1*1000;
         immap2 = immap2*1000;       
     
-    vol_info.fname = [condnames{1} '_no_anova_' datetime '.img'];
+    vol_info.fname = [condnames{1} '_no_anova_' mvpa_datetime '.img'];
     spm_write_vol(vol_info,immap1);
-    vol_info.fname = [condnames{2} '_no_anova_' datetime '.img'];
+    vol_info.fname = [condnames{2} '_no_anova_' mvpa_datetime '.img'];
     spm_write_vol(vol_info,immap2);
 end
     

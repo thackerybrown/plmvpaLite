@@ -62,7 +62,7 @@ if exist_objfield(subj,'pattern',patname,'movehd')
   return
 end
 
-dt = datetime(true);
+dt = mvpa_datetime(true); %patched for post-2013
 
 % Won't overwrite an existing file of same name
 pathfilename = sprintf('%s/%s_%s',args.subdir,patname,dt);

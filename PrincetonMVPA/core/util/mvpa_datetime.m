@@ -1,8 +1,8 @@
-function [dt] = datetime(seconds)
+function [dt] = mvpa_datetime(seconds)
 
 % Spits out the date and time in yymmdd_HHMM format
 %
-% [dt] = datetime([seconds])
+% [dt] = mvpa_datetime([seconds]) %patched for post-2013
 %
 % The advantage of this is that alphabetic order is also
 % chronological).

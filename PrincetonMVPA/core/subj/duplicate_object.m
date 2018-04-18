@@ -75,7 +75,7 @@ whole_obj.header.history = {};
 % structure because of a weird matlab syntax thing to do with
 % creating empty structs. there should still only be one 'created'
 % structure
-whole_obj.created.datetime = datetime(true);
+whole_obj.created.mvpa_datetime = mvpa_datetime(true); %patched for post-2013
 whole_obj.last_modified = [];
 if ~args.transfer_group_name
   whole_obj.group_name = '';

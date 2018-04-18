@@ -342,7 +342,7 @@ for b=(1:length(subj_array))
             %         res.subj{b}.penalty(1).nVox(1).weights(1).S = S;
             %         res.subjArray = subj_array;
             
-            save (fullfile(S.group_mvpa_dir, S.saveName), 'res', '-v7.3');
+            save (fullfile(S.group_mvpa_dir, S.saveName), 'res', '-v7.3'); % Generates save file for each sub
             
             % display time classification pass took.
             time2finish = toc/60;

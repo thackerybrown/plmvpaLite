@@ -47,7 +47,7 @@ for o=1:nObjs
   
   % store history of how this came to be
   created = [];
-  created.datetime = datetime(true);
+  created.mvpa_datetime = mvpa_datetime(true); %patched for post-2013
   created.dbstack = dbstack;
   created.function = mfilename;
   created.old_groupname = old_groupname;

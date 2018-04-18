@@ -172,7 +172,7 @@ if ~exist('mvpa_workspace')
     % clean up workspace
     subj = remove_mat(subj,'pattern','spiral_d_hp');
     
-    %save_cmd = ['save ' subj_id '_spiral_d_hp_z_' roi_file(1:end-4) '_' datetime '.mat'];
+    %save_cmd = ['save ' subj_id '_spiral_d_hp_z_' roi_file(1:end-4) '_' mvpa_datetime '.mat'];
     %eval(save_cmd); 
 
 else

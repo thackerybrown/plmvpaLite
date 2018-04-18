@@ -71,7 +71,7 @@ obj.matsize = size([]);
 obj.group_name = '';
 obj.derived_from = '';
 obj.header.description = '';
-obj.created.datetime = datetime(true);
+obj.created.mvpa_datetime = mvpa_datetime(true); %patched for post-2013
 obj.created.dbstack = dbstack;
 
 % Deal with particular fields that are specific to different types

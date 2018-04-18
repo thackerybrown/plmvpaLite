@@ -53,7 +53,7 @@ for b=subj_arr
         [subj] = JR_mvpa_load_and_preprocess_raw_data(subj_id, exp_name, roi_name, roi_file, raw_filenames, num_runs, num_TP_per_run);
 
         if flags.save_workspace == 1
-            save_cmd = ['save ' subj_id '_' roi_name '_8mm_smoothing_' datetime '.mat'];
+            save_cmd = ['save ' subj_id '_' roi_name '_8mm_smoothing_' mvpa_datetime '.mat'];
             eval(save_cmd);
         end
     else

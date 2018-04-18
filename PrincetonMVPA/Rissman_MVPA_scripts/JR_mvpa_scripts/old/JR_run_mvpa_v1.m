@@ -287,9 +287,9 @@ if generate_importance_maps == 1;
     immap1_avg = immap1./composite_mask * 1000;  % divide by number of observations contributing to each sum (to get avg) and multiply by 1000 for scaling
     immap2_avg = immap2./composite_mask * 1000;  % divide by number of observations contributing to each sum (to get avg) and multiply by 1000 for scaling
     
-    vol_info.fname = [condnames{1} '_p' num2str(anova_p_thresh) '_' datetime '.img'];
+    vol_info.fname = [condnames{1} '_p' num2str(anova_p_thresh) '_' mvpa_datetime '.img'];
     spm_write_vol(vol_info,immap1_avg);
-    vol_info.fname = [condnames{2} '_p' num2str(anova_p_thresh) '_' datetime '.img'];
+    vol_info.fname = [condnames{2} '_p' num2str(anova_p_thresh) '_' mvpa_datetime '.img'];
     spm_write_vol(vol_info,immap2_avg);
 end
     

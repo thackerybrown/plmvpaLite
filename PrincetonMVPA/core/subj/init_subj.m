@@ -37,7 +37,7 @@ function [subj] = init_subj(exp_name,id,varargin)
 
 
 version = 3;
-created = datetime(true);
+created = mvpa_datetime(true); %patched for post-2013
 
 defaults.subdir = sprintf('%s_%s_%s',exp_name,id,created);
 defaults.username = '';
