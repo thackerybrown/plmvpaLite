@@ -1,4 +1,4 @@
-function [res, results]= TIB_run_mvpa_general(subj_array, task, TRsperRun, studyName)
+function [res, results]= TIB_run_mvpa_general_sst(subj_array, task, TRsperRun, studyName)
 
 
 %example call - TIB_run_mvpa_general({'001'},'CM_localizer',{[114,114]},'8080test')
@@ -23,12 +23,12 @@ for b=(1:length(subj_array))
     %% load general parameter information
     
     %[S idxTr idxTe par] = TIB_mvpa_params_betas(subj_array(b), task, TRsperRun);%runs with Circmaze data
-    [S idxTr idxTe par] = TIB_mvpa_params_8080(subj_array(b), task, TRsperRun{b}, 'raw');%runs with CM localizer data.
-    %[S idxTr idxTe par] = TIB_mvpa_params_8080_pseudo(subj_array(b), task, TRsperRun{b}, 'raw');%runs with pseudodata
+    %[S idxTr idxTe par] = TIB_mvpa_params_8080(subj_array(b), task, TRsperRun{b}, 'raw');%runs with CM localizer data.
+    [S idxTr idxTe par] = TIB_mvpa_params_SST(subj_array(b), task, TRsperRun{b}, 'raw');%runs with pseudodata
     
     S.idxTr = idxTr;
     S.idxTe = idxTe;
-    S.saveName = [studyName '_' S.nwayclass 'way_' S.xvaltype '_' S.subj_id];%set name for the .mat results and data log file. Will contain all the goodies for analysis.
+    S.saveName = [studyName '_' S.nwayclass 'way_' S.xvaltype '_000000000025525_ffrt_' S.subj_id];%set name for the .mat results and data log file. Will contain all the goodies for analysis.
     S.saveName2 = [studyName '_' S.nwayclass 'way_MeanActivity' S.subj_id];
     
     S.subj_array = subj_array; %subjects, input to function at the "call". put in as strings of subject numbers - e.g. '12'.

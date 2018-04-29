@@ -62,8 +62,8 @@ if length(choice_set) == 2
                 if strcmp(in_args.classType,'libLin')
                     trainOpts_orig = in_args.libLin ;
                     trainOptsOptimize = [trainOpts_orig ' -c ' num2str(l)];
-                    m = ll_train(thisChoice, sparse(thisV), trainOptsOptimize);%NOTE: changed this from "train(...)" because I needed to refer to mac-friendly compiled files Alan put together for Valerie
-                    [theseLabels,~]=ll_predict(choice(theseOmitted), sparse(v(theseOmitted,:)), m);%NOTE: changed this from "predict(...)" because I needed to refer to mac-friendly compiled files Alan put together for Valerie
+                    m = train(thisChoice, sparse(thisV), trainOptsOptimize);%NOTE: changed this from "ll_train(...)" 
+                    [theseLabels,~]=predict(choice(theseOmitted), sparse(v(theseOmitted,:)), m);%NOTE: changed this from "ll_predict(...)"
                 elseif strcmp(in_args.classType,'svm')
                     trainOpts_orig = in_args.libsvm ;
                     trainOptsOptimize = [trainOpts_orig ' -c ' num2str(l) ' -r ' num2str(thisR)];
