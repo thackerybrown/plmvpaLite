@@ -490,7 +490,7 @@ if S.existpatmat==1
   S.vol_info = 'NA';
   S.roi_name = 'NA'
   S.roi_file = 'NA';
-  S.secondaryMask = 'NA';
+  S.secondaryMask = [];
 else
 S.vol_info = spm_vol(fullfile(par.funcdir, 'run_01', 'run_01_006.nii')); %get functional data resolution info for spm .img writing
 
