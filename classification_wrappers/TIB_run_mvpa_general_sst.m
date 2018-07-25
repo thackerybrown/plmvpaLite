@@ -28,7 +28,11 @@ for b=(1:length(subj_array))
     
     S.idxTr = idxTr;
     S.idxTe = idxTe;
+<<<<<<< HEAD
     S.saveName = [studyName '_' S.nwayclass 'way_' S.xvaltype '_000000000025525_ffrt_' S.subj_id];%set name for the .mat results and data log file. Will contain all the goodies for analysis.
+=======
+    S.saveName = [studyName '_' S.nwayclass 'way_' S.xvaltype '_025525_fta_' S.subj_id];%set name for the .mat results and data log file. Will contain all the goodies for analysis.
+>>>>>>> e1aadfcef8c293b71be4cca85320c68aa1731468
     S.saveName2 = [studyName '_' S.nwayclass 'way_MeanActivity' S.subj_id];
     
     S.subj_array = subj_array; %subjects, input to function at the "call". put in as strings of subject numbers - e.g. '12'.
@@ -342,7 +346,11 @@ for b=(1:length(subj_array))
             %         res.subj{b}.penalty(1).nVox(1).weights(1).S = S;
             %         res.subjArray = subj_array;
             
+<<<<<<< HEAD
             save (fullfile(S.group_mvpa_dir, S.saveName), 'res');%, '-v7.3');
+=======
+            save (fullfile(S.group_mvpa_dir, S.saveName), 'res');%, '-v7.3'); Generates save file for each sub
+>>>>>>> e1aadfcef8c293b71be4cca85320c68aa1731468
             
             % display time classification pass took.
             time2finish = toc/60;

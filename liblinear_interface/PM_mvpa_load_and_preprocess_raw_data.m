@@ -9,29 +9,43 @@ end
 S.runs = runs;
 
 if strcmp(S.patternType, 'betas')
-    % if we are going to use betas to classify, load the betas
-    subj = init_subj(S.exp_name,S.subj_id);
-    subj = load_spm_mask(subj,S.roi_name,S.roi_file);
-    subj = load_analyze_pattern(subj,'betas',S.roi_name, S.img_files,'single',true);
-
-    % make runs vector
-    %if S.xval
+    if S.existpatmat==1 %add code to handle previously extracted beta data (instead of extracting it using SPM and masks)
+        subj = init_subj(S.exp_name,S.subj_id);
+        subj = load_matrix_pattern_2D(subj,'betas',S.roi_name, S.img_files);
         runs = S.idxTr.sess;
-%     else %commented out by TIB, 11/13/2014
-%         runs = [S.idxTr.sess max(S.idxTr.sess) + S.idxTe.sess];
-%     end
-    
-    runs = runs(1:length(subj.patterns{1,1}.mat(1,:))); %shorten vector to length of usable betas, 10/15/2014
-    
-
-    subj = init_object(subj,'selector','runs');
-    subj = set_mat(subj,'selector','runs',runs);
-    
-   % zscore the data - not sure if useful for beta analysis
-   %      subj = zscore_runs(subj,'betas','runs');
-   %      subj = remove_mat(subj,'pattern','betas');
+        runs = runs(1:length(subj.patterns{1,1}.mat(1,:))); %shorten vector to length of usable betas, 10/15/2014
+        subj = init_object(subj,'selector','runs');
+        subj = set_mat(subj,'selector','runs',runs);
+        % zscore the data - useful for beta analysis IF features are
+        % actually not all of the same type/unit (e.g., not actually betas,
+        % but demographics
+        subj = zscore_runs(subj,'betas','runs');
+        subj = remove_mat(subj,'pattern','betas');
+    else
         
-
+        % if we are going to use betas to classify, load the betas
+        subj = init_subj(S.exp_name,S.subj_id);
+        subj = load_spm_mask(subj,S.roi_name,S.roi_file);
+        subj = load_analyze_pattern(subj,'betas',S.roi_name, S.img_files,'single',true);
+        
+        % make runs vector
+        %if S.xval
+        runs = S.idxTr.sess;
+        %     else %commented out by TIB, 11/13/2014
+        %         runs = [S.idxTr.sess max(S.idxTr.sess) + S.idxTe.sess];
+        %     end
+        
+        runs = runs(1:length(subj.patterns{1,1}.mat(1,:))); %shorten vector to length of usable betas, 10/15/2014
+        
+        
+        subj = init_object(subj,'selector','runs');
+        subj = set_mat(subj,'selector','runs',runs);
+        
+        % zscore the data - not sure if useful for beta analysis
+        %      subj = zscore_runs(subj,'betas','runs');
+        %      subj = remove_mat(subj,'pattern','betas');
+        
+    end
     
 elseif strcmp(S.patternType, 'raw')
     

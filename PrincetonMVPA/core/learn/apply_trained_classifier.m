@@ -144,7 +144,7 @@ for n=1:nIterations
   disp( sprintf('\t%.2f',cur_it.perf(1)) );
 
   % Book-keep the bountiful insight from this iteration
-  cur_it.created.datetime  = datetime(true);
+  cur_it.created.mvpa_datetime  = mvpa_datetime(true); %patched for post-2013
   cur_it.test_idx          = test_idx;
   cur_it.acts              = acts;
   cur_it.scratchpad        = scratchpad;

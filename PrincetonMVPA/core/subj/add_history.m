@@ -31,7 +31,7 @@ end
 if displayme
   disp(hist_str);
 end
-hist_str = sprintf('%s: %s',datetime(),hist_str);
+hist_str = sprintf('%s: %s',mvpa_datetime(),hist_str); %patched for post-2013
 
 % Deal with OBJTYPE == 'subj' as a special case
 if strcmp(objtype,'subj')

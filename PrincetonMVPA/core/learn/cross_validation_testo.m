@@ -292,7 +292,7 @@ for n=1:nIterations
   disp( sprintf('\t%.2f',cur_iteration.perf(p)) );
 
   % Book-keep the bountiful insight from this iteration
-  cur_iteration.created.datetime  = datetime(true);
+  cur_iteration.created.mvpa_datetime  = mvpa_datetime(true); %patched for post-2013
   cur_iteration.train_idx         = train_idx;
   cur_iteration.test_idx          = test_idx;
   cur_iteration.unused_idx        = unused_idx;

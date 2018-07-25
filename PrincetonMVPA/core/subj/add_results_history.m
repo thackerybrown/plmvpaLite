@@ -37,7 +37,7 @@ if ~isfield(results.header,'history')
   results.header.history = [];
 end
 
-hist_str = sprintf('%s: %s',datetime(),hist_str);
+hist_str = sprintf('%s: %s',mvpa_datetime(),hist_str); %patched for post-2013
 
 results.header.history{end+1}=hist_str;
 

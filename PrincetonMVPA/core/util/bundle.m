@@ -24,7 +24,7 @@ function [ history ] = bundle(varargin)
 %     You can also mix and match variables and expressions, regardless
 %     of the type, as much as you like.  For example:
 %     
-%     b = bundle(datetime(true), 'timestamp', x, y, @sin, 'sin')
+%     b = bundle(mvpa_datetime(true), 'timestamp', x, y, @sin, 'sin')
 %
 %     will create a structure b with field 'timestamp' set to the
 %     current date and time with seconds, fields 'x' and 'y' set to

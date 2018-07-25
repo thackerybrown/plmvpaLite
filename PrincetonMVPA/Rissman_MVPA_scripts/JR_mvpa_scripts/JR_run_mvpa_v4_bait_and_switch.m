@@ -35,7 +35,7 @@ for a=1:length(subjects_to_include)
         [subj] = JR_mvpa_load_and_preprocess_raw_data(subj_id, exp_name, roi_name, roi_file, raw_filenames, num_runs, num_TP_per_run);
 
         if flags.save_workspace == 1
-            save_cmd = ['save ' subj_id '_' roi_name '_4mm_smoothing_' datetime '.mat'];
+            save_cmd = ['save ' subj_id '_' roi_name '_4mm_smoothing_' mvpa_datetime '.mat'];
             eval(save_cmd);
         end
     else
@@ -507,9 +507,9 @@ subj = set_objfield(subj,'regressors','conds_switch','condnames',condnames_switc
             impmap1 = impmap1/num_runs*1000; %compute average and multiply by 1000 for scaling
             impmap2 = impmap2/num_runs*1000; %compute average and multiply by 1000 for scaling
 
-            vol_info.fname = [subj_id '_' condnames_bait{1} '_no_anova_' datetime '.img'];
+            vol_info.fname = [subj_id '_' condnames_bait{1} '_no_anova_' mvpa_datetime '.img'];
             spm_write_vol(vol_info,impmap1);
-            vol_info.fname = [subj_id '_' condnames_bait{2} '_no_anova_' datetime '.img'];
+            vol_info.fname = [subj_id '_' condnames_bait{2} '_no_anova_' mvpa_datetime '.img'];
             spm_write_vol(vol_info,impmap2);
 
         else % ANOVA VERSION
@@ -537,9 +537,9 @@ subj = set_objfield(subj,'regressors','conds_switch','condnames',condnames_switc
             impmap1_avg = impmap1./composite_mask * 1000;  % divide by number of observations contributing to each sum (to get avg) and multiply by 1000 for scaling
             impmap2_avg = impmap2./composite_mask * 1000;  % divide by number of observations contributing to each sum (to get avg) and multiply by 1000 for scaling
 
-            vol_info.fname = [subj_id '_' condnames_bait{1} '_p' num2str(anova_p_thresh) '_' datetime '.img'];
+            vol_info.fname = [subj_id '_' condnames_bait{1} '_p' num2str(anova_p_thresh) '_' mvpa_datetime '.img'];
             spm_write_vol(vol_info,impmap1_avg);
-            vol_info.fname = [subj_id '_' condnames_bait{2} '_p' num2str(anova_p_thresh) '_' datetime '.img'];
+            vol_info.fname = [subj_id '_' condnames_bait{2} '_p' num2str(anova_p_thresh) '_' mvpa_datetime '.img'];
             spm_write_vol(vol_info,impmap2_avg);
         end
 

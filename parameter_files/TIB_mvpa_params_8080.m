@@ -617,7 +617,7 @@ S.class_args.libLin = '-q -s 0 -B 1'; %arguments for liblinear; -s 0 = L2; -s 6 
 S.class_args.libsvm = '-q -s 0 -t 2 -d 3'; % arguments for libsvm
 S.class_args.constant = true; % include a constant term?
 S.class_args.prefitWeights = true;
-S.class_args.chooseOptimalPenalty = 1; % 1 = yes. cycle through cost parameters in the training set, and choose the optimal one. Note, this only makes sense in context of loo with >2 runs or for nf with >2 folds, because it subdivides training set into additional 'runs' and performs nested xvalidation.
+S.class_args.chooseOptimalPenalty = 0; % 1 = yes. cycle through cost parameters in the training set, and choose the optimal one. Note, this only makes sense in context of loo with >2 runs or for nf with >2 folds, because it subdivides training set into additional 'runs' and performs nested xvalidation.
 S.class_args.penaltyRange = [.001 .005 .01 .05 .1 .5 1 5 10 50 100 500 1000 50000]; % a vector "[]" of cost parameters to cycle through
 S.class_args.radialBasisSelection = [];%[.00001 .0001 .001 .01 .1 1 10];
 S.class_args.nFoldsPenaltySelection = 10; % number of cross validation folds for penalty parameter selection.

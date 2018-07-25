@@ -23,7 +23,7 @@ if ~exist('mvpa_workspace')
     [subj] = JR_mvpa_load_and_preprocess_raw_data(subj_id, exp_name, roi_name, roi_file, raw_filenames, num_runs, num_TP_per_run);
 
     if flags.save_workspace == 1
-        save_cmd = ['save ' subj_id '_' roi_name '_8mm_smoothing_' datetime '.mat'];
+        save_cmd = ['save ' subj_id '_' roi_name '_8mm_smoothing_' mvpa_datetime '.mat'];
         eval(save_cmd);
     end
 else
@@ -362,9 +362,9 @@ if flags.generate_importance_maps == 1;
         immap1 = immap1*1000;
         immap2 = immap2*1000;
 
-        vol_info.fname = [condnames{1} '_no_anova_' datetime '.img'];
+        vol_info.fname = [condnames{1} '_no_anova_' mvpa_datetime '.img'];
         spm_write_vol(vol_info,immap1);
-        vol_info.fname = [condnames{2} '_no_anova_' datetime '.img'];
+        vol_info.fname = [condnames{2} '_no_anova_' mvpa_datetime '.img'];
         spm_write_vol(vol_info,immap2);
 
     else % ANOVA VERSION
@@ -393,9 +393,9 @@ if flags.generate_importance_maps == 1;
         immap2_avg = immap2./composite_mask * 1000;  % divide by number of observations contributing to each sum (to get avg) and multiply by 1000 for scaling
 
 
-        vol_info.fname = [condnames{1} '_p' num2str(anova_p_thresh) '_' datetime '.img'];
+        vol_info.fname = [condnames{1} '_p' num2str(anova_p_thresh) '_' mvpa_datetime '.img'];
         spm_write_vol(vol_info,immap1_avg);
-        vol_info.fname = [condnames{2} '_p' num2str(anova_p_thresh) '_' datetime '.img'];
+        vol_info.fname = [condnames{2} '_p' num2str(anova_p_thresh) '_' mvpa_datetime '.img'];
         spm_write_vol(vol_info,immap2_avg);
     end
 

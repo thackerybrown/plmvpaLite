@@ -77,7 +77,7 @@ if exist_objfield(subj,objtype,objname,'movehd')
   mat = newmat;  
   save(movehd.pathfilename,'mat');
   clear mat
-  subj = set_objsubfield(subj,objtype,objname,'movehd','last_saved',datetime(true),'ignore_absence',true);
+  subj = set_objsubfield(subj,objtype,objname,'movehd','last_saved',mvpa_datetime(true),'ignore_absence',true); %patched for post-2013
  
 % Otherwise, get the cell array. Mess with the appropriate cell in
 % it. Set it back into the subj structure
@@ -98,7 +98,7 @@ subj = set_objfield(subj,objtype,objname,'matsize',size(newmat));
 % Record that we modified this. Could be useful. Don't ask me when
 % or why. Mine is not the place to know these things. The brain
 % moves in mysterious ways
-subj = set_objfield(subj,objtype,objname,'last_modified',datetime(true),'ignore_absence',true);
+subj = set_objfield(subj,objtype,objname,'last_modified',mvpa_datetime(true),'ignore_absence',true);
 
 % Update type-specific stuff
 switch(objtype)

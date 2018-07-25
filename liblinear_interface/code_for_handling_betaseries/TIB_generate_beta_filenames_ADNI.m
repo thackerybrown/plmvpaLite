@@ -93,10 +93,11 @@ bnames{1,2} = 'AD';
 % bnames{1,9} = 'cues5_1';
 % bnames{1,10} = 'cues5_2';
 
-allbetafilenames = dir(fullfile(S.mvpa_dir, 'beta*.img'));
+%allbetafilenames = dir(fullfile(S.mvpa_dir, 'beta*.img'));
+%load(S.datafile)
 
 for idx = 1:length(betaidx{1,1})%-1%note, we are filling in the beta file names based on how many betas OF INTEREST we have (length(betaidx)). We don't care about the error reg betas for this analysis
-    beta_filenames{idx,1} = [S.mvpa_dir allbetafilenames(idx).name]; %create the analog to "raw_filenames.mat" - i.e. a list of all filenames including the path
+    beta_filenames{idx,1} = [S.mvpa_dir S.datafile]; %create the analog to "raw_filenames.mat" - i.e. a list of all filenames including the path
 end
 
   
