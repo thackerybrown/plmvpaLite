@@ -50,11 +50,11 @@ S.preprocType = 'spm'; % 'spm' for spm preprocessing, 'knk' for kendrick preproc
 %cross-validation (see section below). If you want to train on one set of
 %data (e.g., a localizer) and test on another (e.g., a retrieval task),
 %then specify different tasks or study phases
-<<<<<<< HEAD
+
 S.trainTask = 'FacevsFruitvsTool'%'FacevsScene';%Circmaze - 'goals' or 'plan'
-=======
+
 S.trainTask = 'FacevsToolvsAnimal'%'FacevsScene';%Circmaze - 'goals' or 'plan'
->>>>>>> e1aadfcef8c293b71be4cca85320c68aa1731468
+
 S.testTask = 'ASSIGNED_classed3'%'FacevsScene';%Circamze - 'goals' or 'plan'
 
 %x-validation info
@@ -76,11 +76,11 @@ elseif strcmp(S.inputformat, 'betas')
 end
 
 %% directories~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-<<<<<<< HEAD
+
 S.expt_dir = ['/home/brain/host/GaTechDropbox/Dropbox (GaTech)/MAP_Lab/' S.exp_name '/'];%study location
-=======
+
 S.expt_dir = ['/data/Dropbox (GaTech)/MAP_Lab/' S.exp_name '/'];['/home/brain/host/GaTechDropbox/Dropbox (GaTech)/MAP_Lab/' S.exp_name '/'];%study location
->>>>>>> e1aadfcef8c293b71be4cca85320c68aa1731468
+
 
 par.subdir =[S.expt_dir S.subj_id];%subject location
 
@@ -271,15 +271,15 @@ elseif strcmp(S.trainTask,'FacevsFruitvsAnimal')
     end
     S.durTrain = numel(S.filenames_train) * par.TR;
     
-<<<<<<< HEAD
+
 elseif strcmp(S.trainTask,'FacevsFruitvsTool')
     S.onsetsTrainDir = [S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
     S.condsTrain = {{'face'}  {'fruitveg'} {'tool'}} ;%corresponds to the names in the onsets.mat or betas_idx.mat files. This is used to select what is being compared with what.
-=======
+
 elseif strcmp(S.trainTask,'AAvsObj')
     S.onsetsTrainDir = [S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
     S.condsTrain = {{'AA'}  {'Obj'}} ;%corresponds to the names in the onsets.mat or betas_idx.mat files. This is used to select what is being compared with what.
->>>>>>> e1aadfcef8c293b71be4cca85320c68aa1731468
+
     S.TrainRuns = par.scansSelect.(par.task).loc;%pull up indexing, defined above, for RUNS corresponding to task of interest (i.e. if runs 2,4,6 correspond to task 1)
     if strcmp(S.inputformat, 'raw')
         S.filenames_train = raw_filenames;%
@@ -288,15 +288,15 @@ elseif strcmp(S.trainTask,'AAvsObj')
     end
     S.durTrain = numel(S.filenames_train) * par.TR;
     
-<<<<<<< HEAD
+
 elseif strcmp(S.trainTask,'AAvsScrambled')
     S.onsetsTrainDir = [S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
     S.condsTrain = {{'AA'}  {'AA_scrambled'}} ;%corresponds to the names in the onsets.mat or betas_idx.mat files. This is used to select what is being compared with what.
-=======
+
 elseif strcmp(S.trainTask,'FacevsToolvsAnimal')
     S.onsetsTrainDir = [S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
     S.condsTrain = {{'face'}  {'tool'} {'animal'}} ;%corresponds to the names in the onsets.mat or betas_idx.mat files. This is used to select what is being compared with what.
->>>>>>> e1aadfcef8c293b71be4cca85320c68aa1731468
+
     S.TrainRuns = par.scansSelect.(par.task).loc;%pull up indexing, defined above, for RUNS corresponding to task of interest (i.e. if runs 2,4,6 correspond to task 1)
     if strcmp(S.inputformat, 'raw')
         S.filenames_train = raw_filenames;%
@@ -616,11 +616,11 @@ S.defineROIsFromANOVAFS = 0; % define ROIs using ANOVA-based feature selection, 
 %different images = different events
 if strcmp(S.inputformat, 'raw')
     %S.TR_weights_set = {{[.0072 .2168 .3781 .2742 .1237] [.0072 .2168 .3781 .2742 .1237]}}; %approximates the canonical haemodynamic response
-<<<<<<< HEAD
+
     S.TR_weights_set = {{[0 0.25 0.5 0.25] [0 0 0 0 0 0 0 0 0 0 0.25 0.5 0.25]}};%use double-bracket structure in case want to set code up to run a sliding window across multiple TR bins
-=======
+
     S.TR_weights_set = {{[0 0.25 0.5 0.25] [0 0.25 0.5 0.25]}};%use double-bracket structure in case want to set code up to run a sliding window across multiple TR bins
->>>>>>> e1aadfcef8c293b71be4cca85320c68aa1731468
+
 elseif strcmp(S.inputformat, 'betas')
     S.TR_weights_set = {{[1] [1]}};%give full weighting to the 1 and only image corresponding to each event
 end

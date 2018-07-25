@@ -60,7 +60,7 @@ if strcmp(S.trainTask,S.testTask) %if we are doing x-validation classification
 
 %% binary
 bnames{1,1} = 'AD';
-bnames{1,2} = 'AD';
+bnames{1,2} = 'HC';
 
 %% 5-way
 % bnames{1,1} = 'plan1';
