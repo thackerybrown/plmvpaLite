@@ -83,7 +83,7 @@ end
 
 disp( sprintf('Starting to load pattern from matrix') );
 matt = load(mat{1}{1});
-mat = matt.fakesub;
+mat = matt.testsubmat;
 % Reshape the data to be nVox X nTimepoints
 %mat = reshape(mat,prod(vDims(1:3)), vDims(4));
 
