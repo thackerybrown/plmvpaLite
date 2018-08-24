@@ -301,12 +301,22 @@ for b=(1:length(subj_array))
                 
                 %classify with correct (unscrambled) class labels
             elseif S.scrambleregs == 0
-                if S.class_args.nVox>0 %if we are using data-derived feature selection (e.g. top n voxels) we feed in the mask grp name such that each x-val iteration gets its own, non-biased, masked set of data
-                    [subj results] = cross_validation(subj,S.classifier_pattern,'conds', ...
-                        S.classSelector, S.classifier_mask_group,S.class_args, 'perfmet_functs', S.perfmet_functs);
-                else %if we aren't doing data-driven feature selection, we just use the user-specified mask for the data
-                    [subj results] = cross_validation_ADNI(subj,S.classifier_pattern,'conds', ...
-                        S.classSelector, S.classifier_mask,S.class_args, 'perfmet_functs', S.perfmet_functs);
+                if S.existpatmat == 0 %typical fMRI classification scenario
+                    if S.class_args.nVox>0 %if we are using data-derived feature selection (e.g. top n voxels) we feed in the mask grp name such that each x-val iteration gets its own, non-biased, masked set of data
+                        [subj results] = cross_validation(subj,S.classifier_pattern,'conds', ...
+                            S.classSelector, S.classifier_mask_group,S.class_args, 'perfmet_functs', S.perfmet_functs);
+                    else %if we aren't doing data-driven feature selection, we just use the user-specified mask for the data
+                        [subj results] = cross_validation(subj,S.classifier_pattern,'conds', ...
+                            S.classSelector, S.classifier_mask,S.class_args, 'perfmet_functs', S.perfmet_functs);
+                    end
+                elseif S.existpatmat == 1 %existing pattern matrix (no masking)
+                    if S.class_args.nVox>0 %if we are using data-derived feature selection (e.g. top n voxels) we feed in the mask grp name such that each x-val iteration gets its own, non-biased, masked set of data
+                        [subj results] = cross_validation_ADNI(subj,S.classifier_pattern,'conds', ...
+                            S.classSelector, S.classifier_mask_group,S.class_args, 'perfmet_functs', S.perfmet_functs);
+                    else %if we aren't doing data-driven feature selection, we just use the user-specified mask for the data
+                        [subj results] = cross_validation_ADNI(subj,S.classifier_pattern,'conds', ...
+                            S.classSelector, S.classifier_mask,S.class_args, 'perfmet_functs', S.perfmet_functs);
+                    end
                 end
                 
             end

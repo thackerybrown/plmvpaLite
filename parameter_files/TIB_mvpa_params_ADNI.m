@@ -45,15 +45,15 @@ end
 
 S.preprocType = 'spm'; % 'spm' for spm preprocessing, 'knk' for kendrick preprocessing
 
-S.datafile = 'testsubmat.mat'; % added for ADNI. Replaces MRI image files with an existing matrix of pattern data
+S.datafile = 'testsubmat_fixed.mat'; % added for ADNI. Replaces MRI image files with an existing matrix of pattern data
 
 %% tasks or study phases
 %set trainTask and testTask to be the same if you want to train and test on the same set of trials via
 %cross-validation (see section below). If you want to train on one set of
 %data (e.g., a localizer) and test on another (e.g., a retrieval task),
 %then specify different tasks or study phases
-S.trainTask = 'ADvsCN';%which ptcpt categories to train on
-S.testTask = 'ADvsCN';%which ptcpt categories to test on
+S.trainTask = 'ADvsHC';%which ptcpt categories to train on
+S.testTask = 'ADvsHC';%which ptcpt categories to test on
 
 %x-validation info
 S.xvaltype = 'nf'; %set to 'loo' for leave-one-out x-validation or 'nf' for nfold using the S.nFolds defined below.
@@ -64,9 +64,9 @@ if strcmp(S.inputformat, 'raw')
     S.onsets_filename_tr = [S.subj_id '_localizer_onsets_test'];% added for train on 1 phase, test on another - this assumes the data are actually in the same set of files.
     S.onsets_filename_tst = [S.subj_id '_localizer_onsets_test'];% added for train on 1 phase, test on another - this assumes the data are actually in the same set of files.
 elseif strcmp(S.inputformat, 'betas')
-    S.onsets_filename = ['testnamesandonsets'];%['onsets_' S.subj_id '_ADNI1'];
-    S.onsets_filename_tr = ['testnamesandonsets'];%['onsets_' S.subj_id '_ADNI1'];
-    S.onsets_filename_tst = ['testnamesandonsets'];%['onsets_' S.subj_id '_ADNI1'];
+    S.onsets_filename = ['testnamesandonsets_fixed'];%['onsets_' S.subj_id '_ADNI1'];
+    S.onsets_filename_tr = ['testnamesandonsets_fixed'];%['onsets_' S.subj_id '_ADNI1'];
+    S.onsets_filename_tst = ['testnamesandonsets_fixed'];%['onsets_' S.subj_id '_ADNI1'];
     
     S.betaidx_filename = [S.subj_id '_betas_idx'];
     S.betaidx_filename_tr = [S.subj_id '_betas_idx_tr'];
@@ -231,9 +231,9 @@ end
 
 % idxTr = behavioral indices for training task, used by TIB_run_MVPA_general
 
-if strcmp(S.trainTask,'ADvsCN')
+if strcmp(S.trainTask,'ADvsHC')
     S.onsetsTrainDir = [S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
-    S.condsTrain = {{'AD'}  {'CN'}} ;%corresponds to the names in the onsets.mat or betas_idx.mat files. This is used to select what is being compared with what.
+    S.condsTrain = {{'AD'}  {'HC'}} ;%corresponds to the names in the onsets.mat or betas_idx.mat files. This is used to select what is being compared with what.
     S.TrainRuns = par.scansSelect.(par.task).loc;%pull up indexing, defined above, for RUNS corresponding to task of interest (i.e. if runs 2,4,6 correspond to task 1)
     if strcmp(S.inputformat, 'raw')
         S.filenames_train = raw_filenames;%
@@ -311,9 +311,9 @@ elseif strcmp(S.trainTask,'EAvsAAvsScene')
 end
 
 %% testing - this defines the testing set. The code is set up this way to enable us to step outside xval if desired to test on different set of data (e.g., at retrieval)
-if strcmp(S.testTask,'ADvsCN')
+if strcmp(S.testTask,'ADvsHC')
     S.onsetsTestDir =[S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
-    S.condsTest = {{'AD'} {'CN'}};
+    S.condsTest = {{'AD'} {'HC'}};
     S.nwayclass = num2str(numel(S.condsTest));%stores the number classification dimensions just for reference (i.e. is this a 5-way or a 2-way/binary classification?)
     S.TestRuns = par.scansSelect.(par.task).loc;
     if strcmp(S.inputformat, 'raw')
@@ -539,7 +539,7 @@ S.num_iter_with_same_data = 1; % number of times to run the classfication step f
 %% Balancing Parameters
 S.equate_number_of_trials_in_groups = 1; % equate number of trials in conditions
 S.numBalancedParams = 1; % number of parameters to balance across (e.g., both goal location AND cue in Circmaze data). The code currently (12/29/17) only handles two options - 1 (standard; main class type), or 2 (main class type plus a second parameter, specified in a second file).
-S.numBalancedIts = 1; % number of iterations to run, with different randomization for the balancing
+S.numBalancedIts = 10; % number of iterations to run, with different randomization for the balancing
 
 %% Z-Scoring and outlier detection
 S.perform_second_round_of_zscoring = 0;  % z-score data again immediately prior to classification
@@ -621,7 +621,7 @@ S.class_args.classType = 'libLin';
 S.perfmet_functs = 'perfmet_maxclass'; % performance metric
 S.statmap_funct = 'statmap_anova';%'AG_statmap_anova'; % performance metric
 S.nPlsCompsSet = 0; % number of pls components to include. 0 = do not use pls components.
-S.nFolds = 50; % number of cross validation iterations - only used for nFold (as opposed to run-by-run leave-one-out)
+S.nFolds = 100; % number of cross validation iterations - only used for nFold (as opposed to run-by-run leave-one-out)
 
 S.class_args.nVox = 0; % number of voxels to select with feature selection e.g. [1000 5000 10000]
 S.class_args.fseltype = 'topn'; % feature selection format: top N vox (topn) or random N vox (rand)?
@@ -633,6 +633,6 @@ S.class_args.chooseOptimalPenalty = 0; % 1 = yes. cycle through cost parameters 
 S.class_args.penaltyRange = [.001 .005 .01 .05 .1 .5 1 5 10 50 100 500 1000 50000]; % a vector "[]" of cost parameters to cycle through
 S.class_args.radialBasisSelection = [];%[.00001 .0001 .001 .01 .1 1 10];
 S.class_args.nFoldsPenaltySelection = 10; % number of cross validation folds for penalty parameter selection.
-S.class_args.penalty = 10; %uncomment if not using optimal penalty. Typical value is 1. If using sample data provided with plmvpaLite, start with 0.000001 to see how minimal regularization harms performance.
+S.class_args.penalty = 1; %uncomment if not using optimal penalty. Typical value is 1. If using sample data provided with plmvpaLite, start with 0.000001 to see how minimal regularization harms performance.
 %establishment
 end
