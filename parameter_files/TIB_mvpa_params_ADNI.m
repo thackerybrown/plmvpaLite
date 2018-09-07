@@ -29,7 +29,7 @@ ImgDims = 3; %as of 12/31/17, code only supports 3D images. %it is highly recomm
 
 par.readimglist = 0; %1=yes; 0 = no. Flag specifies whether to generate raw_filenames on the fly or to read in a previously-made file
 
-S.existpatmat = 1; %1=yes - skip trying to load image files using SPM. We've already got all patterns in a matrix
+S.existpatmat = 1; %1=yes - skip trying to load image files using SPM. We've already got all patterns in a matrix. Currently (09/2018) the existing pattern matrix is hardcoded in load_matrix_pattern_2D to be a matrix (double) named 'testmat'
 
 %Functional image scan selectors
 par.scansSelect.ADNI.loc = 1:1;%***if ALL FILENAMES corresponding to ALL RUNS OF INTEREST are stored in ONE cell of raw_filenames.mat (i.e., not broken up by run), set index to 1 or 1:1. Otherwise, create indexing for elements of cell array raw_filenames.mat corresponding to task of interest (i.e. if cells runs 1:4 correspond to phase 1, we want to reference {1}, {2}... in raw_filenames.mat)
