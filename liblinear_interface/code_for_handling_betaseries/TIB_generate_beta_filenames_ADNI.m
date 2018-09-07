@@ -31,7 +31,7 @@ if strcmp(S.trainTask,S.testTask) %if we are doing x-validation classification
 
 %% binary
  betaidx{1,1} = strcmpi('AD',names);
- betaidx{1,2} = strcmpi('HC',names);
+ betaidx{1,2} = strcmpi('CN',names);
 
 %% 5-way
 %betaidx{1,1} = strcmpi('cues1',names);
@@ -60,7 +60,7 @@ if strcmp(S.trainTask,S.testTask) %if we are doing x-validation classification
 
 %% binary
 bnames{1,1} = 'AD';
-bnames{1,2} = 'HC';
+bnames{1,2} = 'CN';
 
 %% 5-way
 % bnames{1,1} = 'plan1';
