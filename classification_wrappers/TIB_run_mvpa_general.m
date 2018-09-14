@@ -248,8 +248,10 @@ for b=(1:length(subj_array))
         end
         
         S.classifier_pattern = S.preprocPatCondensedName; % data to use for classification.
-        load('tempmasks.mat')
-        subj.masks = temp;%{1}.name = 'NA';
+        if S.existpatmat == 1 %added 09/2018 to allow code to handle existing pattern vs "normal" pattern classification scenarios in which data are actually extracted from a volume
+            load('tempmasks.mat')
+            subj.masks = temp;%{1}.name = 'NA';
+        end
         S.classifier_mask = subj.masks{end}.name; % mask to use for classification.
         
         %zscore the patterns prior to classification
