@@ -11,7 +11,7 @@ h.buttonMVPA = uicontrol('style', 'pushbutton', ...
     'string', 'Classification');
 
 %add callback
-set(h.buttonMVPA, 'callback', {@addButton, h})
+set(h.buttonMVPA, 'callback', {@addButtonMVPAtype, h})
 
 %% run RSA
 h.buttonRSA = uicontrol('style', 'pushbutton', ...
@@ -19,21 +19,21 @@ h.buttonRSA = uicontrol('style', 'pushbutton', ...
     'string', 'RSA');
 
 %add callback
-set(h.buttonRSA, 'callback', {@addButton, h})
+set(h.buttonRSA, 'callback', {@addButtonRSAtype, h})
 
 
 
 
-function h = addButton(hObject, eventdata, h)
+function h = addButtonMVPAtype(hObject, eventdata, h)
 
-h.buttonTwo = uicontrol('style', 'pushbutton', ...
+h.buttonMVPAtype = uicontrol('style', 'pushbutton', ...
     'position', [130 10 100 40] , ...
-    'string', 'Remove button'); 
-set(h.buttonTwo, 'callback', {@removeButton, h});
-set(h.buttonOne, 'enable', 'off');
+    'string', 'Type'); 
+set(h.buttonMVPAtype, 'callback', {@removeButton, h});
+set(h.buttonMVPA, 'enable', 'off'); %turn off option to click on MVPA
 
 function h = removeButton(hObject, eventdata, h)
 
-delete(h.buttonTwo)
-h = rmfield(h, 'buttonTwo');
-set(h.buttonOne, 'enable', 'on');
+delete(h.buttonMVPAtype)
+h = rmfield(h, 'buttonMVPAtype');
+set(h.buttonMVPA, 'enable', 'on');
