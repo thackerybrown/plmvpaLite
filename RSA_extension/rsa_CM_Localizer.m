@@ -10,7 +10,7 @@ function [] = rsa_CM_Localizer(Sub, Mask, TRsperRun)
 %at this time only use concatenated 3D
 
 %% flags and parameters
-S.TR = 2;
+S.TR = 3;
 theseTRWeights = [0 0 .2 .2 .2 .2 .2];%[0 0.25 0.5 0.25 0];
 weights_str = mat2str(theseTRWeights);% assign values to string for custom output file naming
 
