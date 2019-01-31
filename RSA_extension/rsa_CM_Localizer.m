@@ -1,6 +1,8 @@
 function [] = rsa_CM_Localizer(Sub, Mask, TRsperRun)
 % code for RSA analysis.
 
+% example call with 'mvpa_sample_data' - rsa_CM_Localizer({'001'}, 'HVisCtx_1', [114 114])
+
 %For alternate code demo purposes, this is built around both 4D and 3D
 %image file types. The use case for 4D includes scenarios like "raw" BOLD data or residual time-series
 
@@ -30,7 +32,7 @@ study_prefix = 'CM';
 
 S.inputformat = 'raw'; % are we working with BOLDs/timeseries ('raw') or with beta maps ('betas')?
 
-S.onsets_filename = [S.subj_id '_localizer_onsets_test_short'];
+S.onsets_filename = [S.subj_id '_localizer_onsets_test'];
 
 %specify preprocessing level of BOLDs
 preproc_lvl = ''; % 'a' for slice-time-only, 'u' for realigned-only, 'ua' for realign+unwarped, 'swua' for smoothed, normalized, and... you get the picture. Modify as needed if you changed SPM's prefix append defaults
@@ -707,7 +709,7 @@ colormap('jet');
 colorbar;
 set(gca, 'YTicklabel', names, 'YTick', [1:length(names)]);
 
-%create vectore of distances between instances in the cm
+%create vector of distances between instances in the cm
 distm = pdist(cm4,'correlation');% tell matlab metric is pearson r
 Z1 = linkage(distm,'average');%compute dendrogram, using average distance within clusters for agglomeration
 
