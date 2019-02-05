@@ -38,7 +38,8 @@ if strcmp(S.thisSelector, 'TrainTestOneIterGroup')
 %% NF - random nfold (also used for leave-one-trial-out)    
 elseif strcmp(S.thisSelector, 'randomNFold_xval')
     actives =  (S.idxOnsets_train_in_classifier | S.idxOnsets_test_in_classifier);
-    train_actives = S.idxOnsets_train_in_classifier;
+    actives = actives(1:S.stbetacount); %filter down to valid betas
+    train_actives = S.idxOnsets_train_in_classifier(1:S.stbetacount); %filter down to valid betas;
     
     randomNFold_h = ceil(shuffle(1:sum(actives))/(sum(actives)/S.nFolds));
     
@@ -74,7 +75,8 @@ elseif strcmp(S.thisSelector, 'randomNFold_xval')
 elseif strcmp(S.thisSelector, 'leave_one_out_xval')
     %do magic using index from subj.selectors.runs (built from idx.tr.sess)
     actives =  (S.idxOnsets_train_in_classifier | S.idxOnsets_test_in_classifier);
-    train_actives = S.idxOnsets_train_in_classifier;
+    actives = actives(1:S.stbetacount); %filter down to valid betas
+    train_actives = S.idxOnsets_train_in_classifier(1:S.stbetacount); %filter down to valid betas
     
     conds_h2 = zeros(size(actives));
     conds_h2(actives) = conds_h;

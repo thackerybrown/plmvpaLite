@@ -35,7 +35,7 @@ if strcmp(S.patternType, 'betas')
         %         runs = [S.idxTr.sess max(S.idxTr.sess) + S.idxTe.sess];
         %     end
         
-        runs = runs(1:length(subj.patterns{1,1}.mat(1,:))); %shorten vector to length of usable betas, 10/15/2014
+        runs = runs(1:S.stbetacount);%length(subj.patterns{1,1}.mat(1,:))); %shorten vector to length of usable betas, updated 02/05/2019
         
         
         subj = init_object(subj,'selector','runs');

@@ -30,9 +30,10 @@ if strcmp(S.trainTask,S.testTask) %if we are doing x-validation classification
 % betaidx{1,5} = strcmpi('plan5',names);
 
 %% binary
- betaidx{1,1} = strcmpi('AD',names);
- betaidx{1,2} = strcmpi('HC',names);
-
+ %betaidx{1,1} = strcmpi('AD',names);
+ %betaidx{1,2} = strcmpi('HC',names);
+ betaidx{1,1} = strcmpi('EA',names);
+ betaidx{1,2} = strcmpi('Scene',names);
 %% 5-way
 %betaidx{1,1} = strcmpi('cues1',names);
 %betaidx{1,2} = strcmpi('cues2',names);
@@ -59,8 +60,8 @@ if strcmp(S.trainTask,S.testTask) %if we are doing x-validation classification
 % betaidx{1,10} = strcmpi('cues5_2',names);
 
 %% binary
-bnames{1,1} = 'AD';
-bnames{1,2} = 'AD';
+bnames{1,1} = 'EA';
+bnames{1,2} = 'Scene';
 
 %% 5-way
 % bnames{1,1} = 'plan1';
@@ -92,14 +93,23 @@ bnames{1,2} = 'AD';
 % bnames{1,8} = 'cues4_2';
 % bnames{1,9} = 'cues5_1';
 % bnames{1,10} = 'cues5_2';
-
-allbetafilenames = dir(fullfile(S.mvpa_dir, 'beta*.img'));
-
-for idx = 1:length(betaidx{1,1})%-1%note, we are filling in the beta file names based on how many betas OF INTEREST we have (length(betaidx)). We don't care about the error reg betas for this analysis
-    beta_filenames{idx,1} = [S.mvpa_dir allbetafilenames(idx).name]; %create the analog to "raw_filenames.mat" - i.e. a list of all filenames including the path
+if S.existpatmat == 0
+    allbetafilenames = dir(fullfile(S.mvpa_dir, 'beta*.nii'));
+    
+    % add catch for failure to find beta filenames
+    if length(allbetafilenames) == 0
+        error('SANITY CHECK: the directory you listed does not have betas OR they have a different extension (e.g. img)')
+    end
+    
+    for idx = 1:length(betaidx{1,1})%-1%note, we are filling in the beta file names based on how many betas OF INTEREST we have (length(betaidx)). We don't care about the error reg betas for this analysis
+        beta_filenames{idx,1} = [S.mvpa_dir allbetafilenames(idx).name]; %create the analog to "raw_filenames.mat" - i.e. a list of all filenames including the path
+    end
+    
+else
+    for idx = 1:length(betaidx{1,1})%-1%note, we are filling in the beta file names based on how many betas OF INTEREST we have (length(betaidx)). We don't care about the error reg betas for this analysis
+        beta_filenames{idx,1} = [S.mvpa_dir S.datafile]; %create the analog to "raw_filenames.mat" - i.e. a list of all filenames including the path
+    end
 end
-
-  
 
 
 cd(S.mvpa_dir);
