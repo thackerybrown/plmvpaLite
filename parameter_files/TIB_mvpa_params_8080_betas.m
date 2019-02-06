@@ -27,7 +27,7 @@ S.subj_id = par.substr;
 %Task type
 par.task = task; %assign input from function call. Task phase label. For circmaze, this is 'goals' or 'plan'. For localizer (8080), this is 'CM_Localizer'
 
-par.TR = 2; %TR (s)
+par.TR = 2; %TR (s). NOTE: if working with Betas - if your "onsets" file is really a numerical list of beta numbers instead of onsets, you must set TR = 1. If your onsets file is in seconds, set this as the TR even for Betas.
 
 ImgDims = 3; %as of 12/31/17, code only supports 3D images. %it is highly recommended that you modify to use 4D nifti files for raw BOLD data ('4'). If you have split them out into TR-by-TR, enter '3'
 
@@ -476,7 +476,7 @@ if strcmp(S.inputformat, 'betas')
     varswecareabout = length(idxTr.sess);
     onsetscount = 0;
     for r = 1:length(S.runs_vector)
-        onsetscount = onsetscount + (S.runs_vector(r)*2);%sums the time (s) from the current run with previously iterated through runs to set an increasing threshold
+        onsetscount = onsetscount + (S.runs_vector(r)*S.TR);%sums the time (s) from the current run with previously iterated through runs to set an increasing threshold
         %s.(sprintf('x%d', r)) =
         %x1= find(S.idxTr.sess)% < 500)
         runsc.(sprintf('x%d', r)) = find([idxTr.sess{:,1:varswecareabout}] <= onsetscount);

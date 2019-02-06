@@ -13,6 +13,14 @@ function [res, results]= TIB_run_mvpa_general(subj_array, task, TRsperRun, study
 %studyName **test if matters**
 %task **test if matters**
 
+%% known bugs
+
+% 02/06/2019 - With betas, if some runs are empty of the desired class, the code will
+% correctly skip the run for xval. However, it doesn't seem to aggregate
+% performance accross runs into Total Perfs correctly (i.e., seems to treat
+% skipped runs as 0 accuracy).
+% 02/06/2019 - With betas, confm fails in the above scenario as well.
+
 %% Dependencies (For TIB Circmaze Study)
 %*_mvpa_params.m
 %TIB_generate_betafilenames
@@ -57,9 +65,9 @@ for b=(1:length(subj_array))
     %% Workspace stuff
     existWorkspace = exist(S.workspace);
     
-    if S.existpatmat == 1
+    %if S.existpatmat == 1
         S.class_args.existpatmat = S.existpatmat; % if we are working through data loaded from a saved pattern matrix (e.g., ADNI)
-    end
+    %end
     
     for n = 1: S.num_results_iter
         % load workspace
@@ -301,17 +309,17 @@ for b=(1:length(subj_array))
                 else %if we are doing 'loo'
                     [subj] =  JR_scramble_regressors(subj,'conds','runs','trainActives','conds_scrambled');%here we feed in 'randomNFold' as a surrogate for "runs" because we want to randomize within each "bin" used for xvalidation. We feed in trainActives for active datapoints because this also reflects all datapoints used for training and testing <- this may change depending on study!
                 end
-                [subj results] = cross_validation(subj,S.classifier_pattern,'conds_scrambled', ...
+                [subj results] = cross_validation_ADNI(subj,S.classifier_pattern,'conds_scrambled', ...
                     S.classSelector, S.classifier_mask,S.class_args, 'perfmet_functs', S.perfmet_functs);
                 
                 %classify with correct (unscrambled) class labels
             elseif S.scrambleregs == 0
                 if S.existpatmat == 0 %typical fMRI classification scenario
                     if S.class_args.nVox>0 %if we are using data-derived feature selection (e.g. top n voxels) we feed in the mask grp name such that each x-val iteration gets its own, non-biased, masked set of data
-                        [subj results] = cross_validation(subj,S.classifier_pattern,'conds', ...
+                        [subj results] = cross_validation_ADNI(subj,S.classifier_pattern,'conds', ...
                             S.classSelector, S.classifier_mask_group,S.class_args, 'perfmet_functs', S.perfmet_functs);
                     else %if we aren't doing data-driven feature selection, we just use the user-specified mask for the data
-                        [subj results] = cross_validation(subj,S.classifier_pattern,'conds', ...
+                        [subj results] = cross_validation_ADNI(subj,S.classifier_pattern,'conds', ...
                             S.classSelector, S.classifier_mask,S.class_args, 'perfmet_functs', S.perfmet_functs);
                     end
                 elseif S.existpatmat == 1 %existing pattern matrix (no masking)

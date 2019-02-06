@@ -213,7 +213,7 @@ for n=1:nIterations
         warning( sprintf('There are unknown selector labels in %s',cur_selsname) );
     end
     
-    if isempty(train_idx) && isempty(test_idx)
+    if isempty(train_idx) || isempty(test_idx) % changed by TIB 02/06/2019 to OR statement to skip xval folds where EITHER training or testing classes are missing.
         disp('No pats and targs timepoints for this iteration - skipping');
         continue
     end
