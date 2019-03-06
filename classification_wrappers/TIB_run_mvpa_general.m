@@ -1,7 +1,8 @@
 function [res, results]= TIB_run_mvpa_general(subj_array, task, TRsperRun, studyName)
 
 
-%example call - TIB_run_mvpa_general({'001'},'CM_localizer',{[114,114]},'8080test')
+%example call, CM localizer - TIB_run_mvpa_general({'001'},'CM_localizer',{[114,114]},'8080test')
+%example call, CM pseudodata - TIB_run_mvpa_general({'2'},'CM_localizer',{[375]},'8080test')
 
 %subj_array = structural array listing strings of unique sub IDs. The code
 %at large assumes the rest of subj identifier, if any, that is not
@@ -34,7 +35,7 @@ for b=(1:length(subj_array))
     
     %[S idxTr idxTe par] = TIB_mvpa_params_betas(subj_array(b), task, TRsperRun);%runs with Circmaze data
     %[S idxTr idxTe par] = TIB_mvpa_params_8080(subj_array(b), task, TRsperRun{b}, 'raw');%runs with CM localizer data.
-    [S idxTr idxTe par] = TIB_mvpa_params_8080_betas(subj_array(b), task, TRsperRun{b}, 'betas');%runs with CM localizer data.
+    [S idxTr idxTe par] = TIB_mvpa_params_8080_betas(subj_array(b), task, TRsperRun{b}, 'raw');%runs with CM localizer data.
     %[S idxTr idxTe par] = TIB_mvpa_params_ADNI(subj_array(b), task, TRsperRun{b}, 'betas');%runs with CM localizer data.
     %[S idxTr idxTe par] = TIB_mvpa_params_8080_pseudo(subj_array(b), task, TRsperRun{b}, 'raw');%runs with pseudodata
     

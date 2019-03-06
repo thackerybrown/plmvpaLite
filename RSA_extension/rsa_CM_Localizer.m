@@ -30,9 +30,9 @@ mask = Mask;
 S.exp_name = 'CM_localizer';
 study_prefix = 'CM';
 
-S.inputformat = 'raw'; % are we working with BOLDs/timeseries ('raw') or with beta maps ('betas')?
+S.inputformat = 'betas'; % are we working with BOLDs/timeseries ('raw') or with beta maps ('betas')?
 
-S.onsets_filename = [S.subj_id '_localizer_onsets_test'];
+S.onsets_filename = [S.subj_id '_localizer_onsets_test_short'];
 
 %specify preprocessing level of BOLDs
 preproc_lvl = ''; % 'a' for slice-time-only, 'u' for realigned-only, 'ua' for realign+unwarped, 'swua' for smoothed, normalized, and... you get the picture. Modify as needed if you changed SPM's prefix append defaults
@@ -61,7 +61,7 @@ if strcmp(S.inputformat, 'raw')
 elseif strcmp(S.inputformat, 'betas')
     S.mvpa_dir = [S.expt_dir S.subj_id '/results01/'];
     if strcmp(LStype,'LSS')
-    S.beta_dir = [S.expt_dir S.subj_id '/results01/LSSshort/'];
+        S.beta_dir = [S.expt_dir S.subj_id '/results01/LSSshort/'];
     elseif strcmp(LStype,'LSA')
         S.beta_dir = [S.expt_dir S.subj_id '/results01/LSAshort/'];
     end
@@ -485,7 +485,6 @@ AA_scrambled = AA_idx.*scrambled_idx;
 %now we can isolate intact faces
 EA_intact = EA_idx-EA_scrambled;%
 AA_intact = AA_idx-AA_scrambled;
-
 
 %% sanity checks
 % if sum(ea_ex) ~= sum(ea_ex2)

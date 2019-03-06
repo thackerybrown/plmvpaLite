@@ -59,8 +59,8 @@ S.datafile = 'testsubmat_fixed.mat'; % added for ADNI neuropsych study. Replaces
 %cross-validation (see section below). If you want to train on one set of
 %data (e.g., a localizer) and test on another (e.g., a retrieval task),
 %then specify different tasks or study phases
-S.trainTask = 'EAvsScene';%Circmaze - 'goals' or 'plan'
-S.testTask = 'EAvsScene';%Circamze - 'goals' or 'plan'
+S.trainTask = 'EAvsAAvsScene';%Circmaze - 'goals' or 'plan'
+S.testTask = 'EAvsAAvsScene';%Circamze - 'goals' or 'plan'
 
 %x-validation info
 S.xvaltype = 'loo'; %set to 'loo' for leave-one-out x-validation or 'nf' for nfold using the S.nFolds defined below.
@@ -122,15 +122,23 @@ end
 %specify preprocessing level of BOLDs
 preproc_lvl = ''; % 'a' for slice-time-only, 'u' for realigned-only, 'ua' for realign+unwarped, 'swua' for smoothed, normalized, and... you get the picture. Modify as needed if you changed SPM's prefix append defaults
 boldnames = [preproc_lvl 'run']; %name of image files with preprocessing level prefix
+runnames = 'run_*'; %what are your run/scan session folders called? If none or only 1 run, set to '' or whatever may be appropriate.
 
 if strcmp(S.inputformat, 'raw')
     if par.readimglist == 1
         load([par.funcdir '/' data_imgs_to_use]); %loads predefined cell array
     else %generate them on the fly
-        runfolds = dir(fullfile(par.funcdir, 'run_*'));%dir(fullfile(par.funcdir, 'localizer*'));%
+        runfolds = dir(fullfile(par.funcdir, runnames));%dir(fullfile(par.funcdir, 'localizer*'));%
+        if strcmp(runnames,'') % add contingency for when all the raw filenames are just dumped in your main funcdir (i.e., there are no runfolds)
+            runfolds = runfolds(1); % runfolds(1) = '.', aka, funcdir itself
+        end
         for idxr = 1:length(runfolds)
-            allrawfilenames{idxr,1} = dir(fullfile(par.funcdir, runfolds(idxr).name, ['/' boldnames '*.nii']));%'/swa*.nii'));%
-            
+            if ~strcmp(runnames,'') % add contingency for when all the raw filenames are just dumped in your main funcdir (i.e., there are no runfolds)
+                
+                allrawfilenames{idxr,1} = dir(fullfile(par.funcdir, runfolds(idxr).name, ['/' boldnames '*.nii']));%'/swa*.nii'));%
+            else
+                allrawfilenames{idxr,1} = dir(fullfile(par.funcdir, ['/' boldnames '*.nii']));%'/swa*.nii'));%
+            end
             %if 3D images (not recommended) check if the count matches that
             %specified for other stages of the process
             if ImgDims == 3
@@ -140,7 +148,11 @@ if strcmp(S.inputformat, 'raw')
             end
             
             for idxf = 1:length(allrawfilenames{idxr})
-                allrawfilepaths{idxr,1}{idxf,1} = runfolds(idxr).name;
+                if ~strcmp(runnames,'') % add contingency for when all the raw filenames are just dumped in your main funcdir (i.e., there are no runfolds)
+                    allrawfilepaths{idxr,1}{idxf,1} = runfolds(idxr).name;
+                else
+                    allrawfilepaths{idxr,1}{idxf,1} = '';
+                end
             end
         end
         allrawfilenames = vertcat(allrawfilenames{:});
@@ -174,16 +186,17 @@ if strcmp(S.inputformat, 'raw')
         %if the BOLD images are 3D instead of 4D (TR-by-TR; NOT recommended, but currently only option supported [12/31/17]),
         %we need to modify indices further to avoid introducing a new sorting error
         if ImgDims == 3
-            
-            for idx = 1:length(raw_filenames)
-                %first, identify the RUN number from its name in full
-                runref_indices = strfind(raw_filenames{idx,1}, '/run_');
-                runidxnum = str2double(raw_filenames{idx,1}(runref_indices(1)+5:runref_indices(2)-1));
-                raw_filenames{idx,3} = runidxnum;
+            if ~strcmp(runnames,'') % add contingency for when all the raw filenames are just dumped in your main funcdir (i.e., there are no runfolds)
+                for idx = 1:length(raw_filenames)
+                    %first, identify the RUN number from its name in full
+                    runref_indices = strfind(raw_filenames{idx,1}, '/run_');
+                    runidxnum = str2double(raw_filenames{idx,1}(runref_indices(1)+5:runref_indices(2)-1));
+                    raw_filenames{idx,3} = runidxnum;
+                end
+                
+                b = sortrows(raw_filenames, 3);
+                raw_filenames = b(:,1);
             end
-            
-            b = sortrows(raw_filenames, 3);
-            raw_filenames = b(:,1);
         end
         
         %save raw_filenames for reference
@@ -309,7 +322,7 @@ elseif strcmp(S.trainTask,'EAvsAAvsScene')
     end
     S.durTrain = numel(S.filenames_train) * par.TR;
     
-    elseif strcmp(S.trainTask,'FacevsScenevsObj')
+elseif strcmp(S.trainTask,'FacevsScenevsObj')
     S.onsetsTrainDir = [S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
     S.condsTrain = {{'Face'}  {'Scene'} {'Obj'}} ;%corresponds to the names in the onsets.mat or betas_idx.mat files. This is used to select what is being compared with what.
     S.TrainRuns = par.scansSelect.(par.task).loc;%pull up indexing, defined above, for RUNS corresponding to task of interest (i.e. if runs 2,4,6 correspond to task 1)
@@ -382,7 +395,7 @@ elseif strcmp(S.testTask,'AAvsObj')
         S.filenames_test = beta_filenames;%
     end
     S.durTest = numel(S.filenames_test) * par.TR;
-        
+    
 elseif strcmp(S.testTask,'AAvsScrambled')
     S.onsetsTestDir =[S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
     S.condsTest = {{'AA'} {'AA_scrambled'}};
@@ -405,9 +418,9 @@ elseif strcmp(S.testTask,'EAvsAAvsScene')
     elseif strcmp(S.inputformat, 'betas')
         S.filenames_test = beta_filenames;%
     end
-    S.durTest = numel(S.filenames_test) * par.TR;    
+    S.durTest = numel(S.filenames_test) * par.TR;
     
-    elseif strcmp(S.testTask,'FacevsScenevsObj')
+elseif strcmp(S.testTask,'FacevsScenevsObj')
     S.onsetsTestDir =[S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
     S.condsTest = {{'Face'} {'Scene'} {'Obj'}};
     S.nwayclass = num2str(numel(S.condsTest));%stores the number classification dimensions just for reference (i.e. is this a 5-way or a 2-way/binary classification?)
@@ -417,7 +430,7 @@ elseif strcmp(S.testTask,'EAvsAAvsScene')
     elseif strcmp(S.inputformat, 'betas')
         S.filenames_test = beta_filenames;%
     end
-    S.durTest = numel(S.filenames_test) * par.TR; 
+    S.durTest = numel(S.filenames_test) * par.TR;
     
 end
 

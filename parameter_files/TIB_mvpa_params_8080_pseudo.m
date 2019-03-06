@@ -1,4 +1,4 @@
-function [S idxTr idxTe par]= TIB_mvpa_params_8080(subj_id, task, TRsperRun, imgtype)
+function [S idxTr idxTe par]= TIB_mvpa_params_8080_pseudo(subj_id, task, TRsperRun, imgtype)
 % Created for PSYCH 8080, Spr 2018
 
 % establish parameters for mvpa analysis
@@ -14,10 +14,10 @@ idxTr = [];
 idxTe = [];
 
 %Study name
-S.exp_name = 'CM_pseudodat5'; %change this to flexibly redirect the script to different studies in subdirectories
+S.exp_name = 'CM_localizer'; %change this to flexibly redirect the script to different studies in subdirectories
 
 %Subject ID/number
-par.substr = ['CM' subj_id{1}];
+par.substr = ['CM_pseudodat' subj_id{1}];
 S.subj_id = par.substr;
 
 %Task type
@@ -27,7 +27,7 @@ par.TR = 2; %TR (s)
 
 ImgDims = 3; %as of 12/31/17, code only supports 3D images. %it is highly recommended that you modify to use 4D nifti files for raw BOLD data ('4'). If you have split them out into TR-by-TR, enter '3'
 
-par.readimglist = 1; %1=yes; 0 = no. Flag specifies whether to generate raw_filenames on the fly or to read in a previously-made file
+par.readimglist = 0; %1=yes; 0 = no. Flag specifies whether to generate raw_filenames on the fly or to read in a previously-made file
 
 %Functional image scan selectors
 %par.scansSelect.goals.loc = 1:1;%***if ALL FILENAMES corresponding to ALL RUNS OF INTEREST are stored in ONE cell of raw_filenames.mat (i.e., not broken up by run), set index to 1 or 1:1. Otherwise, create indexing for elements of cell array raw_filenames.mat corresponding to task of interest (i.e. if cells runs 1:4 correspond to task 1, we want to reference {1}, {2}... in raw_filenames.mat)
@@ -45,6 +45,11 @@ end
 
 S.preprocType = 'spm'; % 'spm' for spm preprocessing, 'knk' for kendrick preprocessing
 
+%% existing pattern handling inputs
+S.existpatmat = 0; %1=yes - skip trying to load image files using SPM. We've already got all patterns in a matrix. Currently (09/2018) the existing pattern matrix is hardcoded in load_matrix_pattern_2D to be a matrix (double) named 'testmat'. \\
+%Also, because so much of the Princeton MVPA toolbox assumes a mask volume is used, a dummy mask file is now included in the PLMVPA_Lite toolkit and called in TIB_run_MVPA_general
+S.datafile = 'testsubmat_fixed.mat'; % added for ADNI neuropsych study. Replaces MRI image (e.g., nii) files with an existing matrix of pattern data
+
 %% tasks or study phases
 %set trainTask and testTask to be the same if you want to train and test on the same set of trials via
 %cross-validation (see section below). If you want to train on one set of
@@ -58,9 +63,9 @@ S.xvaltype = 'nf'; %set to 'loo' for leave-one-out x-validation or 'nf' for nfol
 
 %%model information - define which timepoints or images correspond to which classes of data
 if strcmp(S.inputformat, 'raw')
-    S.onsets_filename = ['pseudo_0p5w0p25w0p1_unbalanced_onsets' ];%
-    S.onsets_filename_tr = ['pseudo_0p5w0p25w0p1_unbalanced_onsets'];% added for train on 1 phase, test on another - this assumes the data are actually in the same set of files.
-    S.onsets_filename_tst = ['pseudo_0p5w0p25w0p1_unbalanced_onsets'];% added for train on 1 phase, test on another - this assumes the data are actually in the same set of files.
+    S.onsets_filename = ['pseudo_0p5w0p35w0p15_unbalanced_onsets' ];%
+    S.onsets_filename_tr = ['pseudo_0p5w0p35w0p15_unbalanced_onsets'];% added for train on 1 phase, test on another - this assumes the data are actually in the same set of files.
+    S.onsets_filename_tst = ['pseudo_0p5w0p35w0p15_unbalanced_onsets'];% added for train on 1 phase, test on another - this assumes the data are actually in the same set of files.
 elseif strcmp(S.inputformat, 'betas')
     S.onsets_filename = ['onsets_' S.subj_id '_allruns_cuenew_rearranged'];
     S.onsets_filename_tr = ['onsets_' S.subj_id '_allruns_cuenew_rearranged'];
@@ -76,7 +81,7 @@ S.expt_dir = ['/home/brain/host/mvpa_sample_data/' S.exp_name '/'];%study locati
 
 par.subdir =[S.expt_dir S.subj_id];%subject location
 
-par.funcdir =[S.expt_dir];%subfolder for 'raw' BOLD data. Assumes BOLDs are stored in subfolders labeled 'run_01', etc)
+par.funcdir =[par.subdir];%subfolder for 'raw' BOLD data. Assumes BOLDs are stored in subfolders labeled 'run_01', etc)
 
 S.workspace_dir = [S.expt_dir '/mvpa_workspace'];%temporary files workspace
 
@@ -85,7 +90,7 @@ S.workspace_dir = [S.expt_dir '/mvpa_workspace'];%temporary files workspace
 %when working with raw data. We must have some way to tell the classifier
 %which images correspond to which classes
 if strcmp(S.inputformat, 'raw')
-    S.mvpa_dir = [S.expt_dir];
+    S.mvpa_dir = [par.subdir];
 elseif strcmp(S.inputformat, 'betas')
     S.mvpa_dir = [S.expt_dir S.subj_id '/results01/betaseries_rearranged/'];
 end
@@ -120,16 +125,24 @@ end
 
 %specify preprocessing level of BOLDs
 preproc_lvl = ''; % 'a' for slice-time-only, 'u' for realigned-only, 'ua' for realign+unwarped, 'swua' for smoothed, normalized, and... you get the picture. Modify as needed if you changed SPM's prefix append defaults
-boldnames = [preproc_lvl 'run']; %name of image files with preprocessing level prefix
+boldnames = 'pseudo_*';%[preproc_lvl 'run']; %name of image files with preprocessing level prefix
+runnames = '';% 'run_*'; %what are your run/scan session folders called? If none or only 1 run, set to '' or whatever may be appropriate.
 
 if strcmp(S.inputformat, 'raw')
     if par.readimglist == 1
         load([par.funcdir '/' data_imgs_to_use]); %loads predefined cell array
     else %generate them on the fly
-        runfolds = dir(fullfile(par.funcdir, 'run_*'));%dir(fullfile(par.funcdir, 'localizer*'));%
+        runfolds = dir(fullfile(par.funcdir, runnames));%dir(fullfile(par.funcdir, 'localizer*'));%
+        if strcmp(runnames,'') % add contingency for when all the raw filenames are just dumped in your main funcdir (i.e., there are no runfolds)
+            runfolds = runfolds(1); % runfolds(1) = '.', aka, funcdir itself
+        end
         for idxr = 1:length(runfolds)
-            allrawfilenames{idxr,1} = dir(fullfile(par.funcdir, runfolds(idxr).name, ['/' boldnames '*.nii']));%'/swa*.nii'));%
-            
+            if ~strcmp(runnames,'') % add contingency for when all the raw filenames are just dumped in your main funcdir (i.e., there are no runfolds)
+                
+                allrawfilenames{idxr,1} = dir(fullfile(par.funcdir, runfolds(idxr).name, ['/' boldnames '*.nii']));%'/swa*.nii'));%
+            else
+                allrawfilenames{idxr,1} = dir(fullfile(par.funcdir, ['/' boldnames '*.nii']));%'/swa*.nii'));%
+            end
             %if 3D images (not recommended) check if the count matches that
             %specified for other stages of the process
             if ImgDims == 3
@@ -139,7 +152,11 @@ if strcmp(S.inputformat, 'raw')
             end
             
             for idxf = 1:length(allrawfilenames{idxr})
-                allrawfilepaths{idxr,1}{idxf,1} = runfolds(idxr).name;
+                if ~strcmp(runnames,'') % add contingency for when all the raw filenames are just dumped in your main funcdir (i.e., there are no runfolds)
+                    allrawfilepaths{idxr,1}{idxf,1} = runfolds(idxr).name;
+                else
+                    allrawfilepaths{idxr,1}{idxf,1} = '';
+                end
             end
         end
         allrawfilenames = vertcat(allrawfilenames{:});
@@ -173,16 +190,17 @@ if strcmp(S.inputformat, 'raw')
         %if the BOLD images are 3D instead of 4D (TR-by-TR; NOT recommended, but currently only option supported [12/31/17]),
         %we need to modify indices further to avoid introducing a new sorting error
         if ImgDims == 3
-            
-            for idx = 1:length(raw_filenames)
-                %first, identify the RUN number from its name in full
-                runref_indices = strfind(raw_filenames{idx,1}, '/run_');
-                runidxnum = str2double(raw_filenames{idx,1}(runref_indices(1)+5:runref_indices(2)-1));
-                raw_filenames{idx,3} = runidxnum;
+            if ~strcmp(runnames,'') % add contingency for when all the raw filenames are just dumped in your main funcdir (i.e., there are no runfolds)
+                for idx = 1:length(raw_filenames)
+                    %first, identify the RUN number from its name in full
+                    runref_indices = strfind(raw_filenames{idx,1}, '/run_');
+                    runidxnum = str2double(raw_filenames{idx,1}(runref_indices(1)+5:runref_indices(2)-1));
+                    raw_filenames{idx,3} = runidxnum;
+                end
+                
+                b = sortrows(raw_filenames, 3);
+                raw_filenames = b(:,1);
             end
-            
-            b = sortrows(raw_filenames, 3);
-            raw_filenames = b(:,1);
         end
         
         %save raw_filenames for reference
@@ -492,7 +510,7 @@ end
 
 
 %% Volume Parameters
-S.vol_info = spm_vol(fullfile(par.funcdir, 'pseudo_0p5w0p25w0p1_unbalanced_0001.nii')); %get functional data resolution info for spm .img writing
+S.vol_info = spm_vol(fullfile(par.funcdir, 'pseudo_0p5w0p35w0p15_unbalanced_0001.nii')); %get functional data resolution info for spm .img writing
 
 S.roi_name = 'HVisCtx_1.nii';
 %S.roi_name = 'NativeGM_BOLDres.nii';
