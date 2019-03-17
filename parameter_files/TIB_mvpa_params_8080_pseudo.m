@@ -63,9 +63,9 @@ S.xvaltype = 'nf'; %set to 'loo' for leave-one-out x-validation or 'nf' for nfol
 
 %%model information - define which timepoints or images correspond to which classes of data
 if strcmp(S.inputformat, 'raw')
-    S.onsets_filename = ['pseudo_0p5w0p35w0p15_unbalanced_onsets' ];%
-    S.onsets_filename_tr = ['pseudo_0p5w0p35w0p15_unbalanced_onsets'];% added for train on 1 phase, test on another - this assumes the data are actually in the same set of files.
-    S.onsets_filename_tst = ['pseudo_0p5w0p35w0p15_unbalanced_onsets'];% added for train on 1 phase, test on another - this assumes the data are actually in the same set of files.
+    S.onsets_filename = ['pseudo_test_onsets' ];%
+    S.onsets_filename_tr = ['pseudo_test_onsets'];% added for train on 1 phase, test on another - this assumes the data are actually in the same set of files.
+    S.onsets_filename_tst = ['pseudo_test_onsets'];% added for train on 1 phase, test on another - this assumes the data are actually in the same set of files.
 elseif strcmp(S.inputformat, 'betas')
     S.onsets_filename = ['onsets_' S.subj_id '_allruns_cuenew_rearranged'];
     S.onsets_filename_tr = ['onsets_' S.subj_id '_allruns_cuenew_rearranged'];
@@ -510,7 +510,7 @@ end
 
 
 %% Volume Parameters
-S.vol_info = spm_vol(fullfile(par.funcdir, 'pseudo_0p5w0p35w0p15_unbalanced_0001.nii')); %get functional data resolution info for spm .img writing
+S.vol_info = spm_vol(fullfile(par.funcdir, 'pseudo_test_0001.nii')); %get functional data resolution info for spm .img writing
 
 S.roi_name = 'HVisCtx_1.nii';
 %S.roi_name = 'NativeGM_BOLDres.nii';
@@ -641,7 +641,7 @@ S.statmap_funct = 'statmap_anova';%'AG_statmap_anova'; % performance metric
 S.nPlsCompsSet = 0; % number of pls components to include. 0 = do not use pls components.
 S.nFolds = 25; % number of cross validation iterations - only used for nFold (as opposed to run-by-run leave-one-out)
 
-S.class_args.nVox = 0; % number of voxels to select with feature selection e.g. [1000 5000 10000]
+S.class_args.nVox = 100; % number of voxels to select with feature selection e.g. [1000 5000 10000]
 S.class_args.fseltype = 'topn'; % feature selection format: top N vox (topn) or random N vox (rand)?
 S.class_args.libLin = '-q -s 0 -B 1'; %arguments for liblinear; -s 0 = L2; -s 6 = L1
 S.class_args.libsvm = '-q -s 0 -t 2 -d 3'; % arguments for libsvm

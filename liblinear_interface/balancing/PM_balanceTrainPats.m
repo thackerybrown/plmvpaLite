@@ -1,6 +1,11 @@
 function subj = PM_balanceTrainPats(S, subj)
 sels = squeeze(get_group_as_matrix(subj, 'selector',S.thisSelector));
-regs = get_mat(subj, 'regressors', 'conds');
+
+if S.scrambleregs ~= 1
+    regs = get_mat(subj, 'regressors', 'conds');
+elseif S.scrambleregs == 1
+    regs = get_mat(subj, 'regressors', 'conds_scrambled');
+end
 
 
 if strcmp(S.thisSelector, 'TrainTestOneIterGroup')%for some reason, the selectors need to be translated to work with "train on one set, test on another" style classification
@@ -27,10 +32,10 @@ for i = 1:S.numBalancedIts
         
         for t = 1:length(nTrainPats)
             if (nTrainPats(t)>0)
-            theseTrials_h = shuffle(find((trainregs(t,:))==1));
-            theseTrials = trainRegIdx(theseTrials_h);
-            idxInclude{t} = theseTrials(1:newBinSize);
-            active_trials_train(idxInclude{t}) = 1;
+                theseTrials_h = shuffle(find((trainregs(t,:))==1));
+                theseTrials = trainRegIdx(theseTrials_h);
+                idxInclude{t} = theseTrials(1:newBinSize);
+                active_trials_train(idxInclude{t}) = 1;
             end
         end
         
@@ -38,20 +43,20 @@ for i = 1:S.numBalancedIts
         active_trials = zeros(1,size(selIt,2));
         active_trials(allIncluded) = 1;
         active_trials(testRegIdx) = 1;
-%         NDiff = diff(nTrainPats);
-%         active_trials = sum(regs);
-%         
-%         if diff(nTrainPats)<0 
-%             theseTrials_h = shuffle(find((trainregs(1,:))==1));
-%             theseTrials = trainRegIdx(theseTrials_h);
-%             idxRemove = theseTrials(1:abs(NDiff));
-%             active_trials(idxRemove) = 0;
-%         elseif diff(nTrainPats)>0 
-%             theseTrials_h = shuffle(find((trainregs(2,:))==1));
-%             theseTrials = trainRegIdx(theseTrials_h);
-%             idxRemove = theseTrials(1:abs(NDiff));
-%             active_trials(idxRemove) = 0;
-%         end
+        %         NDiff = diff(nTrainPats);
+        %         active_trials = sum(regs);
+        %
+        %         if diff(nTrainPats)<0
+        %             theseTrials_h = shuffle(find((trainregs(1,:))==1));
+        %             theseTrials = trainRegIdx(theseTrials_h);
+        %             idxRemove = theseTrials(1:abs(NDiff));
+        %             active_trials(idxRemove) = 0;
+        %         elseif diff(nTrainPats)>0
+        %             theseTrials_h = shuffle(find((trainregs(2,:))==1));
+        %             theseTrials = trainRegIdx(theseTrials_h);
+        %             idxRemove = theseTrials(1:abs(NDiff));
+        %             active_trials(idxRemove) = 0;
+        %         end
         
         selItName = [S.thisSelector num2str(s) '_balanced' num2str(i)];
         selItGroupName = [S.thisSelector 'balanced'];

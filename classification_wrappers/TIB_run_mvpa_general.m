@@ -3,6 +3,7 @@ function [res, results]= TIB_run_mvpa_general(subj_array, task, TRsperRun, study
 
 %example call, CM localizer - TIB_run_mvpa_general({'001'},'CM_localizer',{[114,114]},'8080test')
 %example call, CM pseudodata - TIB_run_mvpa_general({'2'},'CM_localizer',{[375]},'8080test')
+%example call, existpatmat - TIB_run_mvpa_general({'15'},'ADNI',{[177]},'8080test')
 
 %subj_array = structural array listing strings of unique sub IDs. The code
 %at large assumes the rest of subj identifier, if any, that is not
@@ -35,8 +36,8 @@ for b=(1:length(subj_array))
     
     %[S idxTr idxTe par] = TIB_mvpa_params_betas(subj_array(b), task, TRsperRun);%runs with Circmaze data
     %[S idxTr idxTe par] = TIB_mvpa_params_8080(subj_array(b), task, TRsperRun{b}, 'raw');%runs with CM localizer data.
-    [S idxTr idxTe par] = TIB_mvpa_params_8080_betas(subj_array(b), task, TRsperRun{b}, 'raw');%runs with CM localizer data.
-    %[S idxTr idxTe par] = TIB_mvpa_params_ADNI(subj_array(b), task, TRsperRun{b}, 'betas');%runs with CM localizer data.
+    %[S idxTr idxTe par] = TIB_mvpa_params_8080_betas(subj_array(b), task, TRsperRun{b}, 'raw');%runs with CM localizer data.
+    [S idxTr idxTe par] = TIB_mvpa_params_ADNI(subj_array(b), task, TRsperRun{b}, 'betas');%runs with CM localizer data.
     %[S idxTr idxTe par] = TIB_mvpa_params_8080_pseudo(subj_array(b), task, TRsperRun{b}, 'raw');%runs with pseudodata
     
     S.idxTr = idxTr;
@@ -67,7 +68,7 @@ for b=(1:length(subj_array))
     existWorkspace = exist(S.workspace);
     
     %if S.existpatmat == 1
-        S.class_args.existpatmat = S.existpatmat; % if we are working through data loaded from a saved pattern matrix (e.g., ADNI)
+    S.class_args.existpatmat = S.existpatmat; % if we are working through data loaded from a saved pattern matrix (e.g., ADNI)
     %end
     
     for n = 1: S.num_results_iter
@@ -248,9 +249,20 @@ for b=(1:length(subj_array))
             [subj S] = PM_organizeBetasForClassification(subj,S);
         end
         
+        %scramble regressors for empirical baseline
+        if S.scrambleregs == 1
+            display('scrambling regressors in training set')
+            if strcmp(S.xvaltype,'nf')%if run labels have been replaced by random nfolds
+                [subj] =  JR_scramble_regressors(subj,'conds','randomNFold','trainActives','conds_scrambled');%here we feed in 'randomNFold' as a surrogate for "runs" because we want to randomize within each "bin" used for xvalidation. We feed in trainActives for active datapoints because this also reflects all datapoints used for training and testing <- this may change depending on study!
+            else %if we are doing 'loo'
+                [subj] =  JR_scramble_regressors(subj,'conds','runs','trainActives','conds_scrambled');%here we feed in 'randomNFold' as a surrogate for "runs" because we want to randomize within each "bin" used for xvalidation. We feed in trainActives for active datapoints because this also reflects all datapoints used for training and testing <- this may change depending on study!
+            end
+            
+        end
+        
         %equate the training set.
         if S.equate_number_of_trials_in_groups
-            display('bancing pattern counts across classes in training set')
+            display('balancing pattern counts across classes in training set')
             if S.numBalancedParams == 1
                 subj = PM_balanceTrainPats(S, subj); %balance only on main classification classes (standard)
             elseif S.numBalancedParams == 2
@@ -305,11 +317,11 @@ for b=(1:length(subj_array))
             
             %scrambled classification analysis
             if S.scrambleregs == 1
-                if strcmp(S.xvaltype,'nf')%if run labels have been replaced by random nfolds
-                    [subj] =  JR_scramble_regressors(subj,'conds','randomNFold','trainActives','conds_scrambled');%here we feed in 'randomNFold' as a surrogate for "runs" because we want to randomize within each "bin" used for xvalidation. We feed in trainActives for active datapoints because this also reflects all datapoints used for training and testing <- this may change depending on study!
-                else %if we are doing 'loo'
-                    [subj] =  JR_scramble_regressors(subj,'conds','runs','trainActives','conds_scrambled');%here we feed in 'randomNFold' as a surrogate for "runs" because we want to randomize within each "bin" used for xvalidation. We feed in trainActives for active datapoints because this also reflects all datapoints used for training and testing <- this may change depending on study!
-                end
+                %                 if strcmp(S.xvaltype,'nf')%if run labels have been replaced by random nfolds
+                %                     [subj] =  JR_scramble_regressors(subj,'conds','randomNFold','trainActives','conds_scrambled');%here we feed in 'randomNFold' as a surrogate for "runs" because we want to randomize within each "bin" used for xvalidation. We feed in trainActives for active datapoints because this also reflects all datapoints used for training and testing <- this may change depending on study!
+                %                 else %if we are doing 'loo'
+                %                     [subj] =  JR_scramble_regressors(subj,'conds','runs','trainActives','conds_scrambled');%here we feed in 'randomNFold' as a surrogate for "runs" because we want to randomize within each "bin" used for xvalidation. We feed in trainActives for active datapoints because this also reflects all datapoints used for training and testing <- this may change depending on study!
+                %                 end
                 [subj results] = cross_validation_ADNI(subj,S.classifier_pattern,'conds_scrambled', ...
                     S.classSelector, S.classifier_mask,S.class_args, 'perfmet_functs', S.perfmet_functs);
                 

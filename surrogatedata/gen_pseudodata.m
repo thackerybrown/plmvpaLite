@@ -9,8 +9,8 @@
 %% params
 
 % output params
-outputdir = '/home/brain/host/mvpa_sample_data/CM_pseudodat5/'; % where data will be saved
-outprefix = 'pseudo_0p5w0p25w0p1_unbalanced'; % prefix for niftis, onsets, & plots
+outputdir = '/home/brain/host/mvpa_sample_data/CM_pseudodat1/'; % where data will be saved
+outprefix = 'pseudo_test'; % prefix for niftis, onsets, & plots
 
 % imaging params
 mimicimg = '/home/brain/host/mvpa_sample_data/CM_localizer/CM001/bolds/run_01/run_01_004.nii'; % generate data with same dim as this image (nifti file)
@@ -28,7 +28,7 @@ weighttrs = [0 .25 .5 0.25 0]; % how are TRs weighted in pattern classification 
 condmu = [1 1 1]; % mean signal for each condition
 condvar = [1 1 1]; % variance across voxels for individual stimuli within each condition
 condcov = [0.5 0.25 0.25; 0.25 0.5 0.1; 0.25 0.1 0.5];%[0.8 0.5 0; 0.5 0.8 0.5; 0 0.5 0.8]; % covariance between conditions
-noisevar = 1; % variance of noise (mean = 0)
+noisevar = .05; % variance of noise (mean = 0)
 lineardrift = .2; % total linear drift across scan
 hrf = spm_hrf(tr); % hrf for convolving data
 

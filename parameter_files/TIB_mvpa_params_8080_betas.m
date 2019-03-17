@@ -59,8 +59,8 @@ S.datafile = 'testsubmat_fixed.mat'; % added for ADNI neuropsych study. Replaces
 %cross-validation (see section below). If you want to train on one set of
 %data (e.g., a localizer) and test on another (e.g., a retrieval task),
 %then specify different tasks or study phases
-S.trainTask = 'EAvsAAvsScene';%Circmaze - 'goals' or 'plan'
-S.testTask = 'EAvsAAvsScene';%Circamze - 'goals' or 'plan'
+S.trainTask = 'EAvsScene';%Circmaze - 'goals' or 'plan'
+S.testTask = 'EAvsScene';%Circamze - 'goals' or 'plan'
 
 %x-validation info
 S.xvaltype = 'loo'; %set to 'loo' for leave-one-out x-validation or 'nf' for nfold using the S.nFolds defined below.
@@ -652,6 +652,6 @@ S.class_args.chooseOptimalPenalty = 0; % 1 = yes. cycle through cost parameters 
 S.class_args.penaltyRange = [.001 .005 .01 .05 .1 .5 1 5 10 50 100 500 1000 50000]; % a vector "[]" of cost parameters to cycle through
 S.class_args.radialBasisSelection = [];%[.00001 .0001 .001 .01 .1 1 10];
 S.class_args.nFoldsPenaltySelection = 10; % number of cross validation folds for penalty parameter selection.
-S.class_args.penalty = 10; %uncomment if not using optimal penalty. Typical value is 1. If using sample data provided with plmvpaLite, start with 0.000001 to see how minimal regularization harms performance.
+S.class_args.penalty = 1000; %uncomment if not using optimal penalty. Typical value is 1. If using sample data provided with plmvpaLite, start with 0.000001 to see how minimal regularization harms performance.
 %establishment
 end

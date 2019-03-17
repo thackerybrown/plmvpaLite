@@ -15,11 +15,16 @@ setmax = 0;%if a non-zero value is specified, override number of cues below to h
 %files and data
 cuefile = [S.mvpa_dir 'cues_' S.subj_id '_allruns.mat'];
 if exist(cuefile)==0;
-    error('you do not appear to have a file specifying a second balancing param')
+    error('you do not appear to have a file specifying a second balancing param; hardcoded in TB_balanceTrainPats')
 end
 load(cuefile)
 sels = squeeze(get_group_as_matrix(subj, 'selector',S.thisSelector));%create matrix of bins/iterations*trials (1s = training, 2s = testing trials)
-regs = get_mat(subj, 'regressors', 'conds');%get matrix of conditions/classes*trials (1s = trial X = this class, 0s = trial X ~= this class)
+
+if S.scrambleregs ~= 1
+    regs = get_mat(subj, 'regressors', 'conds');%get matrix of conditions/classes*trials (1s = trial X = this class, 0s = trial X ~= this class)
+elseif S.scrambleregs == 1
+    regs = get_mat(subj, 'regressors', 'conds_scrambled');
+end
 
 if strcmp(S.thisSelector, 'TrainTestOneIterGroup')%for some reason, the selectors need to be translated to work with "train on one set, test on another" style classification
     sels = sels';
