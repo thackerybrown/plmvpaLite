@@ -50,7 +50,7 @@ end
 
 S.preprocType = 'spm'; % 'spm' for spm preprocessing, 'knk' for kendrick preprocessing
 
-S.datafile = 'feature_set13.mat'; % added for ADNI. Replaces MRI image files with an existing matrix of pattern data
+S.datafile = 'feature_set150.mat'; % added for ADNI. Replaces MRI image files with an existing matrix of pattern data
 
 %% tasks or study phases
 %set trainTask and testTask to be the same if you want to train and test on the same set of trials via
@@ -65,7 +65,7 @@ S.xvaltype = 'nf'; %set to 'loo' for leave-one-out x-validation or 'nf' for nfol
 
 %how many single trial betas are the? Number is not used (can be ignored)
 %for studies using raw bolds
-S.stbetacount = 456; % NOTE: the code assumes all single trial betas of potential interest are contiguous in the model. If multi-event betas are inteleaved in the .mat model structure, this will need more editing.
+S.stbetacount = 177; % NOTE: the code assumes all single trial betas of potential interest are contiguous in the model. If multi-event betas are inteleaved in the .mat model structure, this will need more editing.
 
 %%model information - define which timepoints or images correspond to which classes of data
 if strcmp(S.inputformat, 'raw')
@@ -73,9 +73,9 @@ if strcmp(S.inputformat, 'raw')
     S.onsets_filename_tr = [S.subj_id '_localizer_onsets_test'];% added for train on 1 phase, test on another - this assumes the data are actually in the same set of files.
     S.onsets_filename_tst = [S.subj_id '_localizer_onsets_test'];% added for train on 1 phase, test on another - this assumes the data are actually in the same set of files.
 elseif strcmp(S.inputformat, 'betas')
-    S.onsets_filename = ['names_set13'];%['onsets_' S.subj_id '_ADNI1'];
-    S.onsets_filename_tr = ['names_set13'];%['onsets_' S.subj_id '_ADNI1'];
-    S.onsets_filename_tst = ['names_set13'];%['onsets_' S.subj_id '_ADNI1'];
+    S.onsets_filename = ['names_set150'];%['onsets_' S.subj_id '_ADNI1'];
+    S.onsets_filename_tr = ['names_set150'];%['onsets_' S.subj_id '_ADNI1'];
+    S.onsets_filename_tst = ['names_set150'];%['onsets_' S.subj_id '_ADNI1'];
     
     S.betaidx_filename = [S.subj_id '_betas_idx'];
     S.betaidx_filename_tr = [S.subj_id '_betas_idx_tr'];
@@ -630,7 +630,7 @@ S.class_args.classType = 'libLin';
 S.perfmet_functs = 'perfmet_maxclass'; % performance metric
 S.statmap_funct = 'statmap_anova';%'AG_statmap_anova'; % performance metric
 S.nPlsCompsSet = 0; % number of pls components to include. 0 = do not use pls components.
-S.nFolds = 100; % number of cross validation iterations - only used for nFold (as opposed to run-by-run leave-one-out)
+S.nFolds = 50; % number of cross validation iterations - only used for nFold (as opposed to run-by-run leave-one-out)
 
 S.class_args.nVox = 0; % number of voxels to select with feature selection e.g. [1000 5000 10000]
 S.class_args.fseltype = 'topn'; % feature selection format: top N vox (topn) or random N vox (rand)?
