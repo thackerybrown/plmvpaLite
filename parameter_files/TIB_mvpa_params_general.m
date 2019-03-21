@@ -171,6 +171,7 @@ S.regNames = {'CondA' 'CondB'}; % should match number of classes
 
 %NOTE: for beta analyses, we don't average over multiple images because
 %different images = different events
+S.inputformat = imgtype; %assign input from function call. Either 'raw' for raw bold images or 'betas' for beta images. Selection here automatically changes some params below.
 if strcmp(S.inputformat, 'raw')
     %S.TR_weights_set = {{[.0072 .2168 .3781 .2742 .1237] [.0072 .2168 .3781 .2742 .1237]}}; %approximates the canonical haemodynamic response
     S.TR_weights_set = {{[0 0.25 0.5 0.25] [0 0.25 0.5 0.25]}};%use double-bracket structure in case want to set code up to run a sliding window across multiple TR bins
@@ -223,7 +224,6 @@ S.subj_id = par.substr;
 par.task = task; %assign input from function call. Task phase label. For circmaze, this is 'goals' or 'plan'. For localizer (8080), this is 'CM_Localizer'
 
 %input image info
-S.inputformat = imgtype; %assign input from function call. Either 'raw' for raw bold images or 'betas' for beta images. Selection here automatically changes some params below.
 if strcmp(S.inputformat, 'raw')
     data_imgs_to_use = 'raw_filenames.mat';
 elseif strcmp(S.inputformat, 'betas')
