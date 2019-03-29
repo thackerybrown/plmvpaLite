@@ -11,7 +11,11 @@ S.runs = runs;
 if strcmp(S.patternType, 'betas')
     if S.existpatmat==1 %add code to handle previously extracted beta data (instead of extracting it using SPM and masks)
         subj = init_subj(S.exp_name,S.subj_id);
-        subj = load_matrix_pattern_2D(subj,'betas',S.roi_name, S.img_files);
+        subj = load_matrix_pattern_2D(subj,'betas',S.roi_name, S.img_files);        
+        if S.addnoise > 0 %add gaussian white noise to manage sparsity in data
+            subj.patterns{1,1}.mat = awgn(subj.patterns{1,1}.mat,S.addnoise);
+            disp('WARNING, adding noise')
+        end
         runs = S.idxTr.sess;
         runs = runs(1:length(subj.patterns{1,1}.mat(1,:))); %shorten vector to length of usable betas, 10/15/2014
         subj = init_object(subj,'selector','runs');
@@ -26,7 +30,11 @@ if strcmp(S.patternType, 'betas')
         % if we are going to use betas to classify, load the betas
         subj = init_subj(S.exp_name,S.subj_id);
         subj = load_spm_mask(subj,S.roi_name,S.roi_file);
-        subj = load_analyze_pattern(subj,'betas',S.roi_name, S.img_files,'single',true);
+        subj = load_analyze_pattern(subj,'betas',S.roi_name, S.img_files,'single',true);        
+        if S.addnoise > 0 %add gaussian white noise to manage sparsity in data
+            subj.patterns{1,1}.mat = awgn(subj.patterns{1,1}.mat,S.addnoise);
+            disp('WARNING, adding noise')
+        end
         
         % make runs vector
         %if S.xval
@@ -106,7 +114,11 @@ elseif strcmp(S.patternType, 'raw')
         % load patterns
         subj = init_subj(S.exp_name,S.subj_id);
         subj = load_spm_mask(subj,S.roi_name,S.roi_file);
-        subj = load_analyze_pattern(subj,'spiral',S.roi_name, S.img_files,'single',true);
+        subj = load_analyze_pattern(subj,'spiral',S.roi_name, S.img_files,'single',true);        
+        if S.addnoise > 0 %add gaussian white noise to manage sparsity in data
+            subj.patterns{1,1}.mat = awgn(subj.patterns{1,1}.mat,S.addnoise);
+            disp('WARNING, adding noise')
+        end
         
         % set runs
         subj = init_object(subj,'selector','runs');

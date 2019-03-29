@@ -140,6 +140,11 @@ S.numBalancedIts = 10; % number of iterations to run, with different randomizati
 % round of z-scoring across all timepoints. Betas are by default not. 
 S.perform_second_round_of_zscoring = 0;  % z-score data again immediately prior to classification
 
+% ~~~ Noising/Denoising
+S.addnoise = 0; %Overly sparse data (lots of features that often have zeroes)? Add gaussian white noise to pattern matrix to help with overfitting. >0 = yes. Value specified = target SNR.
+%S.denoise = 0; %undergo denoising?
+%S.denoiseOpt.denoisespec = '10001'; %which parts of the glm output do we want to save?
+
 % ~~~ Signal intensity analysis
 S.thisSigIntenseSelector = 'randomNFold_xval'; %which selector to use for signal intensity analysis
 S.zscoreIntensityVals = 1; % zscore the intensity values?
@@ -656,10 +661,6 @@ S.intMaskName = 'interactionMask';
 S.intPatName = 'interactions';
 S.intGroupName = 'interactionsGroup';
 S.intUseIntsWithUniqueInfo = 1;
-
-%% UNSUPPORTED -- Denoising
-S.denoise = 0; %undergo denoising?
-S.denoiseOpt.denoisespec = '10001'; %which parts of the glm output do we want to save?
 
 %% UNSUPPORTED -- classifier parameters
 S.nPlsCompsSet = 0; % number of pls components to include. 0 = do not use pls components.

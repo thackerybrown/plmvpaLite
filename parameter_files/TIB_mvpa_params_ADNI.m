@@ -589,7 +589,8 @@ S.intUseIntsWithUniqueInfo = 1;
 S.thisSigIntenseSelector = 'randomNFold_xval'; %which selector to use for signal intensity analysis
 S.zscoreIntensityVals = 1; % zscore the intensity values?
 
-%% Denoising
+%% Noising/Denoising
+S.addnoise = 0; %Overly sparse data (lots of features that often have zeroes)? Add gaussian white noise to pattern matrix to help with overfitting. >0 = yes. Value specified = target SNR.
 S.denoise = 0; %undergo denoising?
 S.denoiseOpt.denoisespec = '10001'; %which parts of the glm output do we want to save?
 

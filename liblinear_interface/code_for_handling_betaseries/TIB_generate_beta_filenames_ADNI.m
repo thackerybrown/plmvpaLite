@@ -30,8 +30,16 @@ if strcmp(S.trainTask,S.testTask) %if we are doing x-validation classification
 % betaidx{1,5} = strcmpi('plan5',names);
 
 %% binary
- betaidx{1,1} = strcmpi('AD',names);
- betaidx{1,2} = strcmpi('CN',names);
+% betaidx{1,1} = strcmpi('Old',names);
+% betaidx{1,2} = strcmpi('New',names);
+ %betaidx{1,1} = strcmpi('Corr',names);
+ %betaidx{1,2} = strcmpi('Incorr',names);
+
+%% 4-way
+betaidx{1,1} = strcmpi('Old',names);
+betaidx{1,2} = strcmpi('New',names);
+betaidx{1,3} = strcmpi('Oldi',names);
+betaidx{1,4} = strcmpi('Newi',names);
 
 %% 5-way
 %betaidx{1,1} = strcmpi('cues1',names);
@@ -59,8 +67,16 @@ if strcmp(S.trainTask,S.testTask) %if we are doing x-validation classification
 % betaidx{1,10} = strcmpi('cues5_2',names);
 
 %% binary
-bnames{1,1} = 'AD';
-bnames{1,2} = 'CN';
+%bnames{1,1} = 'Old';
+%bnames{1,2} = 'New';
+%bnames{1,1} = 'Corr';
+%bnames{1,2} = 'Incorr';
+
+%% 4-way
+ bnames{1,1} = 'Old';
+ bnames{1,2} = 'New';
+ bnames{1,3} = 'Oldi';
+ bnames{1,4} = 'Newi';
 
 %% 5-way
 % bnames{1,1} = 'plan1';
