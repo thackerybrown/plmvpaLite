@@ -548,7 +548,7 @@ S.num_iter_with_same_data = 1; % number of times to run the classfication step f
 %% Balancing Parameters
 S.equate_number_of_trials_in_groups = 1; % equate number of trials in conditions
 S.numBalancedParams = 1; % number of parameters to balance across (e.g., both goal location AND cue in Circmaze data). The code currently (12/29/17) only handles two options - 1 (standard; main class type), or 2 (main class type plus a second parameter, specified in a second file).
-S.numBalancedIts = 5; % number of iterations to run, with different randomization for the balancing
+S.numBalancedIts = 10; % number of iterations to run, with different randomization for the balancing
 
 %% Z-Scoring and outlier detection
 S.perform_second_round_of_zscoring = 0;  % z-score data again immediately prior to classification
@@ -633,7 +633,7 @@ S.statmap_funct = 'statmap_anova';%'AG_statmap_anova'; % performance metric
 S.nPlsCompsSet = 0; % number of pls components to include. 0 = do not use pls components.
 S.nFolds = 100; % number of cross validation iterations - only used for nFold (as opposed to run-by-run leave-one-out)
 
-S.class_args.nVox = 100; % number of voxels to select with feature selection e.g. [1000 5000 10000]
+S.class_args.nVox = 0; % number of voxels to select with feature selection e.g. [1000 5000 10000]
 S.class_args.fseltype = 'topn'; % feature selection format: top N vox (topn) or random N vox (rand)?
 S.class_args.libLin = '-q -s 5 -B 1'; %arguments for liblinear; -s 0 = L2; -s 6 = L1; -s 5 = L1 with L2 loss; -s 3 L2 with L1 loss
 S.class_args.libsvm = '-q -s 0 -t 2 -d 3'; % arguments for libsvm

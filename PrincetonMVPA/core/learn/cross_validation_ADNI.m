@@ -232,14 +232,24 @@ for n=1:nIterations
         
     elseif class_args.existpatmat == 1
         
-        % added by TIB - for unmasked data (e.g., existing matrix ADNI)
-        pats = get_mat(subj,'pattern',cur_patname);
-        
-        % Create the training patterns and targets
-        trainpats  = pats(:,train_idx);
-        traintargs = regressors( :,train_idx);
-        testpats   = pats(:,test_idx);
-        testtargs  = regressors( :,test_idx);
+        if ~ismaskgroup
+            % added by TIB - for unmasked data (e.g., existing matrix ADNI)
+            pats = get_mat(subj,'pattern',cur_patname);
+            
+            % Create the training patterns and targets
+            trainpats  = pats(:,train_idx);
+            traintargs = regressors( :,train_idx);
+            testpats   = pats(:,test_idx);
+            testtargs  = regressors( :,test_idx);
+        elseif ismaskgroup %if we implemented a post-hoc mask to the existing pattern (e.g., featureselection)
+            masked_pats = get_masked_pattern_existpat(subj,cur_patname,cur_maskname);
+            
+            % Create the training patterns and targets
+            trainpats  = masked_pats(:,train_idx);
+            traintargs = regressors( :,train_idx);
+            testpats   = masked_pats(:,test_idx);
+            testtargs  = regressors( :,test_idx);
+        end
     end
     
     % Create a function handle for the classifier training function

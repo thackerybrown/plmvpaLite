@@ -296,7 +296,11 @@ for b=(1:length(subj_array))
         if S.class_args.nVox>0
             display('Performing feature selection')
             statmap_arg.use_mvpa_ver = 1;%statmap_arg = []; %%TIB - edited this so that we draw on Princeton MVPA ANOVA func instead of needing stats toolbox
+            if S.existpatmat == 1
+            subj = TIB_feature_select_top_N_vox_existpatmat(subj,S.preprocPatCondensedName,'conds',S.classSelector,'nVox_thresh',S.class_args.nVox, 'statmap_funct', S.statmap_funct, 'statmap_arg',statmap_arg, 'fseltype', S.class_args.fseltype);    
+            else
             subj = TIB_feature_select_top_N_vox(subj,S.preprocPatCondensedName,'conds',S.classSelector,'nVox_thresh',S.class_args.nVox, 'statmap_funct', S.statmap_funct, 'statmap_arg',statmap_arg, 'fseltype', S.class_args.fseltype);
+            end
             S.classifier_mask = subj.masks{end}.name; % use group of masks created by ANOVA
             S.classifier_mask_group = subj.masks{end}.group_name;
         end
