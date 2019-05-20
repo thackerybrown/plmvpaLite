@@ -153,7 +153,7 @@ for r = 1:nRuns
     % calc the mean and std
     mu = mean(pat(:,actives_this_run),2);
     sigma = std(pat(:,actives_this_run),[],2);
-    % replicte them over the second dimension
+    % replicate them over the second dimension
     mu = mu(:,ones(1,sum(this_run)));
     sigma = sigma(:,ones(1,sum(this_run)));
     

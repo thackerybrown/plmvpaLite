@@ -30,7 +30,7 @@ mask = Mask;
 S.exp_name = 'CM_localizer';
 study_prefix = 'CM';
 
-S.inputformat = 'betas'; % are we working with BOLDs/timeseries ('raw') or with beta maps ('betas')?
+S.inputformat = 'raw'; % are we working with BOLDs/timeseries ('raw') or with beta maps ('betas')?
 
 S.onsets_filename = [S.subj_id '_localizer_onsets_test_short'];
 

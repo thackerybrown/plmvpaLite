@@ -576,7 +576,7 @@ if strcmp(S.inputformat, 'betas')
     %ASSUMES that single trial regressors are continuous - e.g., the first
     %n onsets values are those we will classify over. Modify code further
     %if multi-event regressors are interleaved with single-trial ones.
-    idxTr.sess = onsets(1:S.stbetacount);%length(onsets)-1);%NOTE: Specific to circmaze, we are skipping the last onsets entry because this is an array of "arrows period" onsets.
+    idxTr.sess = onsets(1:S.stbetacount);
     
     varswecareabout = length(idxTr.sess);
     onsetscount = 0;
