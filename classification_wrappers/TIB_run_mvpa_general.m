@@ -39,8 +39,8 @@ for b=(1:length(subj_array))
     %[S idxTr idxTe par] = TIB_mvpa_params_8080_betas(subj_array(b), task, TRsperRun{b}, 'raw');%runs with CM localizer data.
     %[S idxTr idxTe par] = TIB_mvpa_params_general(subj_array(b), task, TRsperRun{b}, 'raw');%runs with CM localizer data.
     %[S idxTr idxTe par] = TIB_mvpa_params_SPIKES(subj_array(b), task, TRsperRun{b}, 'betas');%runs with CM localizer data.
-    % [S idxTr idxTe par] = TIB_mvpa_params_EOG(subj_array(b), task, TRsperRun{b}, 'betas');%runs with CM localizer data.
-     [S idxTr idxTe par] = TIB_mvpa_params_mnist(subj_array(b), task, TRsperRun{b}, 'betas');%runs with CM localizer data.
+     [S idxTr idxTe par] = TIB_mvpa_params_general_EOG(subj_array(b), task, TRsperRun{b}, 'betas');%runs with CM localizer data.
+     %[S idxTr idxTe par] = TIB_mvpa_params_mnist(subj_array(b), task, TRsperRun{b}, 'betas');%runs with CM localizer data.
      %[S idxTr idxTe par] = TIB_mvpa_params_ADNI(subj_array(b), task, TRsperRun{b}, 'betas');%runs with CM localizer data.
     %[S idxTr idxTe par] = TIB_mvpa_params_8080_pseudo(subj_array(b), task, TRsperRun{b}, 'raw');%runs with pseudodata
     
@@ -256,9 +256,11 @@ for b=(1:length(subj_array))
         %scramble regressors for empirical baseline
         if S.scrambleregs == 1
             display('scrambling regressors in training set')
-            if strcmp(S.xvaltype,'nf')%if run labels have been replaced by random nfolds
+            if strcmp(S.classSelector, 'TrainTestOneIterGroup')
+                [subj] =  JR_scramble_regressors(subj,'conds','TrainTestOneIter','TrainTestOneIter','conds_scrambled');%here we feed in 'randomNFold' as a surrogate for "runs" because we want to randomize within each "bin" used for xvalidation. We feed in trainActives for active datapoints because this also reflects all datapoints used for training and testing <- this may change depending on study!
+            elseif strcmp(S.xvaltype,'nf')%if run labels have been replaced by random nfolds
                 [subj] =  JR_scramble_regressors(subj,'conds','randomNFold','trainActives','conds_scrambled');%here we feed in 'randomNFold' as a surrogate for "runs" because we want to randomize within each "bin" used for xvalidation. We feed in trainActives for active datapoints because this also reflects all datapoints used for training and testing <- this may change depending on study!
-            else %if we are doing 'loo'
+            elseif strcmp(S.xvaltype, 'loo') %if we are doing 'loo'
                 [subj] =  JR_scramble_regressors(subj,'conds','runs','trainActives','conds_scrambled');%here we feed in 'randomNFold' as a surrogate for "runs" because we want to randomize within each "bin" used for xvalidation. We feed in trainActives for active datapoints because this also reflects all datapoints used for training and testing <- this may change depending on study!
             end
             

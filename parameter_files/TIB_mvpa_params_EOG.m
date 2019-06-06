@@ -18,7 +18,7 @@ idxTr = [];
 idxTe = [];
 
 %Study name
-S.exp_name = 'SeniorCapstone'; %change this to flexibly redirect the script to different studies in subdirectories
+S.exp_name = 'EOG'; %change this to flexibly redirect the script to different studies in subdirectories
 
 %Subject ID/number
 par.substr = ['Subject' subj_id{1}];
@@ -83,9 +83,9 @@ elseif strcmp(S.inputformat, 'betas')
 end
 
 %% directories~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-S.expt_dir = ['/media/sf_host/mvpa_sample_data/' S.exp_name '/'];%study location
+S.expt_dir = ['/mnt/hgfs/Work/mvpa_sample_data/' S.exp_name '/'];%study location
 
-par.subdir =[S.expt_dir 'data/Data/' S.subj_id];%subject location
+par.subdir =[S.expt_dir '/' S.subj_id];%subject location
 
 par.funcdir =[par.subdir '/bolds/'];%subfolder for 'raw' BOLD data. Assumes BOLDs are stored in subfolders labeled 'run_01', etc)
 
@@ -109,7 +109,7 @@ S.group_mvpa_dir = [S.expt_dir 'mvpa_output_files'];%results .mat files are spit
 
 %% identify betas
 if strcmp(S.inputformat, 'betas')%if we are running a beta analysis, take a moment to create "model" files for the beta images
-    TIB_generate_beta_filenames_ADNI(S);
+    TIB_generate_beta_filenames(S);
 end
 
 %% create raw_filenames on the fly (as opposed to making it by loading structures from an SPM.mat file [for this method, see comment above])
