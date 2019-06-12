@@ -106,7 +106,7 @@ par.ref_funcimage = [par.boldnames '_01_010' par.imageextension];
 
 % ~~~ WHAT IS YOUR *computer base path* (where your study and its subfolders
 % live
-S.sbasepath = '/home/brain/host/mvpa_sample_data/';
+S.sbasepath = '/mnt/hgfs/Work/mvpa_sample_data/';
 
 % ~~~ WHAT IS THE NAME *of your model folder's directory*?
 S.modfold = 'results01';

@@ -61,7 +61,7 @@ S.stbetacount = 89; % NOTE: the code assumes all single trial betas of potential
 %% EDIT - You must establish parameters for this SPECIFIC classification scenario involving the data described in the preceding section
 
 % ~~~ what study conditions or phases do you want to *TRAIN* on?
-S.trainTask = 'OnevsTwo';
+S.trainTask = 'OnevsTwovsThreevsFour';
 
 % ~~~ WHAT is the ROI we're analyzing
 S.roi_name = 'NativeGM_BOLDres.nii'; %S.roi_name = 'HVisCtx_1.nii'; %S.roi_name = 'NativeGM_BOLDres.nii';
@@ -70,7 +70,7 @@ S.roi_name = 'NativeGM_BOLDres.nii'; %S.roi_name = 'HVisCtx_1.nii'; %S.roi_name 
 % NOTE: if the string here is not the same as S.trainTask, the classifier
 % will switch to a 'tr1teo' procedure (train one phase, test on the other).
 % When would tr1teo be useful? e.g., if you want to train on a functional localizer, and test on a memory retrieval task
-S.testTask = 'OnevsTwo';
+S.testTask = 'OnevsTwovsThreevsFour';
 
 % ~~~ what cross-validation procedure do you want? *ignored if S.testTask
 % and S.trainTask are not the same
@@ -198,7 +198,7 @@ S.statmap_funct = 'statmap_anova';%'AG_statmap_anova'; % performance metric
 
 S.class_args.nVox = 0; % number of voxels to select with feature selection e.g. [1000 5000 10000]
 S.class_args.fseltype = 'topn'; % feature selection format: top N vox (topn) or random N vox (rand)?
-S.class_args.libLin = '-q -s 0 -B 1'; %arguments for liblinear; -s 0 = L2; -s 6 = L1; -s 5 = L1 with L2 loss; -s 3 L2 with L1 loss
+S.class_args.libLin = '-q -s 5 -B 1'; %arguments for liblinear; -s 0 = L2; -s 6 = L1; -s 5 = L1 with L2 loss; -s 3 L2 with L1 loss
 S.class_args.constant = true; % include a constant term?
 S.class_args.prefitWeights = true;
 
@@ -370,6 +370,17 @@ elseif strcmp(S.trainTask,'OnevsThree')
     end
     S.durTrain = numel(S.filenames_train) * par.TR;
     
+ elseif strcmp(S.trainTask,'OnevsTwovsThreevsFour')
+    S.onsetsTrainDir = [S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
+    S.condsTrain = {{'1'} {'2'}  {'3'} {'4'}} ;%corresponds to the names in the onsets.mat or betas_idx.mat files. This is used to select what is being compared with what.
+    S.TrainRuns = par.scansSelect.(par.task).loc;%pull up indexing, defined above, for RUNS corresponding to task of interest (i.e. if runs 2,4,6 correspond to task 1)
+    if strcmp(S.inputformat, 'raw')
+        S.filenames_train = raw_filenames;%
+    elseif strcmp(S.inputformat, 'betas')
+        S.filenames_train = beta_filenames;%
+    end
+    S.durTrain = numel(S.filenames_train) * par.TR;
+    
 end
 
 % testing - this defines the testing set. The code is set up this way to enable us to step outside xval if desired to test on different set of data (e.g., at retrieval)
@@ -389,6 +400,18 @@ if strcmp(S.testTask,'OnevsTwo')
 elseif strcmp(S.testTask,'OnevsThree')
     S.onsetsTestDir =[S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
     S.condsTest = {{'1'} {'3'}};
+    S.nwayclass = num2str(numel(S.condsTest));%stores the number classification dimensions just for reference (i.e. is this a 5-way or a 2-way/binary classification?)
+    S.TestRuns = par.scansSelect.(par.task).loc;
+    if strcmp(S.inputformat, 'raw')
+        S.filenames_test = raw_filenames;%
+    elseif strcmp(S.inputformat, 'betas')
+        S.filenames_test = beta_filenames;%
+    end
+    S.durTest = numel(S.filenames_test) * par.TR;
+    
+    elseif strcmp(S.testTask,'OnevsTwovsThreevsFour')
+    S.onsetsTestDir =[S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
+    S.condsTest = {{'1'} {'2'} {'3'} {'4'}};
     S.nwayclass = num2str(numel(S.condsTest));%stores the number classification dimensions just for reference (i.e. is this a 5-way or a 2-way/binary classification?)
     S.TestRuns = par.scansSelect.(par.task).loc;
     if strcmp(S.inputformat, 'raw')

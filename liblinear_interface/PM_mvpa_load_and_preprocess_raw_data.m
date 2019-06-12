@@ -57,59 +57,59 @@ if strcmp(S.patternType, 'betas')
     
 elseif strcmp(S.patternType, 'raw')
     
-    if S.denoise
-        
-        %initialize subj structure,
-        subj = init_subj(S.exp_name,S.subj_id);
-        
-        %load masks
-        subj = load_spm_mask(subj,S.roi_name,S.roi_file);
-        subj = load_spm_mask(subj,S.noiseVoxels_name,S.noiseVoxels_file);
-        subj = load_spm_mask(subj,S.sigVoxels_name,S.sigVoxels_file);
-        
-        %create sub-masks for signal and noise
-        subj = intersect_masks(subj,S.roi_name,S.sigVoxels_name, 'new_maskname', 'sigMask');
-        subj = intersect_masks(subj,S.roi_name,S.noiseVoxels_name, 'new_maskname', 'noiseMask');
-        
-        %load functional data
-        subj = load_analyze_pattern(subj,'patsAllVox', S.roi_name, S.img_files,'single',true);
-        
-        % make runs vector
-        subj = init_object(subj,'selector','runs');
-        subj = set_mat(subj,'selector','runs',runs);
-        
-        % zscore the data from each run
-        subj = zscore_runs(subj,'patsAllVox','runs'); % Z-score the data
-        subj = remove_mat(subj,'pattern','patsAllVox');
-        
-        % make a mask of only voxels considered to be noise (e.g. white
-        % matter voxels)
-        allMaskVox = find(get_mat(subj,'mask',S.roi_name));
-        noiseMask = find(get_mat(subj,'mask','noiseMask'));
-        noiseWithinMask = ismember(allMaskVox,noiseMask);
-        
-        opt = S.denoiseOpt;
-        opt.noiseWithinMask = noiseWithinMask;
-        
-        % denoise data, separately for train and test set
-        if S.xval
-            [~, denoisedData] = denoiseWrapper(S, subj, 1:length(S.runs_vector), 'patsAllVox_z', opt, [], 0);
-        else
-            [dnResTrain, denoisedDataTrain] = denoiseWrapper(S, subj, find(S.TrainTestOrder==1), 'patsAllVox_z', opt, 'train');
-            [dnResTest, denoisedDataTest] = denoiseWrapper(S, subj, find(S.TrainTestOrder==2), 'patsAllVox_z', opt, 'test');
-            denoisedData = [denoisedDataTrain denoisedDataTest];
-            S.dnInputsTrain = dnResTrain.inputs;
-            S.dnInputsTest = dnResTest.inputs;
-            clear denoisedDataTrain denoisedDataTest;
-        end
-        
-        %put denoised data in subj struct
-        cat_DND = squeeze(cat(4,denoisedData{:}));
-        subj = remove_mat(subj,'pattern','patsAllVox');
-        subj = duplicate_object(subj,'pattern','patsAllVox','patsAllVox_z_dn');
-        subj = set_mat(subj,'pattern','patsAllVox_z_dn',cat_DND,'ignore_diff_size',true);
-        
-    else % if we're not going to denoise...
+%     if S.denoise
+%         
+%         %initialize subj structure,
+%         subj = init_subj(S.exp_name,S.subj_id);
+%         
+%         %load masks
+%         subj = load_spm_mask(subj,S.roi_name,S.roi_file);
+%         subj = load_spm_mask(subj,S.noiseVoxels_name,S.noiseVoxels_file);
+%         subj = load_spm_mask(subj,S.sigVoxels_name,S.sigVoxels_file);
+%         
+%         %create sub-masks for signal and noise
+%         subj = intersect_masks(subj,S.roi_name,S.sigVoxels_name, 'new_maskname', 'sigMask');
+%         subj = intersect_masks(subj,S.roi_name,S.noiseVoxels_name, 'new_maskname', 'noiseMask');
+%         
+%         %load functional data
+%         subj = load_analyze_pattern(subj,'patsAllVox', S.roi_name, S.img_files,'single',true);
+%         
+%         % make runs vector
+%         subj = init_object(subj,'selector','runs');
+%         subj = set_mat(subj,'selector','runs',runs);
+%         
+%         % zscore the data from each run
+%         subj = zscore_runs(subj,'patsAllVox','runs'); % Z-score the data
+%         subj = remove_mat(subj,'pattern','patsAllVox');
+%         
+%         % make a mask of only voxels considered to be noise (e.g. white
+%         % matter voxels)
+%         allMaskVox = find(get_mat(subj,'mask',S.roi_name));
+%         noiseMask = find(get_mat(subj,'mask','noiseMask'));
+%         noiseWithinMask = ismember(allMaskVox,noiseMask);
+%         
+%         opt = S.denoiseOpt;
+%         opt.noiseWithinMask = noiseWithinMask;
+%         
+%         % denoise data, separately for train and test set
+%         if S.xval
+%             [~, denoisedData] = denoiseWrapper(S, subj, 1:length(S.runs_vector), 'patsAllVox_z', opt, [], 0);
+%         else
+%             [dnResTrain, denoisedDataTrain] = denoiseWrapper(S, subj, find(S.TrainTestOrder==1), 'patsAllVox_z', opt, 'train');
+%             [dnResTest, denoisedDataTest] = denoiseWrapper(S, subj, find(S.TrainTestOrder==2), 'patsAllVox_z', opt, 'test');
+%             denoisedData = [denoisedDataTrain denoisedDataTest];
+%             S.dnInputsTrain = dnResTrain.inputs;
+%             S.dnInputsTest = dnResTest.inputs;
+%             clear denoisedDataTrain denoisedDataTest;
+%         end
+%         
+%         %put denoised data in subj struct
+%         cat_DND = squeeze(cat(4,denoisedData{:}));
+%         subj = remove_mat(subj,'pattern','patsAllVox');
+%         subj = duplicate_object(subj,'pattern','patsAllVox','patsAllVox_z_dn');
+%         subj = set_mat(subj,'pattern','patsAllVox_z_dn',cat_DND,'ignore_diff_size',true);
+%         
+%     else % if we're not going to denoise...
         
         % load patterns
         subj = init_subj(S.exp_name,S.subj_id);
@@ -131,7 +131,7 @@ elseif strcmp(S.patternType, 'raw')
         % zscore the data
         subj = zscore_runs(subj,'spiral_hp','runs');
         subj = remove_mat(subj,'pattern','spiral_hp');
-    end
+%    end
     
     %save the workspace
     if ~exist(S.workspace_dir)
