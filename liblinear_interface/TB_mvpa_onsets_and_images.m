@@ -45,8 +45,8 @@ elseif strcmp(part, 'test')
     theseFiles = S.filenames_test;%good, comes from PM_mvpa_params
     theseTRWeights = S.TR_weights{2};%good, comes from PM_mvpa_params
     thisIdx = S.idxTe;
-%added for train on one set, test on the other set circumstance -
-%6/11/2014, TIB
+    %added for train on one set, test on the other set circumstance -
+    %6/11/2014, TIB
 elseif strcmp(part, 'train_set')
     thisOns = load(fullfile(S.onsetsTrainDir, S.onsets_filename_tr));%good, comes from PM_mvpa_params
     if strcmp(S.inputformat, 'betas')
@@ -66,8 +66,8 @@ elseif strcmp(part, 'test_set')
     thisConds = S.condsTest;%good, comes from PM_mvpa_params
     theseFiles = S.filenames_test;%good, comes from PM_mvpa_params
     theseTRWeights = S.TR_weights{2};%good, comes from PM_mvpa_params
-    thisIdx = S.idxTe;%-----------------what to doooooo    
-
+    thisIdx = S.idxTe;%-----------------what to doooooo
+    
 end
 
 
@@ -120,12 +120,17 @@ end
 %We just want a row vector of all 1s for trials for which onsets are listed here.
 
 if strcmp(S.patternType, 'betas')%added by TIB 10/27/2014 to handle binary classification with betas
-     idxOnsets_in_classifier = zeros([1,length(thisOns.names)]);
-     for z = 1:length(onsets)
-         idxOnsets_in_classifier(onsets{z}) = 1;
-     end
+    idxOnsets_in_classifier = zeros([1,length(thisOns.names)]);
+    for z = 1:length(onsets)
+        idxOnsets_in_classifier(onsets{z}) = 1;
+    end
 else
-idxOnsets_in_classifier = ones([1,numel([onsets{:}])]);
+    
+    idxOnsets_in_classifier = [];
+    for z = 1:length(onsets)
+        idxOnsets_in_classifier = [idxOnsets_in_classifier ones([1,numel([onsets{z}])])];
+    end
+    %idxOnsets_in_classifier = ones([1,numel([onsets{:}])]);
 end
 
 end
