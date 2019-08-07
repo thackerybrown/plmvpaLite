@@ -1,4 +1,4 @@
-function [S idxTr idxTe par]= TIB_mvpa_params_general(subj_id, task, TRsperRun, imgtype)
+function [S idxTr idxTe par]= TIB_mvpa_params_general_BC(subj_id, task, TRsperRun, imgtype)
 % Created for PSYCH 8080, Spr 2018
 
 % establish parameters for mvpa analysis
@@ -19,11 +19,11 @@ function [S idxTr idxTe par]= TIB_mvpa_params_general(subj_id, task, TRsperRun, 
 %% EDIT - You must establish these general parameters
 
 % ~~~ WHAT IS YOUR *Study name* (code looks for this specific folder) ~~~
-S.exp_name = 'CM_localizer'; %change this to flexibly redirect the script to different studies in subdirectories
+S.exp_name = 'BC'; %change this to flexibly redirect the script to different studies in subdirectories
 
 % ~~~ WHAT IS YOUR *subject ID/number PREFIX* (code appends this to the
 % front of the sub number provided with the run_mvpa_general function call)
-subprefix = 'CM';
+subprefix = 'S';
 
 % ~~~ WHAT IS YOUR *scan TR in the units of your model file (usually seconds)*
 % NOTE: if working with Betas - if your "onsets" file is really a numerical list of beta numbers instead of onsets, you must set TR = 1.
@@ -46,7 +46,7 @@ par.readimglist = 0; %1=yes, read an existing list; 0 = no, generate on the fly 
 % ~~~ DO YOU WANT *to read in an existing extracted workspace (e.g., BOLD
 % patterns). Not the same as having a simple pre-defined matrix ready for
 % classification with one column per pattern (see existpatmat flag on next line)
-S.use_premade_workspace = 0;
+S.use_premade_workspace = 1;
 
 % ~~~ DO YOU WANT *to read in a .mat file with existing patterns in it
 % already (instead of fMRI image files)?
@@ -61,16 +61,16 @@ S.stbetacount = 12; % NOTE: the code assumes all single trial betas of potential
 %% EDIT - You must establish parameters for this SPECIFIC classification scenario involving the data described in the preceding section
 
 % ~~~ what study conditions or phases do you want to *TRAIN* on?
-S.trainTask = 'EAvsScene';%Circmaze - 'goals' or 'plan'
+S.trainTask = 'FacevsScene';%Circmaze - 'goals' or 'plan'
 
 % ~~~ WHAT is the ROI we're analyzing
-S.roi_name = 'hvis0p1intensthresh'; %S.roi_name = 'HVisCtx_1.nii'; %S.roi_name = 'NativeGM_BOLDres.nii';
+S.roi_name = 'rBilateral_VOTC'; %S.roi_name = 'HVisCtx_1.nii'; %S.roi_name = 'NativeGM_BOLDres.nii';
 
 % ~~~ what study conditions or phases do you want to *TEST* on?
 % NOTE: if the string here is not the same as S.trainTask, the classifier
 % will switch to a 'tr1teo' procedure (train one phase, test on the other).
 % When would tr1teo be useful? e.g., if you want to train on a functional localizer, and test on a memory retrieval task
-S.testTask = 'EAvsScene';%Circamze - 'goals' or 'plan'
+S.testTask = 'FacevsScene';%Circamze - 'goals' or 'plan'
 
 % ~~~ what cross-validation procedure do you want? *ignored if S.testTask
 % and S.trainTask are not the same
@@ -85,22 +85,22 @@ S.nFolds = 8; % number of cross validation iterations - only used for nFold (as 
 % ~~~ WHAT IS THE NAME *of your model.mat file* for this analysis?
 % NOTE: be default JUST put the end of the name; code will append the
 % subject ID in front of this. Edit as appropriate
-S.trainonsfname = '_localizer_onsets_test';
-S.testonsfname = '_localizer_onsets_test';
+S.trainonsfname = '_FSRAW';
+S.testonsfname = '_FSRAW';
 
 S.trainonsfnamebetas = '_localizer_onsets_oneperblcknew';
 S.testonsfnamebetas = '_localizer_onsets_oneperblcknew';
 
 % ~~~ WHAT is the preprocessing level of your BOLDs (if input type 'raw')
-par.preproc_lvl = ''; % 'a' for slice-time-only, 'u' for realigned-only, 'ua' for realign+unwarped, 'swua' for smoothed, normalized, and... you get the picture. Modify as needed if you changed SPM's prefix append defaults
-par.boldnames = [par.preproc_lvl 'run']; %name of image files with preprocessing level prefix
+par.preproc_lvl = 'swaf'; % 'a' for slice-time-only, 'u' for realigned-only, 'ua' for realign+unwarped, 'swua' for smoothed, normalized, and... you get the picture. Modify as needed if you changed SPM's prefix append defaults
+par.boldnames = [par.preproc_lvl '']; %name of image files with preprocessing level prefix
 par.runnames = 'run_*'; %what are your run/scan session folders called? If none or only 1 run, set to '' or whatever may be appropriate.
 par.imageextension = '.nii'; %are your images .nii or .img?
 
 % ~~~ WHAT is a reference BOLD image we can look to for image dimenstions
 % (EVEN if doing Betas)
 par.refrun = '01'; %just the run number - we'll fill in the name prefix below automatically
-par.ref_funcimage = [par.boldnames '_01_010' par.imageextension];
+par.ref_funcimage = [par.preproc_lvl 'DuarteLab-0009-00003-000003-01' par.imageextension];
 
 %% EDIT - Path customization (can be changed more below, but not recommended - try to maintain the directory structure and just change these paths for consistency
 
@@ -198,7 +198,7 @@ S.statmap_funct = 'statmap_anova';%'AG_statmap_anova'; % performance metric
 
 S.class_args.nVox = 0; % number of voxels to select with feature selection e.g. [1000 5000 10000]
 S.class_args.fseltype = 'topn'; % feature selection format: top N vox (topn) or random N vox (rand)?
-S.class_args.libLin = '-q -s 6 -B 1'; %arguments for liblinear; -s 0 = L2; -s 6 = L1; -s 5 = L1 with L2 loss; -s 3 L2 with L1 loss
+S.class_args.libLin = '-q -s 5 -B 1'; %arguments for liblinear; -s 0 = L2; -s 6 = L1; -s 5 = L1 with L2 loss; -s 3 L2 with L1 loss
 S.class_args.constant = true; % include a constant term?
 S.class_args.prefitWeights = true;
 
@@ -347,9 +347,9 @@ end
 
 % idxTr = behavioral indices for training task, used by TIB_run_MVPA_general
 
-if strcmp(S.trainTask,'EAvsScene')
+if strcmp(S.trainTask,'FacevsScene')
     S.onsetsTrainDir = [S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
-    S.condsTrain = {{'EA'}  {'Scene'}} ;%corresponds to the names in the onsets.mat or betas_idx.mat files. This is used to select what is being compared with what.
+    S.condsTrain = {{'Face'}  {'Scene'}} ;%corresponds to the names in the onsets.mat or betas_idx.mat files. This is used to select what is being compared with what.
     S.TrainRuns = par.scansSelect.(par.task).loc;%pull up indexing, defined above, for RUNS corresponding to task of interest (i.e. if runs 2,4,6 correspond to task 1)
     if strcmp(S.inputformat, 'raw')
         S.filenames_train = raw_filenames;%
@@ -427,9 +427,9 @@ elseif strcmp(S.trainTask,'FacevsScenevsObj')
 end
 
 % testing - this defines the testing set. The code is set up this way to enable us to step outside xval if desired to test on different set of data (e.g., at retrieval)
-if strcmp(S.testTask,'EAvsScene')
+if strcmp(S.testTask,'FacevsScene')
     S.onsetsTestDir =[S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
-    S.condsTest = {{'EA'} {'Scene'}};
+    S.condsTest = {{'Face'} {'Scene'}};
     S.nwayclass = num2str(numel(S.condsTest));%stores the number classification dimensions just for reference (i.e. is this a 5-way or a 2-way/binary classification?)
     S.TestRuns = par.scansSelect.(par.task).loc;
     if strcmp(S.inputformat, 'raw')
@@ -742,19 +742,19 @@ raw_filenames = a(:,1);
 
 %if the BOLD images are 3D instead of 4D (TR-by-TR; NOT recommended, but currently only option supported [12/31/17]),
 %we need to modify indices further to avoid introducing a new sorting error
-if par.ImgDims == 3
-    if ~strcmp(par.runnames,'') % add contingency for when all the raw filenames are just dumped in your main funcdir (i.e., there are no runfolds)
-        for idx = 1:length(raw_filenames)
-            %first, identify the RUN number from its name in full
-            runref_indices = strfind(raw_filenames{idx,1}, ['/' par.boldrundirpfx]);
-            runidxnum = str2double(raw_filenames{idx,1}(runref_indices(1)+5:runref_indices(2)-1));
-            raw_filenames{idx,3} = runidxnum;
-        end
-        
-        b = sortrows(raw_filenames, 3);
-        raw_filenames = b(:,1);
-    end
-end
+% if par.ImgDims == 3
+%     if ~strcmp(par.runnames,'') % add contingency for when all the raw filenames are just dumped in your main funcdir (i.e., there are no runfolds)
+%         for idx = 1:length(raw_filenames)
+%             %first, identify the RUN number from its name in full
+%             runref_indices = strfind(raw_filenames{idx,1}, ['/' par.boldrundirpfx]);
+%             runidxnum = str2double(raw_filenames{idx,1}(runref_indices(1)+5:runref_indices(2)-1));
+%             raw_filenames{idx,3} = runidxnum;
+%         end
+%         
+%         b = sortrows(raw_filenames, 3);
+%         raw_filenames = b(:,1);
+%     end
+% end
 
 %save raw_filenames for reference
 savename_rawfnms=[par.funcdir 'raw_filenames.mat'];

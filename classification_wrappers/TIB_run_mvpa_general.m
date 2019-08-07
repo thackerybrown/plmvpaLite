@@ -37,7 +37,7 @@ for b=(1:length(subj_array))
     %[S idxTr idxTe par] = TIB_mvpa_params_betas(subj_array(b), task, TRsperRun);%runs with Circmaze data
     %[S idxTr idxTe par] = TIB_mvpa_params_8080(subj_array(b), task, TRsperRun{b}, 'raw');%runs with CM localizer data.
     %[S idxTr idxTe par] = TIB_mvpa_params_8080_betas(subj_array(b), task, TRsperRun{b}, 'raw');%runs with CM localizer data.
-    [S idxTr idxTe par] = TIB_mvpa_params_general(subj_array(b), task, TRsperRun{b}, 'raw');%runs with CM localizer data.
+    [S idxTr idxTe par] = TIB_mvpa_params_general_BC(subj_array(b), task, TRsperRun{b}, 'raw');%runs with CM localizer data.
     %[S idxTr idxTe par] = TIB_mvpa_params_SPIKES(subj_array(b), task, TRsperRun{b}, 'betas');%runs with CM localizer data.
     %[S idxTr idxTe par] = TIB_mvpa_params_general_EOG(subj_array(b), task, TRsperRun{b}, 'betas');%runs with CM localizer data.
     %[S idxTr idxTe par] = TIB_mvpa_params_mnist(subj_array(b), task, TRsperRun{b}, 'betas');%runs with CM localizer data.
@@ -77,6 +77,7 @@ for b=(1:length(subj_array))
         %end
         
         for n = 1: S.num_results_iter
+            display(['results iteration ' num2str(n)])
             % load workspace
             if (S.use_premade_workspace&&existWorkspace) % if we are supposed to use premade workspace, and one with the correct name exists
                 load(S.workspace, 'subj');
