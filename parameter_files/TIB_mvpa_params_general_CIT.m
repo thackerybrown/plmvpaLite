@@ -1,4 +1,4 @@
-function [S idxTr idxTe par]= TIB_mvpa_params_general(subj_id, task, TRsperRun, imgtype)
+function [S idxTr idxTe par]= TIB_mvpa_params_general_CIT(subj_id, task, TRsperRun, imgtype)
 % Created for PSYCH 8080, Spr 2018
 
 % establish parameters for mvpa analysis
@@ -19,11 +19,11 @@ function [S idxTr idxTe par]= TIB_mvpa_params_general(subj_id, task, TRsperRun, 
 %% EDIT - You must establish these general parameters
 
 % ~~~ WHAT IS YOUR *Study name* (code looks for this specific folder) ~~~
-S.exp_name = 'CM_localizer'; %change this to flexibly redirect the script to different studies in subdirectories
+S.exp_name = 'CIT'; %change this to flexibly redirect the script to different studies in subdirectories
 
 % ~~~ WHAT IS YOUR *subject ID/number PREFIX* (code appends this to the
 % front of the sub number provided with the run_mvpa_general function call)
-subprefix = 'CM';
+subprefix = 'anlz_';
 
 % ~~~ WHAT IS YOUR *scan TR in the units of your model file (usually seconds)*
 % NOTE: if working with Betas - if your "onsets" file is really a numerical list of beta numbers instead of onsets, you must set TR = 1.
@@ -56,21 +56,21 @@ S.existpatmat = 0; %1=yes - skip trying to load image files using SPM. We've alr
 S.datafile = 'testsubmat_fixed.mat'; % added for ADNI neuropsych study. Replaces MRI image (e.g., nii) files with an existing matrix of pattern data
 
 % ~~~ HOW MANY *single trial betas* are there? If data input type is 'raw', number is not used (can be ignored)
-S.stbetacount = 12; % NOTE: the code assumes all single trial betas of potential interest are contiguous in the model. If multi-event betas are inteleaved in the .mat model structure, this will need more editing.
+S.stbetacount = 100; % NOTE: the code assumes all single trial betas of potential interest are contiguous in the model. If multi-event betas are inteleaved in the .mat model structure, this will need more editing.
 
 %% EDIT - You must establish parameters for this SPECIFIC classification scenario involving the data described in the preceding section
 
 % ~~~ what study conditions or phases do you want to *TRAIN* on?
-S.trainTask = 'EAvsAA';%Circmaze - 'goals' or 'plan'
+S.trainTask = 'TvsI';%Circmaze - 'goals' or 'plan'
 
 % ~~~ WHAT is the ROI we're analyzing
-S.roi_name = 'hvis0p1intensthresh'; %S.roi_name = 'HVisCtx_1.nii'; %S.roi_name = 'NativeGM_BOLDres.nii';
+S.roi_name = 'all3rois_nowm';%'grp_hippovis'; %S.roi_name = 'HVisCtx_1.nii'; %S.roi_name = 'NativeGM_BOLDres.nii';
 
 % ~~~ what study conditions or phases do you want to *TEST* on?
 % NOTE: if the string here is not the same as S.trainTask, the classifier
 % will switch to a 'tr1teo' procedure (train one phase, test on the other).
 % When would tr1teo be useful? e.g., if you want to train on a functional localizer, and test on a memory retrieval task
-S.testTask = 'EAvsAA';%Circamze - 'goals' or 'plan'
+S.testTask = 'CMpcmvsCMcmi';%Circamze - 'goals' or 'plan'
 
 % ~~~ what cross-validation procedure do you want? *ignored if S.testTask
 % and S.trainTask are not the same
@@ -79,8 +79,8 @@ S.testTask = 'EAvsAA';%Circamze - 'goals' or 'plan'
 % 'nf' = random nfold - generates "pseudo runs" if you want to do cross
 % validation but don't want to use existing run structure (e.g., you only
 % have one run, there's no such thing as a "run" in your data
-S.xvaltype = 'loo';
-S.nFolds = 8; % number of cross validation iterations - only used for nFold (as opposed to run-by-run loo)
+S.xvaltype = 'nf';
+S.nFolds = 100; % number of cross validation iterations - only used for nFold (as opposed to run-by-run loo)
 
 % ~~~ WHAT IS THE NAME *of your model.mat file* for this analysis?
 % NOTE: be default JUST put the end of the name; code will append the
@@ -88,8 +88,8 @@ S.nFolds = 8; % number of cross validation iterations - only used for nFold (as 
 S.trainonsfname = '_localizer_onsets_test';
 S.testonsfname = '_localizer_onsets_test';
 
-S.trainonsfnamebetas = '_localizer_onsets_oneperblcknew';
-S.testonsfnamebetas = '_localizer_onsets_oneperblcknew';
+S.trainonsfnamebetas = '_CIT_ids';
+S.testonsfnamebetas = '_CIT_ids';
 
 % ~~~ WHAT is the preprocessing level of your BOLDs (if input type 'raw')
 par.preproc_lvl = ''; % 'a' for slice-time-only, 'u' for realigned-only, 'ua' for realign+unwarped, 'swua' for smoothed, normalized, and... you get the picture. Modify as needed if you changed SPM's prefix append defaults
@@ -99,8 +99,8 @@ par.imageextension = '.nii'; %are your images .nii or .img?
 
 % ~~~ WHAT is a reference BOLD image we can look to for image dimenstions
 % (EVEN if doing Betas)
-par.refrun = '01'; %just the run number - we'll fill in the name prefix below automatically
-par.ref_funcimage = [par.boldnames '_01_010' par.imageextension];
+par.refrun = 'modfold'; %just the run number - we'll fill in the name prefix below automatically
+par.ref_funcimage = ['con_0001_01' par.imageextension];
 
 %% EDIT - Path customization (can be changed more below, but not recommended - try to maintain the directory structure and just change these paths for consistency
 
@@ -109,25 +109,25 @@ par.ref_funcimage = [par.boldnames '_01_010' par.imageextension];
 S.sbasepath = '/mnt/hgfs/Work/mvpa_sample_data/';
 
 % ~~~ WHAT IS THE NAME *of your model folder's directory*?
-S.modfold = 'results01';
-S.modfold_singlebetas = 'results01/simpleLSA'; % if your single trial (or person, ...
+S.modfold = 'modfold';
+S.modfold_singlebetas = 'modfold'; % if your single trial (or person, ...
 %...for between-sub classification) betas are in their own folder
 
 % ~~~ WHAT IS THE NAME *of your Masks folder* where your ROIs live
 S.maskdir = 'Masks';
 
 % ~~~ WHAT IS THE NAME *of your BOLDs folder*
-S.boldsdir = 'bolds';
+S.boldsdir = '';
 
 % ~~~ WHAT IS THE NAME *of your BOLD run folder prefix*
 % NOTE: be default JUST put the start of the name; code will append the
 % specific number to the end of this. Edit as appropriate
-par.boldrundirpfx = 'run_';
+par.boldrundirpfx = '';
 
 %% EDIT - Classifier tuning and various settings
 
 % ~~~ Iteration Parameters
-S.num_results_iter = 1; % number of times to run the entire classification process (select subset of the data and train/test classifier)
+S.num_results_iter = 3; % number of times to run the entire classification process (select subset of the data and train/test classifier)
 S.num_iter_with_same_data = 1; % number of times to run the classfication step for a given subset of data - useful for non-deterministic cases.
 
 % ~~~ Balancing Parameters
@@ -187,7 +187,7 @@ end
 % ~~~ Special types of analysis
 S.searchlightAnalysis = 0; % run a searchlight analysis
 %S.linReg = 0; % run an analysis with a continuous outcome variable
-S.scrambleregs = 0; % run an anlysis with the class labels scrambled on a run-by-run basis.
+S.scrambleregs = 1; % run an anlysis with the class labels scrambled on a run-by-run basis.
 
 % ~~~ classifier parameters
 S.class_args.train_funct_name = 'train_liblinear_multiclass';%'train_pLR';   %training function
@@ -198,7 +198,7 @@ S.statmap_funct = 'statmap_anova';%'AG_statmap_anova'; % performance metric
 
 S.class_args.nVox = 0; % number of voxels to select with feature selection e.g. [1000 5000 10000]
 S.class_args.fseltype = 'topn'; % feature selection format: top N vox (topn) or random N vox (rand)?
-S.class_args.libLin = '-q -s 6 -B 1'; %arguments for liblinear; -s 0 = L2; -s 6 = L1; -s 5 = L1 with L2 loss; -s 3 L2 with L1 loss
+S.class_args.libLin = '-q -s 0 -B 1'; %arguments for liblinear; -s 0 = L2; -s 6 = L1; -s 5 = L1 with L2 loss; -s 3 L2 with L1 loss
 S.class_args.constant = true; % include a constant term?
 S.class_args.prefitWeights = true;
 
@@ -206,7 +206,7 @@ S.class_args.chooseOptimalPenalty = 0; % 1 = yes. cycle through cost parameters 
 S.class_args.penaltyRange = [.001 .005 .01 .05 .1 .5 1 5 10 50 100 500 1000 50000]; % a vector "[]" of cost parameters to cycle through
 S.class_args.nFoldsPenaltySelection = 10; % number of cross validation folds for penalty parameter selection.
 
-S.class_args.penalty = 1.5; %uncomment if not using optimal penalty. Typical value is 1. If using sample data provided with plmvpaLite, start with 0.000001 to see how minimal regularization harms performance.
+S.class_args.penalty = 1; %uncomment if not using optimal penalty. Typical value is 1. If using sample data provided with plmvpaLite, start with 0.000001 to see how minimal regularization harms performance.
 %establishment
 
 %% Default and auto-generated parameters. **Only change if you must for your specific use case to work**
@@ -278,7 +278,7 @@ S.group_mvpa_dir = [S.expt_dir 'mvpa_output_files'];%results .mat files are spit
 
 %% identify betas
 if strcmp(S.inputformat, 'betas')%if we are running a beta analysis, take a moment to create "model" files for the beta images
-    TIB_generate_beta_filenames(S);
+    TIB_generate_beta_filenames_CIT(S);
 end
 
 %% Initialize empty vars to be filled below
@@ -347,9 +347,9 @@ end
 
 % idxTr = behavioral indices for training task, used by TIB_run_MVPA_general
 
-if strcmp(S.trainTask,'EAvsScene')
+if strcmp(S.trainTask,'TvsI')
     S.onsetsTrainDir = [S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
-    S.condsTrain = {{'EA'}  {'Scene'}} ;%corresponds to the names in the onsets.mat or betas_idx.mat files. This is used to select what is being compared with what.
+    S.condsTrain = {{'t'}  {'i'}} ;%corresponds to the names in the onsets.mat or betas_idx.mat files. This is used to select what is being compared with what.
     S.TrainRuns = par.scansSelect.(par.task).loc;%pull up indexing, defined above, for RUNS corresponding to task of interest (i.e. if runs 2,4,6 correspond to task 1)
     if strcmp(S.inputformat, 'raw')
         S.filenames_train = raw_filenames;%
@@ -427,9 +427,9 @@ elseif strcmp(S.trainTask,'FacevsScenevsObj')
 end
 
 % testing - this defines the testing set. The code is set up this way to enable us to step outside xval if desired to test on different set of data (e.g., at retrieval)
-if strcmp(S.testTask,'EAvsScene')
+if strcmp(S.testTask,'TvsI')
     S.onsetsTestDir =[S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
-    S.condsTest = {{'EA'} {'Scene'}};
+    S.condsTest = {{'t'} {'i'}};
     S.nwayclass = num2str(numel(S.condsTest));%stores the number classification dimensions just for reference (i.e. is this a 5-way or a 2-way/binary classification?)
     S.TestRuns = par.scansSelect.(par.task).loc;
     if strcmp(S.inputformat, 'raw')
@@ -440,9 +440,9 @@ if strcmp(S.testTask,'EAvsScene')
     S.durTest = numel(S.filenames_test) * par.TR;
     %[~, idxTe] = fMRIBehAnalysis_Loc(par);
     
-elseif strcmp(S.testTask,'EAvsObj')
+elseif strcmp(S.testTask,'CMpcmvsCMcmi')
     S.onsetsTestDir =[S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
-    S.condsTest = {{'EA'} {'Obj'}};
+    S.condsTest = {{'cmpcm'} {'cmcmi'}};
     S.nwayclass = num2str(numel(S.condsTest));%stores the number classification dimensions just for reference (i.e. is this a 5-way or a 2-way/binary classification?)
     S.TestRuns = par.scansSelect.(par.task).loc;
     if strcmp(S.inputformat, 'raw')
@@ -626,7 +626,7 @@ else
     if strcmp(S.inputformat, 'raw')
         S.secondaryMask = [S.expt_dir S.subj_id '/' S.maskdir '/' S.roi_name par.imageextension]; % secondary mask (the specific classification mask - e.g. hippocampus within MTL)
     elseif strcmp(S.inputformat, 'betas')
-        S.secondaryMask = [S.mvpa_dir 'mask' par.imageextension];
+        S.secondaryMask = [];
     end
 end
 %% Workspace Parameters - these files can be huge. In future versions, consider finding ways to pare down.

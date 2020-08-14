@@ -9,26 +9,26 @@
 %% params
 
 % output params
-outputdir = '/home/brain/host/mvpa_sample_data/CM_pseudodat1/'; % where data will be saved
+outputdir = '/mnt/hgfs/Work/mvpa_sample_data/CM_pseudodat_8080_1/'; % where data will be saved
 outprefix = 'pseudo_test'; % prefix for niftis, onsets, & plots
 
 % imaging params
-mimicimg = '/home/brain/host/mvpa_sample_data/CM_localizer/CM001/bolds/run_01/run_01_004.nii'; % generate data with same dim as this image (nifti file)
-msk = '/home/brain/host/mvpa_sample_data/CM_localizer/CM001/Masks/HVisCtx_1.nii'; %[]: use no mask
+mimicimg = '/mnt/hgfs/Work/mvpa_sample_data/CM_localizer/CM001/bolds/run_01/run_01_004.nii'; % generate data with same dim as this image (nifti file)
+msk = '/mnt/hgfs/Work/mvpa_sample_data/CM_localizer/CM001/Masks/HVisCtx_1.nii'; %[]: use no mask
 
 % design params
-ncond = 3; % how many conditions
-ntrials = [25 25 25]; % how many trials per condition
+ncond = 4; % how many conditions
+ntrials = [50 50 50 50]; % how many trials per condition
 duration = 2; % how long are stimuli on the screen
-iti = 8; % how long in between stimuli
+iti = 6; % how long in between stimuli
 tr = 2; % repetition time
-weighttrs = [0 .25 .5 0.25 0]; % how are TRs weighted in pattern classification (must be of length (duration + iti)/tr)
+weighttrs = [0 .25 .5 0.25]; % how are TRs weighted in pattern classification (must be of length (duration + iti)/tr)
 
 % signal params
-condmu = [1 1 1]; % mean signal for each condition
-condvar = [1 1 1]; % variance across voxels for individual stimuli within each condition
-condcov = [0.5 0.25 0.25; 0.25 0.5 0.1; 0.25 0.1 0.5];%[0.8 0.5 0; 0.5 0.8 0.5; 0 0.5 0.8]; % covariance between conditions
-noisevar = .05; % variance of noise (mean = 0)
+condmu = [1 1 1 1]; % mean signal for each condition
+condvar = [0.7 0.7 0.7 0.7]; % variance across voxels for individual stimuli within each condition
+condcov = [0.7 0.5 0.15 0.25; 0.5 0.7 0.15 0.25; 0.15 0.15 0.7 0.65; 0.25 0.25 0.65 0.7];%[0.8 0.5 0; 0.5 0.8 0.5; 0 0.5 0.8]; % covariance between conditions
+noisevar = .15; % variance of noise (mean = 0)
 lineardrift = .2; % total linear drift across scan
 hrf = spm_hrf(tr); % hrf for convolving data
 
@@ -215,9 +215,9 @@ title('estimated correlation, collapsed')
 colorbar();
 colormap(hot);
 
-textStrings = num2str(estcov(:),'%0.3f');  %# Create strings from the matrix values
+textStrings = num2str(estcov(:),'%0.2f');  %# Create strings from the matrix values
 textStrings = strtrim(cellstr(textStrings));  %# Remove any space padding
-[x,y] = meshgrid(1:3);   %# Create x and y coordinates for the strings
+[x,y] = meshgrid(1:4);%3);   %# Create x and y coordinates for the strings
 hStrings = text(x(:),y(:),textStrings(:),...      %# Plot the strings
     'HorizontalAlignment','center');
 set(hStrings,'Color',[0,0,1])

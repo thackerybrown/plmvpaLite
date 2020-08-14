@@ -1,4 +1,4 @@
-function [res, results]= TIB_run_mvpa_general(subj_array, task, TRsperRun, studyName)
+function [res, results]= TIB_run_mvpa_general_CIT(subj_array, task, TRsperRun, studyName)
 
 
 %example call, CM localizer - TIB_run_mvpa_general({'001'},'CM_localizer',{[114,114]},'8080test')
@@ -37,7 +37,7 @@ for b=(1:length(subj_array))
     %[S idxTr idxTe par] = TIB_mvpa_params_betas(subj_array(b), task, TRsperRun);%runs with Circmaze data
     %[S idxTr idxTe par] = TIB_mvpa_params_8080(subj_array(b), task, TRsperRun{b}, 'raw');%runs with CM localizer data.
     %[S idxTr idxTe par] = TIB_mvpa_params_8080_betas(subj_array(b), task, TRsperRun{b}, 'raw');%runs with CM localizer data.
-    [S idxTr idxTe par] = TIB_mvpa_params_general_PIB(subj_array(b), task, TRsperRun{b}, 'betas');%runs with CM localizer data.
+    [S idxTr idxTe par] = TIB_mvpa_params_general_CIT(subj_array(b), task, TRsperRun{b}, 'betas');%runs with CM localizer data.
     %[S idxTr idxTe par] = TIB_mvpa_params_SPIKES(subj_array(b), task, TRsperRun{b}, 'betas');%runs with CM localizer data.
     %[S idxTr idxTe par] = TIB_mvpa_params_general_EOG(subj_array(b), task, TRsperRun{b}, 'betas');%runs with CM localizer data.
     %[S idxTr idxTe par] = TIB_mvpa_params_mnist(subj_array(b), task, TRsperRun{b}, 'betas');%runs with CM localizer data.

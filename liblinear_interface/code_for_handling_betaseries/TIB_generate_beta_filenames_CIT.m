@@ -32,10 +32,10 @@ if strcmp(S.trainTask,S.testTask) %if we are doing x-validation classification
     %% binary
     %betaidx{1,1} = strcmpi('AD',names);
     %betaidx{1,2} = strcmpi('HC',names);
-    betaidx{1,1} = strcmpi(' pibpos',names);
-    betaidx{1,2} = strcmpi('pibneg',names);
-    %betaidx{1,3} = strcmpi('3',names);
-    %betaidx{1,4} = strcmpi('4',names);
+    betaidx{1,1} = strcmpi('t',names);
+    betaidx{1,2} = strcmpi('i',names);
+%    betaidx{1,3} = strcmpi('3',names);
+%    betaidx{1,4} = strcmpi('4',names);
     
     %% 3-way
     % betaidx{1,1} = strcmpi('EA',names);
@@ -68,10 +68,10 @@ if strcmp(S.trainTask,S.testTask) %if we are doing x-validation classification
     % betaidx{1,10} = strcmpi('cues5_2',names);
     
     %% binary
-    bnames{1,1} = ' pibpos';
-    bnames{1,2} = 'pibneg';
-    %bnames{1,3} = '3';
-    %bnames{1,4} = '4';
+    bnames{1,1} = 't';
+    bnames{1,2} = 'i';
+%     bnames{1,3} = '3';
+%     bnames{1,4} = '4';
     
     %% 3-way
     %  bnames{1,1} = 'EA';
@@ -109,7 +109,7 @@ if strcmp(S.trainTask,S.testTask) %if we are doing x-validation classification
     % bnames{1,9} = 'cues5_1';
     % bnames{1,10} = 'cues5_2';
     if S.existpatmat == 0
-        allbetafilenames = dir(fullfile(S.mvpa_dir, 'beta*.nii'));
+        allbetafilenames = dir(fullfile(S.mvpa_dir, 'con*.nii'));
         
         % add catch for failure to find beta filenames
         if length(allbetafilenames) == 0
@@ -138,11 +138,11 @@ if strcmp(S.trainTask,S.testTask) %if we are doing x-validation classification
 else
     
     %% binary
-    betaidx_tr{1,1} = strcmpi('EA',names);
-    betaidx_tr{1,2} = strcmpi('Scene',names);
+    betaidx_tr{1,1} = strcmpi('t',names);
+    betaidx_tr{1,2} = strcmpi('i',names);
     
-    betaidx_te{1,1} = strcmpi('AA',names);
-    betaidx_te{1,2} = strcmpi('AAScrambled',names);
+    betaidx_te{1,1} = strcmpi('cmpcm',names);
+    betaidx_te{1,2} = strcmpi('cmcmi',names);
     %% 5-way
     % betaidx_tr{1,1} = strcmpi('goal1',names);%training set beta indices
     % betaidx_tr{1,2} = strcmpi('goal2',names);
@@ -175,11 +175,11 @@ else
     % betaidx_te{1,5} = strcmpi('cues5_2',names);
     
     %% binary
-    bnames_tr{1,1} = 'EA';
-    bnames_tr{1,2} = 'Scene';
+    bnames_tr{1,1} = 't';
+    bnames_tr{1,2} = 'i';
     
-    bnames_te{1,1} = 'AA';
-    bnames_te{1,2} = 'AAScrambled';
+    bnames_te{1,1} = 'cmpcm';
+    bnames_te{1,2} = 'cmcmi';
     
     %% 5-way
     % bnames_tr{1,1} = 'goal1';
@@ -213,14 +213,14 @@ else
     % bnames_te{1,5} = 'cues5_2';
     
     if S.existpatmat == 0
-        allbetafilenames = dir(fullfile(S.mvpa_dir, 'beta*.nii'));
+        allbetafilenames = dir(fullfile(S.mvpa_dir, 'con*.nii'));
         
         % add catch for failure to find beta filenames
         if length(allbetafilenames) == 0
             error('SANITY CHECK: the directory you listed does not have betas OR they have a different extension (e.g. img)')
         end
         
-        for idx = 1:length(betaidx{1,1})%-1%note, we are filling in the beta file names based on how many betas OF INTEREST we have (length(betaidx)). We don't care about the error reg betas for this analysis
+        for idx = 1:length(betaidx_tr{1,1})%-1%note, we are filling in the beta file names based on how many betas OF INTEREST we have (length(betaidx)). We don't care about the error reg betas for this analysis
             beta_filenames{idx,1} = [S.mvpa_dir allbetafilenames(idx).name]; %create the analog to "raw_filenames.mat" - i.e. a list of all filenames including the path
         end
         

@@ -1,4 +1,4 @@
-function [S idxTr idxTe par]= TIB_mvpa_params_general(subj_id, task, TRsperRun, imgtype)
+function [S idxTr idxTe par]= TIB_mvpa_params_general_ADNI(subj_id, task, TRsperRun, imgtype)
 % Created for PSYCH 8080, Spr 2018
 
 % establish parameters for mvpa analysis
@@ -19,11 +19,11 @@ function [S idxTr idxTe par]= TIB_mvpa_params_general(subj_id, task, TRsperRun, 
 %% EDIT - You must establish these general parameters
 
 % ~~~ WHAT IS YOUR *Study name* (code looks for this specific folder) ~~~
-S.exp_name = 'CM_localizer'; %change this to flexibly redirect the script to different studies in subdirectories
+S.exp_name = 'ADNI'; %change this to flexibly redirect the script to different studies in subdirectories
 
 % ~~~ WHAT IS YOUR *subject ID/number PREFIX* (code appends this to the
 % front of the sub number provided with the run_mvpa_general function call)
-subprefix = 'CM';
+subprefix = 's';
 
 % ~~~ WHAT IS YOUR *scan TR in the units of your model file (usually seconds)*
 % NOTE: if working with Betas - if your "onsets" file is really a numerical list of beta numbers instead of onsets, you must set TR = 1.
@@ -50,18 +50,18 @@ S.use_premade_workspace = 0;
 
 % ~~~ DO YOU WANT *to read in a .mat file with existing patterns in it
 % already (instead of fMRI image files)?
-S.existpatmat = 0; %1=yes - skip trying to load image files using SPM. We've already got all patterns in a matrix. Currently (09/2018) the existing pattern matrix is hardcoded in load_matrix_pattern_2D to be a matrix (double) named 'testmat'. \\
+S.existpatmat = 1; %1=yes - skip trying to load image files using SPM. We've already got all patterns in a matrix. Currently (09/2018) the existing pattern matrix is hardcoded in load_matrix_pattern_2D to be a matrix (double) named 'testmat'. \\
 % Because so much of the Princeton MVPA toolbox assumes a mask volume is used, a dummy mask file is now included in the PLMVPA_Lite toolkit and called in TIB_run_MVPA_general
 % What's that existing pattern .mat file called?
-S.datafile = 'testsubmat_fixed.mat'; % added for ADNI neuropsych study. Replaces MRI image (e.g., nii) files with an existing matrix of pattern data
+S.datafile = 'feature_set10.mat'; % added for ADNI neuropsych study. Replaces MRI image (e.g., nii) files with an existing matrix of pattern data
 
 % ~~~ HOW MANY *single trial betas* are there? If data input type is 'raw', number is not used (can be ignored)
-S.stbetacount = 12; % NOTE: the code assumes all single trial betas of potential interest are contiguous in the model. If multi-event betas are inteleaved in the .mat model structure, this will need more editing.
+S.stbetacount = 238; % NOTE: the code assumes all single trial betas of potential interest are contiguous in the model. If multi-event betas are inteleaved in the .mat model structure, this will need more editing.
 
 %% EDIT - You must establish parameters for this SPECIFIC classification scenario involving the data described in the preceding section
 
 % ~~~ what study conditions or phases do you want to *TRAIN* on?
-S.trainTask = 'EAvsAA';%Circmaze - 'goals' or 'plan'
+S.trainTask = 'ADvsMCI';%Circmaze - 'goals' or 'plan'
 
 % ~~~ WHAT is the ROI we're analyzing
 S.roi_name = 'hvis0p1intensthresh'; %S.roi_name = 'HVisCtx_1.nii'; %S.roi_name = 'NativeGM_BOLDres.nii';
@@ -70,7 +70,7 @@ S.roi_name = 'hvis0p1intensthresh'; %S.roi_name = 'HVisCtx_1.nii'; %S.roi_name =
 % NOTE: if the string here is not the same as S.trainTask, the classifier
 % will switch to a 'tr1teo' procedure (train one phase, test on the other).
 % When would tr1teo be useful? e.g., if you want to train on a functional localizer, and test on a memory retrieval task
-S.testTask = 'EAvsAA';%Circamze - 'goals' or 'plan'
+S.testTask = 'ADvsMCI';%Circamze - 'goals' or 'plan'
 
 % ~~~ what cross-validation procedure do you want? *ignored if S.testTask
 % and S.trainTask are not the same
@@ -79,8 +79,8 @@ S.testTask = 'EAvsAA';%Circamze - 'goals' or 'plan'
 % 'nf' = random nfold - generates "pseudo runs" if you want to do cross
 % validation but don't want to use existing run structure (e.g., you only
 % have one run, there's no such thing as a "run" in your data
-S.xvaltype = 'loo';
-S.nFolds = 8; % number of cross validation iterations - only used for nFold (as opposed to run-by-run loo)
+S.xvaltype = 'nf';
+S.nFolds = 10; % number of cross validation iterations - only used for nFold (as opposed to run-by-run loo)
 
 % ~~~ WHAT IS THE NAME *of your model.mat file* for this analysis?
 % NOTE: be default JUST put the end of the name; code will append the
@@ -88,8 +88,8 @@ S.nFolds = 8; % number of cross validation iterations - only used for nFold (as 
 S.trainonsfname = '_localizer_onsets_test';
 S.testonsfname = '_localizer_onsets_test';
 
-S.trainonsfnamebetas = '_localizer_onsets_oneperblcknew';
-S.testonsfnamebetas = '_localizer_onsets_oneperblcknew';
+S.trainonsfnamebetas = '_names_set';
+S.testonsfnamebetas = '_names_set';
 
 % ~~~ WHAT is the preprocessing level of your BOLDs (if input type 'raw')
 par.preproc_lvl = ''; % 'a' for slice-time-only, 'u' for realigned-only, 'ua' for realign+unwarped, 'swua' for smoothed, normalized, and... you get the picture. Modify as needed if you changed SPM's prefix append defaults
@@ -106,11 +106,11 @@ par.ref_funcimage = [par.boldnames '_01_010' par.imageextension];
 
 % ~~~ WHAT IS YOUR *computer base path* (where your study and its subfolders
 % live
-S.sbasepath = '/mnt/hgfs/Work/mvpa_sample_data/';
+S.sbasepath = '/mnt/hgfs/Work/';
 
 % ~~~ WHAT IS THE NAME *of your model folder's directory*?
-S.modfold = 'results01';
-S.modfold_singlebetas = 'results01/simpleLSA'; % if your single trial (or person, ...
+S.modfold = 'datafolder';
+S.modfold_singlebetas = 'datafolder'; % if your single trial (or person, ...
 %...for between-sub classification) betas are in their own folder
 
 % ~~~ WHAT IS THE NAME *of your Masks folder* where your ROIs live
@@ -164,7 +164,7 @@ S.defineROIsFromANOVAFS = 0; % define ROIs using ANOVA-based feature selection, 
 % S.ROI2_file   = [par.subdir '/analysis_loc_mnem/' S.ROI2_name];
 
 % ~~~ Importance Maps
-S.generate_importance_maps = 1; %visualize classifier weights
+S.generate_importance_maps = 0; %visualize classifier weights
 S.generateBetaMaps = 1; %use betas, instead of importance values
 S.impType = {'pos' 'neg' 'both' 'raw'}; %importance map types
 S.regNames = {'CondA' 'CondB'}; % should match number of classes
@@ -347,9 +347,9 @@ end
 
 % idxTr = behavioral indices for training task, used by TIB_run_MVPA_general
 
-if strcmp(S.trainTask,'EAvsScene')
+if strcmp(S.trainTask,'ADvsMCI')
     S.onsetsTrainDir = [S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
-    S.condsTrain = {{'EA'}  {'Scene'}} ;%corresponds to the names in the onsets.mat or betas_idx.mat files. This is used to select what is being compared with what.
+    S.condsTrain = {{'AD'}  {'MCI'}} ;%corresponds to the names in the onsets.mat or betas_idx.mat files. This is used to select what is being compared with what.
     S.TrainRuns = par.scansSelect.(par.task).loc;%pull up indexing, defined above, for RUNS corresponding to task of interest (i.e. if runs 2,4,6 correspond to task 1)
     if strcmp(S.inputformat, 'raw')
         S.filenames_train = raw_filenames;%
@@ -427,9 +427,9 @@ elseif strcmp(S.trainTask,'FacevsScenevsObj')
 end
 
 % testing - this defines the testing set. The code is set up this way to enable us to step outside xval if desired to test on different set of data (e.g., at retrieval)
-if strcmp(S.testTask,'EAvsScene')
+if strcmp(S.testTask,'ADvsMCI')
     S.onsetsTestDir =[S.mvpa_dir];%directory containing onsets.mat or betas_idx.mat file to be loaded in
-    S.condsTest = {{'EA'} {'Scene'}};
+    S.condsTest = {{'AD'} {'MCI'}};
     S.nwayclass = num2str(numel(S.condsTest));%stores the number classification dimensions just for reference (i.e. is this a 5-way or a 2-way/binary classification?)
     S.TestRuns = par.scansSelect.(par.task).loc;
     if strcmp(S.inputformat, 'raw')
@@ -637,7 +637,7 @@ S.patternType = S.inputformat; %'raw' or 'betas'
 if strcmp(S.inputformat, 'raw')
     S.preprocPatName = 'spiral_hp_z';%stands for 'spiral imaging'_'high-pass filtered'_'z-scored'. Doesn't matter really. Just leave this alone.
 elseif strcmp(S.inputformat, 'betas')
-    S.preprocPatName = 'betas';%'betas_z';%use betas_z if z-scoring betas
+    S.preprocPatName = 'betas_z';%'betas';%;%use betas_z if z-scoring betas
 end
 
 S.preprocPatCondensedName = [S.preprocPatName '_condensed'];
