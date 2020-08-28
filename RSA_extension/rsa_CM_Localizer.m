@@ -11,7 +11,7 @@ function [] = rsa_CM_Localizer(Sub, Mask, TRsperRun)
 
 %% flags and parameters
 S.TR = 2;
-theseTRWeights = [0 0 .2 .2 .2 .2 .2];%[0 0.25 0.5 0.25 0];
+theseTRWeights = [0 0 0.2 0.2 0.2 0.2 0.2];%[0 0.25 0.5 0.25 0];
 weights_str = mat2str(theseTRWeights);% assign values to string for custom output file naming
 
 funcftype = '.nii';
@@ -20,7 +20,7 @@ use_exist_workspace = 0; %1=yes. Load existing pattern workspaces and onsets fil
 
 gen_onsetsTR = 1; %1=yes. Typically, you'll use an onsets.mat file with tr-by-tr onsets and names (as used for a beta-series). But if you only have a traditional GLM model with one name for multiple onsets, setting this flag to 1 will auto-populate unique but related names (e.g., Face_1; Face_2...)
 sortmatbycat = 1; %1=yes. Rearrange names and patterns according to alphabetical order (helps with visualization of corrmats)
-runhpfilt = 1;%1=yes. Standard
+runhpfilt = 0;%1=yes. Standard
 runzscore = 1;%1=yes. Standard but controversial preprocessing.
 
 %Subject ID/number
@@ -33,11 +33,12 @@ study_prefix = 'CM';
 
 S.inputformat = 'raw'; % are we working with BOLDs/timeseries ('raw') or with beta maps ('betas')?
 
-S.onsets_filename = [S.subj_id '_localizer_onsets_test_short'];
+S.onsets_filename = [S.subj_id '_localizer_onsets_test'];%_short'];
 
 %specify preprocessing level of BOLDs
 preproc_lvl = ''; % 'a' for slice-time-only, 'u' for realigned-only, 'ua' for realign+unwarped, 'swua' for smoothed, normalized, and... you get the picture. Modify as needed if you changed SPM's prefix append defaults
-boldnames = [preproc_lvl 'run']; %name of image files with preprocessing level prefix
+%boldnames = [preproc_lvl 'run']; %name of image files with preprocessing level prefix
+boldnames = ['ResI']; %for residual time series
 
 %specify beta filename unique identifiers (often simply 'beta')
 betanames = 'beta'; %name shared across image files to help ensure only those are read. For LSS, often code renames betas according to conditions and events, so this could be set to read in only a specific condition type, or to load in all events ('event' - all patterns as you normally would)
@@ -50,7 +51,7 @@ S.expt_dir = ['/mnt/hgfs/Work/mvpa_sample_data/' S.exp_name '/'];%study location
 
 par.subdir =[S.expt_dir S.subj_id];%subject location
 
-par.funcdir =[par.subdir '/bolds/'];%subfolder for 'raw' BOLD data. Assumes BOLDs are stored in subfolders labeled 'run_01', etc)
+par.funcdir =[par.subdir '/boldsres/'];%subfolder for 'raw' BOLD data. Assumes BOLDs are stored in subfolders labeled 'run_01', etc)
 
 S.workspace_dir = [par.subdir '/mvpa_workspace'];%temporary files workspace
 
@@ -322,108 +323,147 @@ if runs_concat == 1
     end
     
 else %if runs are NOT concatenated %-------in debugging stage as of 1/3/2018
-    %load onsets
-    load([S.mvpa_dir S.onsets_filename]);
+    tempmat = []; %initialize an empty matrix you'll append data from the runs to
+    tnames = [];
     
-    %runs = [1 2]; %indicate number of runs and which ones to target with analysis
-    
-    rmat_condensed = [];
-    onsets_TRs = [];
-    
-    %before loading and preprocessing all the pattern data, we can see if its
-    %already there for analysis
-    if exist([S.mvpa_dir '/RSA_data/' S.subj_id '_' mask '_condensedpats.mat']);
-        load([S.mvpa_dir '/RSA_data/' S.subj_id '_' mask '_condensedpats.mat']);
-    else
+    for rnum = 1:length(TRsperRun)
         
-        %%load in pattern data
-        if ImgDims == 4
+        run = num2str(rnum, '%02.f');
+        
+        path = [par.funcdir '/run_' run '/'];
+        
+        cd(path);
+        
+        %load onsets for the run
+        load(S.onsets_filename); %[S.mvpa_dir S.onsets_filename]);
+        
+        if ImgDims == 4 %in development
             
-            for rnum = 1:length(TRsperRun)
-                
-                run = num2str(rnum);
-                
-                path = [par.funcdir '/run_' run '/'];
-                
-                cd(path);
-                
-                
-                tmp=dir(['*' funcftype]);
-                
-                runlength = length(spm_vol(strtok(tmp.name)));
-                
-                %iterate through 3D frames of 4D file to extract all patterns
-                for i=1:runlength
-                    betamaps{i} = [tmp.name ',' num2str(i)];
-                    
-                    
-                    [b,r] = MAP_getROI(maskname, betamaps{i}, 'vox', 0, '');
-                    bmat_t(:,i) = b{1}; % returns all voxels, whether or not they have NaNs
-                    rmat_t(:,i) = r; % returns voxels excluding NaNs
-                    %meanbetas_t = nanmean(bmat_t(:,:));%get mean beta values from the ROI for each regressor
-                    
-                    
-                    
-                    
-                end
-                %         names_t = names(cell2mat(runs_onsidx)==num2str(run));%filter to current run
-                %         onsets_t = onsets(cell2mat(runs_onsidx)==num2str(run));%filter to current run
-                
-                names_t = names(cell2mat(runs_onsidx)==rnum);%filter to current run
-                onsets_t = onsets(cell2mat(runs_onsidx)==rnum);%filter to current run
-                %['ASSIGNED_habit_env4_rep' num2str(rnum)]
-                
-                %%      now compute a mean pattern for __ TRs surrounding the onset
-                
-                % convert onsets to TRs
-                for n = 1:length(names_t)
-                    
-                    time_idx = floor(onsets_t{n}/S.TR) + 1;
-                    enoughTRs_h = (time_idx + (length(theseTRWeights)-1)) <= runlength;
-                    lengthdiff = runlength - time_idx; %calculate how many more TRs there are beyond the onset
-                    %onsets{i} = sort(horzcat(onsets{i}, theseOnsets(enoughTRs_h)));
-                    onsets_TR{n} = time_idx; %sort(horzcat(onsets_t{n}, onsets_t{n}{idxThisCond}(enoughTRs_h)));%put the onsets for cond{i} into an array,
-                    
-                    %if the n TRs is too short, calculate a new weights vector
-                    %to accomodate
-                    if enoughTRs_h == 1
-                        theseTRWeights2 = theseTRWeights;
-                    else
-                        theseTRWeights2 = theseTRWeights(1:(lengthdiff+1))/(sum(theseTRWeights(1:(lengthdiff+1))));
-                    end
-                    %restricting to onsets for which we have enough TRs acquired.
-                    %NOTE: This will literally REcreate the onsets component of my model files,
-                    %BUT is still useful IF we haven't prescreened them based
-                    %on how many TRs we acquired (i.e. we might get 31/32
-                    %onsets of the 32nd exceeds the number of TRs we acquired,
-                    %based on how many post-onset TRs we want to average across
-                    %in our MVPA analysis
-                    
-                    %create weighted mean pattern for that onset
-                    for nvoxr = 1:length(rmat_t(:,1))
-                        tempvals = theseTRWeights2.*rmat_t(nvoxr,time_idx:time_idx+(length(theseTRWeights2)-1));
-                        rmat_condensed_t(nvoxr,n) = squeeze(sum(tempvals));
-                    end
-                end
-                %% now integrate patterns and indices into master matrices for study-level analysis
-                rmat_condensed = [rmat_condensed rmat_condensed_t];
-                onsets_TRs = [onsets_TRs onsets_TR];
-            end
-            
+            a = [];
             
         elseif ImgDims == 3
             
-            a=[];
+            allrawfilenames{rnum,1} = dir(fullfile(['./' boldnames '*.nii']));
             
+            %if 3D images (not recommended) check if the count matches that
+            %specified for other stages of the process
+            if ImgDims == 3
+                if length(allrawfilenames{rnum})~=TRsperRun(rnum);
+                    error('your specified run length does not match 3D file count')
+                end
+            end
+            
+            %             for idxf = 1:length(allrawfilenames{rnum})
+            %                 allrawfilepaths{rnum,1}{rnum,1} = runfolds(rnum).name;
+            %             end
+            %             x = [allrawfilenames{1}(1).folder '/' allrawfilenames{1}(1).name]
+            %allrawfilenames = vertcat(allrawfilenames{:});
+            %             allrawfilepaths = vertcat(allrawfilepaths{:});
+            for idx = 1:length(allrawfilenames{rnum})%length(allrawfilenames);
+                raw_filenames{idx,1} = [allrawfilenames{rnum}(idx).folder '/' allrawfilenames{rnum}(idx).name]
+            end
+            
+            imgslength = length(raw_filenames);
+            
+            %% iterate through 3D frames to extract all patterns
+            for i=1:imgslength
+                betamaps{i} = raw_filenames{i};%[tmp.name ',' num2str(i)];
+                
+                [b,r] = MAP_getROI(maskname, betamaps{i}, 'vox', 0, '');
+                bmat_t(:,i) = b{1}; % returns all voxels, whether or not they have NaNs
+                rmat_t(:,i) = r; % returns voxels excluding NaNs
+                %meanbetas_t = nanmean(bmat_t(:,:));%get mean beta values from the ROI for each regressor
+            end
+            
+            %% optional preprocessing
+                figure;
+                % hp filter the data - recommended
+                run_sel = ones(1,imgslength); % because we are doing one run at a time, run_sel is nonexistant at this time
+                if runhpfilt == 1
+                    rmat_t = hp_filter(rmat_t,run_sel',100,2)';%2=2s TR
+                    
+                    %plot for exploration
+                    cm_t = corr(rmat_t);
+                    subplot(2,1,1), imagesc(cm_t);
+                    title('hp_filt corrmat')
+                    colormap('jet'); % set the colorscheme
+                    colorbar;
+                    caxis([-1 1]);
+                end
+                
+                % zscore within runs
+                if runzscore == 1
+                    
+                    pat_t = [];
+                    
+                %    for r = 1:length(TRsperRun) %for each run
+                        activepats = rmat_t;%(:,logical(run_sel==r));%filter patterns to current run
+                        if size(activepats,2)~=TRsperRun(rnum)
+                            error('Your pattern count doesnt match current run length');
+                        end
+                        
+                        pat_t = [pat_t zscore_mvpa(activepats,2)];%2 = z-score within rows (within-voxels)
+                %    end
+                    
+                    rmat_t = pat_t;
+                    
+                    %plot for exploration
+                    cm_t2 = corr(rmat_t);
+                    subplot(2,1,2), imagesc(cm_t2);
+                    title('hp_filt_z corrmat')
+                    colormap('jet'); % set the colorscheme
+                    colorbar;
+                    caxis([-1 1]);
+                end
+                
+                %% now compute a mean pattern for __ TRs surrounding the onset
+                
+                 for n = 1:length(names)
+                    
+                    
+                    time_idx = floor(onsets{n}/S.TR) + 1;%convert onsets to TRs
+                    
+                    onsets_TR{n} = time_idx; %sort(horzcat(onsets_t{n}, onsets_t{n}{idxThisCond}(enoughTRs_h)));%put the onsets for cond{i} into an array,
+                    
+                    theseTRWeights2 = theseTRWeights;
+                    
+                    %create weighted mean pattern for that onset
+                    for nvoxr = 1:size(rmat_t,1)
+                        %tempvals = [];
+                        for tidx = 1:length(time_idx)
+                            tempvals = theseTRWeights2.*rmat_t(nvoxr,time_idx(tidx):time_idx(tidx)+(length(theseTRWeights2)-1));
+                            condmat_condensed_t{nvoxr,time_idx(tidx)} = squeeze(sum(tempvals));
+                        end
+                    end
+                    %rmat_condensed = [rmat_condensed condmat_condensed_t];
+                    
+                    if gen_onsetsTR == 1 %if we need to split our names out by individual events
+                        for tidx = 1:length(time_idx)
+                            tempnames{time_idx(tidx)} = [names{n} '_' run '_' num2str(tidx)];
+                            temprunsel{time_idx(tidx)} = run_sel(time_idx(tidx));
+                        end
+                    end
+                    
+                    %runsel_TRs = [runsel_TRs temprunsel];
+                    %names_TRs = [names_TRs tempnames];
+                end
+                
+                filt = any(~cellfun('isempty', condmat_condensed_t),1);
+                rmat_condensed = cell2mat(condmat_condensed_t(:,filt));
+                runsel_TRs = temprunsel(:,filt);
+                names_TRs = tempnames(:,filt);
+                tempnames=[];%clear for next loop
+                temprunsel=[];
+                condmat_condensed_t=[];
         end
         
-        %% write out pattern info
-        savename1 = [basepath '/wagner/thackery/SST_temp/sst' sub '/mvpa_orient/sst' sub '_' mask '_condensedpats.mat'];
-        save(savename1,'rmat_condensed');
-        
-        savename2 = [basepath '/wagner/thackery/SST_temp/sst' sub '/mvpa_orient/onsets_nonconcat.mat'];
-        save(savename2,'names','onsets','onsets_TRs','durations','runs_onsidx');
+        tempmat = [tempmat rmat_condensed]; % now concatenate with other runs' data
+        tnames = [tnames names_TRs];
     end
+    
+    rmat_condensed = tempmat;
+    names_TRs = tnames;
+    
 end
 
 %% create indices for patterns of interest
