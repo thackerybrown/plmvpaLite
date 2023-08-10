@@ -34,14 +34,8 @@ for b=(1:length(subj_array))
     tic; %start stopwatch to track analysis time on machine
     %% load general parameter information
     
-    %[S idxTr idxTe par] = TIB_mvpa_params_betas(subj_array(b), task, TRsperRun);%runs with Circmaze data
-    %[S idxTr idxTe par] = TIB_mvpa_params_8080(subj_array(b), task, TRsperRun{b}, 'raw');%runs with CM localizer data.
-    %[S idxTr idxTe par] = TIB_mvpa_params_8080_betas(subj_array(b), task, TRsperRun{b}, 'raw');%runs with CM localizer data.
-    [S idxTr idxTe par] = TIB_mvpa_params_general_PIB(subj_array(b), task, TRsperRun{b}, 'betas');%runs with CM localizer data.
-    %[S idxTr idxTe par] = TIB_mvpa_params_SPIKES(subj_array(b), task, TRsperRun{b}, 'betas');%runs with CM localizer data.
-    %[S idxTr idxTe par] = TIB_mvpa_params_general_EOG(subj_array(b), task, TRsperRun{b}, 'betas');%runs with CM localizer data.
-    %[S idxTr idxTe par] = TIB_mvpa_params_mnist(subj_array(b), task, TRsperRun{b}, 'betas');%runs with CM localizer data.
-    %[S idxTr idxTe par] = TIB_mvpa_params_ADNI(subj_array(b), task, TRsperRun{b}, 'betas');%runs with CM localizer data.
+    [S idxTr idxTe par] = TIB_mvpa_params_general_8080(subj_array(b), task, TRsperRun{b}, 'raw');%runs with CM localizer data.
+    %[S idxTr idxTe par] = TIB_mvpa_params_ADNI(subj_array(b), task, TRsperRun{b}, 'betas');%runs as 'existpatmat' example
     %[S idxTr idxTe par] = TIB_mvpa_params_8080_pseudo(subj_array(b), task, TRsperRun{b}, 'raw');%runs with pseudodata
     
     S.idxTr = idxTr;
