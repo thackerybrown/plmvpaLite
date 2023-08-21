@@ -25,9 +25,14 @@ runzscore = 1;%1=yes. Standard but controversial preprocessing.
 
 % %what if our data of interest don't start at "run_01"?
 % specify scan run range; currently used only if runs_concat = 0
-runstart = 1;
+runstart = 1; 
 runend = 2;
 realrnums = runstart:1:runend;
+
+%specialized analyses to run
+run_mds = 0; % run a "multimensional scaling" analysis?
+run_hrclust = 0; % run a hierarchical clustering analysis?
+run_modelfit = 0; % build a "model" 
 
 %Subject ID/number
 par.substr = ['CM' Sub{1}];
@@ -51,12 +56,6 @@ betanames = 'beta'; %name shared across image files to help ensure only those ar
 LStype = 'LSA'; %LSS or LSA will divert code to different accordingly named beta folders
 
 ImgDims = 3; %if working with timeseries, it is highly recommended that you use 4D nifti files ('4'). If you have split them out into TR-by-TR, or are working with betas, enter '3'
-
-%flags for specialized analyses to run
-run_mds = 0; % run a "multimensional scaling" analysis?
-run_hrclust = 0; % run a hierarchical clustering analysis?
-run_simmodelfit = 0; % build "model" similarity matrices and test how well these fit observed
-
 
 %% Directories
 S.expt_dir = ['/home/thackery/Documents/work/mvpa_sample_data/' S.exp_name '/'];%study location
@@ -100,36 +99,36 @@ end
 if runs_concat == 1
     %load onsets
     load([S.mvpa_dir S.onsets_filename]);
-
+    
     %ditch unneeded indices. NOTE: this is custom for class example
     names = names(1:7);
     onsets = onsets(1:7);
     durations = durations(1:7);
     %runs = [1 2]; %indicate number of runs and which ones to target with analysis
-
+    
     rmat_condensed = [];
     onsets_TRs = [];
     names_TRs = [];%filled in if gen_onsetsTR == 1
     runsel_TRs = [];
-
+    
     %before loading and preprocessing all the pattern data, we can see if its
     %already there for analysis
     if use_exist_workspace && exist([S.mvpa_dir '/RSA_data/' S.subj_id '_' mask '_condensedpats.mat']);
         load([S.mvpa_dir '/RSA_data/' S.subj_id '_' mask '_condensedpats.mat']);
         load([S.mvpa_dir '/RSA_data/' S.subj_id '_onsets_expanded.mat']);
     else
-
+        
         %% load in pattern data
         if ImgDims == 4 %in development
-
+            
             a = [];
-
+            
         elseif ImgDims == 3
             if strcmp(S.inputformat, 'raw')
                 runfolds = dir(fullfile(par.funcdir, 'run_*'));%dir(fullfile(par.funcdir, 'localizer*'));%
                 for idxr = 1:length(runfolds)
                     allrawfilenames{idxr,1} = dir(fullfile(par.funcdir, runfolds(idxr).name, ['/' boldnames '*.nii']));%'/swa*.nii'));%
-
+                    
                     %if 3D images (not recommended) check if the count matches that
                     %specified for other stages of the process
                     if ImgDims == 3
@@ -137,7 +136,7 @@ if runs_concat == 1
                             error('your specified run length does not match 3D file count')
                         end
                     end
-
+                    
                     for idxf = 1:length(allrawfilenames{idxr})
                         allrawfilepaths{idxr,1}{idxf,1} = runfolds(idxr).name;
                     end
@@ -147,7 +146,7 @@ if runs_concat == 1
                 for idx = 1:length(allrawfilenames);
                     raw_filenames{idx,1} = [par.funcdir char(allrawfilepaths(idx)) '/' allrawfilenames(idx).name];
                 end
-
+                
                 %files may have been read in out of order. This would be very very bad.
                 %Here, we try to confirm/fix this with a resort - but you *MUST* double
                 %check that the final file order is correct before proceeding with
@@ -164,44 +163,44 @@ if runs_concat == 1
                     %else
                     %    raw_filenames{idx,2} = str2double(raw_filenames{idx,1}(length(raw_filenames{idx,1})-10:length(raw_filenames{idx,1})-9));
                     %end
-
+                    
                 end
-
+                
                 a = sortrows(raw_filenames, 2);
                 raw_filenames = a(:,1);
-
+                
                 %if the BOLD images are 3D instead of 4D, we need to modify indices further to avoid introducing a new sorting error
-
+                
                 for idx = 1:length(raw_filenames)
                     %first, identify the RUN number from its name in full
                     runref_indices = strfind(raw_filenames{idx,1}, '/run_');
                     runidxnum = str2double(raw_filenames{idx,1}(runref_indices(1)+5:runref_indices(1)+6));%runref_indices(2)-1)); %%Warning - this coding assumes the run numbers do not exceed double digits
                     raw_filenames{idx,3} = runidxnum;
                 end
-
+                
                 b = sortrows(raw_filenames, 3);
                 raw_filenames = b(:,1);
                 run_sel = b(:,3);%store run numbers for reference
                 imgslength = length(raw_filenames);
-
+                
                 %% iterate through 3D frames to extract all patterns
                 for i=1:imgslength
                     betamaps{i} = raw_filenames{i};%[tmp.name ',' num2str(i)];
-
+                    
                     [b,r] = MAP_getROI(maskname, betamaps{i}, 'vox', 0, '');
                     bmat_t(:,i) = b{1}; % returns all voxels, whether or not they have NaNs
                     rmat_t(:,i) = r; % returns voxels excluding NaNs
                     %meanbetas_t = nanmean(bmat_t(:,:));%get mean beta values from the ROI for each regressor
-
+                    
                 end
-
+                
                 run_sel = cell2mat(run_sel);
                 %% optional preprocessing
                 figure;
                 % hp filter the data - recommended
                 if runhpfilt == 1
                     rmat_t = hp_filter(rmat_t,run_sel',100,2)';%2=2s TR
-
+                    
                     %plot for exploration
                     cm_t = corr(rmat_t);
                     subplot(2,1,1), imagesc(cm_t);
@@ -210,23 +209,23 @@ if runs_concat == 1
                     colorbar;
                     caxis([-1 1]);
                 end
-
+                
                 % zscore within runs
                 if runzscore == 1
-
+                    
                     pat_t = [];
-
+                    
                     for r = 1:length(TRsperRun) %for each run
                         activepats = rmat_t(:,logical(run_sel==r));%filter patterns to current run
                         if size(activepats,2)~=TRsperRun(r)
                             error('Your pattern count doesnt match current run length');
                         end
-
+                        
                         pat_t = [pat_t zscore_mvpa(activepats,2)];%2 = z-score within rows (within-voxels)
                     end
-
+                    
                     rmat_t = pat_t;
-
+                    
                     %plot for exploration
                     cm_t2 = corr(rmat_t);
                     subplot(2,1,2), imagesc(cm_t2);
@@ -235,18 +234,18 @@ if runs_concat == 1
                     colorbar;
                     caxis([-1 1]);
                 end
-
+                
                 %% now compute a mean pattern for __ TRs surrounding the onset
-
+                
                 for n = 1:length(names)
-
-
+                    
+                    
                     time_idx = floor(onsets{n}/S.TR) + 1;%convert onsets to TRs
-
+                    
                     onsets_TR{n} = time_idx; %sort(horzcat(onsets_t{n}, onsets_t{n}{idxThisCond}(enoughTRs_h)));%put the onsets for cond{i} into an array,
-
+                    
                     theseTRWeights2 = theseTRWeights;
-
+                    
                     %create weighted mean pattern for that onset
                     for nvoxr = 1:size(rmat_t,1)
                         %tempvals = [];
@@ -256,24 +255,24 @@ if runs_concat == 1
                         end
                     end
                     %rmat_condensed = [rmat_condensed condmat_condensed_t];
-
+                    
                     if gen_onsetsTR == 1 %if we need to split our names out by individual events
                         for tidx = 1:length(time_idx)
                             tempnames{time_idx(tidx)} = [names{n} '_' num2str(tidx)];
                             temprunsel{time_idx(tidx)} = run_sel(time_idx(tidx));
                         end
                     end
-
+                    
                     %runsel_TRs = [runsel_TRs temprunsel];
                     %names_TRs = [names_TRs tempnames];
                 end
-
+                
                 filt = any(~cellfun('isempty', condmat_condensed_t),1);
                 rmat_condensed = cell2mat(condmat_condensed_t(:,filt));
                 runsel_TRs = temprunsel(:,filt);
                 names_TRs = tempnames(:,filt);
-
-
+                
+                
             elseif strcmp(S.inputformat, 'betas')
                 %note, this analysis assumes betas are grouped by
                 %condition, and in the order of the conditions in your
@@ -282,31 +281,31 @@ if runs_concat == 1
                 %(e.g., conditions interleaved) then some of the code below
                 %that reorders the betas will need to be updated
                 allrawfilenames{1,1} = dir(fullfile(S.beta_dir, ['/*' betanames '*.nii']));%
-
+                
                 for idx = 1:length(allrawfilenames{1,1});
                     raw_filenames{idx,1} = [S.beta_dir allrawfilenames{1,1}(idx).name];
                 end
-
+                
                 imgslength = length(raw_filenames);
-
+                
                 %% iterate through 3D frames to extract all patterns
                 for i=1:imgslength
                     betamaps{i} = raw_filenames{i};%[tmp.name ',' num2str(i)];
-
+                    
                     [b,r] = MAP_getROI(maskname, betamaps{i}, 'vox', 0, '');
                     bmat_t(:,i) = b{1}; % returns all voxels, whether or not they have NaNs
                     rmat_t(:,i) = r; % returns voxels excluding NaNs
                     %meanbetas_t = nanmean(bmat_t(:,:));%get mean beta values from the ROI for each regressor
-
+                    
                 end
-
+                
                 rmat_condensed = rmat_t;
                 %% now pull out original condition names, and resort to original trial order to help index and analyze pattern data and compare with raw bold patterns. Requires input of TR numbers for study even though we are working with precomputed beta maps
                 time_idx_sortvec = [];%we'll fill in the TR times for events, and use this to resort the betas into their true event order (LSS and LSA code typically create betas grouped by condition/out of temporal order)
                 for n = 1:length(names)
                     time_idx = floor(onsets{n}/S.TR) + 1;%convert onsets to TRs
                     time_idx_sortvec = [time_idx_sortvec time_idx];
-
+                    
                     if gen_onsetsTR == 1 %if we need to split our names out by individual events
                         for tidx = 1:length(time_idx)
                             tempnames{time_idx(tidx)} = [names{n} '_' num2str(tidx)];
@@ -314,49 +313,49 @@ if runs_concat == 1
                         end
                     end
                 end
-
+                
                 filt = any(~cellfun('isempty', tempnames),1);
                 %rmat_condensed = cell2mat(condmat_condensed_t(:,filt));
                 %runsel_TRs = temprunsel(:,filt);
                 names_TRs = tempnames(:,filt);
-
+                
                 [~,sortnames]=sort(time_idx_sortvec);%calculate sorting vector for original temporal order for the task
                 rmat_condensed = rmat_condensed(:,sortnames);%let's sort the patterns into their original temporal order for the task
             end
         end
-
-
+        
+        
         %% write out pattern info
         savename1 = [S.mvpa_dir '/RSA_data/' S.subj_id '_' mask '_condensedpats.mat'];
         save(savename1,'rmat_condensed');
-
+        
         savename2 = [S.mvpa_dir '/RSA_data/' S.subj_id '_onsets_expanded.mat'];
         save(savename2,'names','onsets','names_TRs','durations');
     end
-
+    
 else %if runs are NOT concatenated %-------in debugging stage as of 1/3/2018
     tempmat = []; %initialize an empty matrix you'll append data from the runs to
     tnames = [];
-
+    
     for rnum = 1:length(TRsperRun)
-
+        
         run = num2str(realrnums(rnum), '%02.f');%run = num2str(rnum, '%02.f');
-
+        
         path = [par.funcdir '/run_' run '/'];
-
+        
         cd(path);
-
+        
         %load onsets for the run
         load(S.onsets_filename); %[S.mvpa_dir S.onsets_filename]);
-
+        
         if ImgDims == 4 %in development
-
+            
             a = [];
-
+            
         elseif ImgDims == 3
-
+            
             allrawfilenames{rnum,1} = dir(fullfile(['./' boldnames '*.nii']));
-
+            
             %if 3D images (not recommended) check if the count matches that
             %specified for other stages of the process
             if ImgDims == 3
@@ -364,7 +363,7 @@ else %if runs are NOT concatenated %-------in debugging stage as of 1/3/2018
                     error('your specified run length does not match 3D file count')
                 end
             end
-
+            
             %             for idxf = 1:length(allrawfilenames{rnum})
             %                 allrawfilepaths{rnum,1}{rnum,1} = runfolds(rnum).name;
             %             end
@@ -376,110 +375,110 @@ else %if runs are NOT concatenated %-------in debugging stage as of 1/3/2018
             for idx = 1:length(allrawfilenames{rnum})%length(allrawfilenames);
                 raw_filenames{idx,1} = [allrawfilenames{rnum}(idx).folder '/' allrawfilenames{rnum}(idx).name]
             end
-
+            
             imgslength = length(raw_filenames);
-
+            
             %% iterate through 3D frames to extract all patterns
             bmat_t = [];
             rmat_t = [];
             for i=1:imgslength
                 betamaps{i} = raw_filenames{i};%[tmp.name ',' num2str(i)];
-
+                
                 [b,r] = MAP_getROI(maskname, betamaps{i}, 'vox', 0, '');
                 bmat_t(:,i) = b{1}; % returns all voxels, whether or not they have NaNs
                 rmat_t(:,i) = r; % returns voxels excluding NaNs
                 %meanbetas_t = nanmean(bmat_t(:,:));%get mean beta values from the ROI for each regressor
             end
-
+            
             %% optional preprocessing
-            figure;
-            % hp filter the data - recommended
-            run_sel = ones(1,imgslength); % because we are doing one run at a time, run_sel is nonexistant at this time
-            if runhpfilt == 1
-                rmat_t = hp_filter(rmat_t,run_sel',100,2)';%2=2s TR
-
-                %plot for exploration
-                cm_t = corr(rmat_t);
-                subplot(2,1,1), imagesc(cm_t);
-                title('hp_filt corrmat')
-                colormap('jet'); % set the colorscheme
-                colorbar;
-                caxis([-1 1]);
-            end
-
-            % zscore within runs
-            if runzscore == 1
-
-                pat_t = [];
-
+                figure;
+                % hp filter the data - recommended
+                run_sel = ones(1,imgslength); % because we are doing one run at a time, run_sel is nonexistant at this time
+                if runhpfilt == 1
+                    rmat_t = hp_filter(rmat_t,run_sel',100,2)';%2=2s TR
+                    
+                    %plot for exploration
+                    cm_t = corr(rmat_t);
+                    subplot(2,1,1), imagesc(cm_t);
+                    title('hp_filt corrmat')
+                    colormap('jet'); % set the colorscheme
+                    colorbar;
+                    caxis([-1 1]);
+                end
+                
+                % zscore within runs
+                if runzscore == 1
+                    
+                    pat_t = [];
+                    
                 %    for r = 1:length(TRsperRun) %for each run
-                activepats = rmat_t;%(:,logical(run_sel==r));%filter patterns to current run
-                if size(activepats,2)~=TRsperRun(rnum)
-                    error('Your pattern count doesnt match current run length');
-                end
-
-                pat_t = [pat_t zscore_mvpa(activepats,2)];%2 = z-score within rows (within-voxels)
+                        activepats = rmat_t;%(:,logical(run_sel==r));%filter patterns to current run
+                        if size(activepats,2)~=TRsperRun(rnum)
+                            error('Your pattern count doesnt match current run length');
+                        end
+                        
+                        pat_t = [pat_t zscore_mvpa(activepats,2)];%2 = z-score within rows (within-voxels)
                 %    end
-
-                rmat_t = pat_t;
-
-                %plot for exploration
-                cm_t2 = corr(rmat_t);
-                subplot(2,1,2), imagesc(cm_t2);
-                title('hp_filt_z corrmat')
-                colormap('jet'); % set the colorscheme
-                colorbar;
-                caxis([-1 1]);
-            end
-
-            %% now compute a mean pattern for __ TRs surrounding the onset
-
-            for n = 1:length(names)
-
-
-                time_idx = floor(onsets{n}/S.TR) + 1;%convert onsets to TRs
-
-                onsets_TR{n} = time_idx; %sort(horzcat(onsets_t{n}, onsets_t{n}{idxThisCond}(enoughTRs_h)));%put the onsets for cond{i} into an array,
-
-                theseTRWeights2 = theseTRWeights;
-
-                %create weighted mean pattern for that onset
-                for nvoxr = 1:size(rmat_t,1)
-                    %tempvals = [];
-                    for tidx = 1:length(time_idx)
-                        tempvals = theseTRWeights2.*rmat_t(nvoxr,time_idx(tidx):time_idx(tidx)+(length(theseTRWeights2)-1));
-                        condmat_condensed_t{nvoxr,time_idx(tidx)} = squeeze(sum(tempvals));
-                    end
+                    
+                    rmat_t = pat_t;
+                    
+                    %plot for exploration
+                    cm_t2 = corr(rmat_t);
+                    subplot(2,1,2), imagesc(cm_t2);
+                    title('hp_filt_z corrmat')
+                    colormap('jet'); % set the colorscheme
+                    colorbar;
+                    caxis([-1 1]);
                 end
-                %rmat_condensed = [rmat_condensed condmat_condensed_t];
-
-                if gen_onsetsTR == 1 %if we need to split our names out by individual events
-                    for tidx = 1:length(time_idx)
-                        tempnames{time_idx(tidx)} = [names{n} '_' run '_' num2str(tidx)];
-                        temprunsel{time_idx(tidx)} = run_sel(time_idx(tidx));
+                
+                %% now compute a mean pattern for __ TRs surrounding the onset
+                
+                 for n = 1:length(names)
+                    
+                    
+                    time_idx = floor(onsets{n}/S.TR) + 1;%convert onsets to TRs
+                    
+                    onsets_TR{n} = time_idx; %sort(horzcat(onsets_t{n}, onsets_t{n}{idxThisCond}(enoughTRs_h)));%put the onsets for cond{i} into an array,
+                    
+                    theseTRWeights2 = theseTRWeights;
+                    
+                    %create weighted mean pattern for that onset
+                    for nvoxr = 1:size(rmat_t,1)
+                        %tempvals = [];
+                        for tidx = 1:length(time_idx)
+                            tempvals = theseTRWeights2.*rmat_t(nvoxr,time_idx(tidx):time_idx(tidx)+(length(theseTRWeights2)-1));
+                            condmat_condensed_t{nvoxr,time_idx(tidx)} = squeeze(sum(tempvals));
+                        end
                     end
+                    %rmat_condensed = [rmat_condensed condmat_condensed_t];
+                    
+                    if gen_onsetsTR == 1 %if we need to split our names out by individual events
+                        for tidx = 1:length(time_idx)
+                            tempnames{time_idx(tidx)} = [names{n} '_' run '_' num2str(tidx)];
+                            temprunsel{time_idx(tidx)} = run_sel(time_idx(tidx));
+                        end
+                    end
+                    
+                    %runsel_TRs = [runsel_TRs temprunsel];
+                    %names_TRs = [names_TRs tempnames];
                 end
-
-                %runsel_TRs = [runsel_TRs temprunsel];
-                %names_TRs = [names_TRs tempnames];
-            end
-
-            filt = any(~cellfun('isempty', condmat_condensed_t),1);
-            rmat_condensed = cell2mat(condmat_condensed_t(:,filt));
-            runsel_TRs = temprunsel(:,filt);
-            names_TRs = tempnames(:,filt);
-            tempnames=[];%clear for next loop
-            temprunsel=[];
-            condmat_condensed_t=[];
+                
+                filt = any(~cellfun('isempty', condmat_condensed_t),1);
+                rmat_condensed = cell2mat(condmat_condensed_t(:,filt));
+                runsel_TRs = temprunsel(:,filt);
+                names_TRs = tempnames(:,filt);
+                tempnames=[];%clear for next loop
+                temprunsel=[];
+                condmat_condensed_t=[];
         end
-
+        
         tempmat = [tempmat rmat_condensed]; % now concatenate with other runs' data
         tnames = [tnames names_TRs];
     end
-
+    
     rmat_condensed = tempmat;
     names_TRs = tnames;
-
+    
 end
 
 %% create indices for patterns of interest
@@ -490,9 +489,9 @@ end
 
 %optional first rearrange data according to category to help with visualization
 if sortmatbycat == 1
-    [names_TRs y] = natsort(names);%requires natsort in path
-    names = names_TRs;
-    rmat_condensed = rmat_condensed(:,y);
+[names_TRs y] = natsort(names);%requires natsort in path
+names = names_TRs;
+rmat_condensed = rmat_condensed(:,y);
 end
 
 % first index different categories
@@ -539,11 +538,11 @@ end
 
 
 for n = 1:length(names)
-    if contains(names{n},{'EA','AA'})%strfind(names{n},'EA') | strfind(names{n}, 'AA')
+     if contains(names{n},{'EA','AA'})%strfind(names{n},'EA') | strfind(names{n}, 'AA')
         Face_idx(n) = 1;
-    else
-        Face_idx(n) = 0;
-    end
+     else
+         Face_idx(n) = 0;
+     end
 end
 
 run1s = logical(cell2mat(runsel_TRs)==1);
@@ -615,7 +614,7 @@ if threshpats == 1
     end
     t = mean(x1');% average across columns - anything less than 1 indicates there are some zeros
     t1 = t'>=1; %threshold once more to voxels that had signal passing our threshold for EVERY pattern
-
+    
     rmat_condensed = rmat_condensed(t1,:);
 end
 
@@ -802,7 +801,7 @@ cm4 = 1-cm3;%generate DISsimilarity matrix - some clustering algorithms assume d
 
 res.cm4=cm4;%store in res structure for posterity
 
-%visualize  a DISsimilarity matrix
+%visualize the dissimilarity matrix
 figure;
 subplot(2,1,1),imagesc(cm4);
 colormap('jet');
@@ -833,56 +832,48 @@ end
 
 %% hierarchical clustering analysis
 
-if run_hrclust == 1; % run a hierarchical clustering analysis?
+%create vector of distances between instances in the cm
+distm = pdist(cm3,'correlation');% tell matlab metric is pearson r
+Z1 = linkage(distm,'ward');%compute dendrogram, using average distance within clusters for agglomeration
 
-    %create vector of distances between instances in the cm
-    distm = pdist(cm3,'correlation');% tell matlab metric is pearson r
-    Z1 = linkage(distm,'ward');%compute dendrogram, using average distance within clusters for agglomeration
-
-    %color code select original classes to help evaluate clustering?
-    colorcode = 1;
-    if colorcode == 1
-        xz(1:size(names'),1) = {[0 0 0]};%create dendrogram condition colors (default = [0 0 0], black)
-        xz(logical(AA_intact)) = {[1 0 0]};
-        xz(logical(EA_intact)) = {[0 1 0]};
-        xz(logical(Scene_idx)) = {[0 0 1]};
-        xz(logical(Obj_idx)) = {[1 0 1]};
-        %h = cell2mat(userOptions.conditionColours)
-        userOptions.conditionColours = cell2mat(xz);
-    end
-
-    % compute dendrogram
-    subplot(2,1,2),[H_ignore T_ignore labelReordering] = dendrogram(Z1,0,'labels',names,'Orientation','left');%display dendrogram. 0 = show all items in correlation structure (default would limit to 30 clusters)
-
-    if colorcode == 1
-        color_t = xz(labelReordering);
-        hold on;
-        x = xlim(gca);
-        for condition = 1:size(cm4,1)%size(squareRDM(cm4), 1)
-            plot(x(1), condition, 'o', 'MarkerFaceColor', color_t{condition, :}, 'MarkerEdgeColor', 'none', 'MarkerSize', 8);
-        end%for:condition
-    end
-
-    % save plot
-    plot_savename = [S.group_mvpa_dir '/Rcorrs_' S.subj_id '_' mask '_' weights_str '_' S.exp_name '_hierarchicalclustering.png'];
-    saveas(gcf,plot_savename);
-
-    % explore which classes belong to clusters at level __ in the dendrogram
-    clustlvl = 3;%define level of dendrogram to inspect. E.g., 3 means the leavel from the top where there are 3 clusters
-    cl_content{clustlvl} = cluster(Z1,'maxclust',clustlvl); %what are the items in cluster level 'cutoff'?
-    names_cl1 = names(cl_content{clustlvl}==1); % which classes are in cluster 1 at this level of the dendrogram?
-
+%color code select original classes to help evaluate clustering?
+colorcode = 1;
+if colorcode == 1
+    xz(1:size(names'),1) = {[0 0 0]};%create dendrogram condition colors (default = [0 0 0], black)
+    xz(logical(AA_intact)) = {[1 0 0]};
+    xz(logical(EA_intact)) = {[0 1 0]};
+    xz(logical(Scene_idx)) = {[0 0 1]};
+    xz(logical(Obj_idx)) = {[1 0 1]};
+    %h = cell2mat(userOptions.conditionColours)
+    userOptions.conditionColours = cell2mat(xz);
 end
+
+% compute dendrogram
+subplot(2,1,2),[H_ignore T_ignore labelReordering] = dendrogram(Z1,0,'labels',names,'Orientation','left');%display dendrogram. 0 = show all items in correlation structure (default would limit to 30 clusters)
+
+if colorcode == 1
+    color_t = xz(labelReordering);
+    hold on;
+    x = xlim(gca);
+    for condition = 1:size(cm4,1)%size(squareRDM(cm4), 1)
+        plot(x(1), condition, 'o', 'MarkerFaceColor', color_t{condition, :}, 'MarkerEdgeColor', 'none', 'MarkerSize', 8);
+    end%for:condition
+end
+
+% save plot
+plot_savename = [S.group_mvpa_dir '/Rcorrs_' S.subj_id '_' mask '_' weights_str '_' S.exp_name '_hierarchicalclustering.png'];
+saveas(gcf,plot_savename);
+
+% explore which classes belong to clusters at level __ in the dendrogram
+clustlvl = 3;%define level of dendrogram to inspect. E.g., 3 means the leavel from the top where there are 3 clusters
+cl_content{clustlvl} = cluster(Z1,'maxclust',clustlvl); %what are the items in cluster level 'cutoff'?
+names_cl1 = names(cl_content{clustlvl}==1); % which classes are in cluster 1 at this level of the dendrogram?
+
 
 %% Test models of similarity structure
-if run_simmodelfit == 1; % build "model" similarity matrices and test how well these fit observed
+modfits = CMmodelcomparison(cm2,EA_intact,AA_intact,Obj_idx,othercond_idx,Scene_idx,scrambled_idx);
 
-    modfits = CMmodelcomparison(cm2,EA_intact,AA_intact,Obj_idx,othercond_idx,Scene_idx,scrambled_idx);
-
-end
-
-
-%% end of script; Save data
+%% Save data
 savename = [S.group_mvpa_dir '/Rcorrs_' S.subj_id '_' mask '_' weights_str '_' S.exp_name '.mat'];
 save(savename, 'res');
 
