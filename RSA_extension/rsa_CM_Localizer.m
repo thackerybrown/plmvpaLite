@@ -23,6 +23,12 @@ sortmatbycat = 1; %1=yes. Rearrange names and patterns according to alphabetical
 runhpfilt = 0;%1=yes. Standard
 runzscore = 1;%1=yes. Standard but controversial preprocessing.
 
+% specify scan run range; currently used only if runs_concat = 0
+runstart = 1 %what if our data of interest don't start at "run_01"?
+runend = 2
+realrnums = runstart:1:runend
+
+
 %Subject ID/number
 par.substr = ['CM' Sub{1}];
 S.subj_id = par.substr;
@@ -328,7 +334,7 @@ else %if runs are NOT concatenated %-------in debugging stage as of 1/3/2018
     
     for rnum = 1:length(TRsperRun)
         
-        run = num2str(rnum, '%02.f');
+        run = num2str(realrnums(rnum), '%02.f');%run = num2str(rnum, '%02.f');
         
         path = [par.funcdir '/run_' run '/'];
         
@@ -359,6 +365,8 @@ else %if runs are NOT concatenated %-------in debugging stage as of 1/3/2018
             %             x = [allrawfilenames{1}(1).folder '/' allrawfilenames{1}(1).name]
             %allrawfilenames = vertcat(allrawfilenames{:});
             %             allrawfilepaths = vertcat(allrawfilepaths{:});
+
+            raw_filenames = {};
             for idx = 1:length(allrawfilenames{rnum})%length(allrawfilenames);
                 raw_filenames{idx,1} = [allrawfilenames{rnum}(idx).folder '/' allrawfilenames{rnum}(idx).name]
             end
@@ -366,6 +374,8 @@ else %if runs are NOT concatenated %-------in debugging stage as of 1/3/2018
             imgslength = length(raw_filenames);
             
             %% iterate through 3D frames to extract all patterns
+            bmat_t = [];
+            rmat_t = [];
             for i=1:imgslength
                 betamaps{i} = raw_filenames{i};%[tmp.name ',' num2str(i)];
                 
