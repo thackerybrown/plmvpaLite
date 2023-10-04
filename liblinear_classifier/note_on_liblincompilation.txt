@@ -1,0 +1,15 @@
+﻿Hi all,
+
+I've done some digging and here's the status for the algorithm and my suggestions:
+
+1) it works out of the box for Windows - you don't even need to run the "make" script (although there is no harm in doing so, it just comes pre-maked). I think this is the path of least resistance is to use the computer lab machines or your own personal Windows machine
+
+2) for linux, you have to launch matlab, navigate your matlab working directory into the matlab subfolder of the liblinear-2.47 folder, in the matlab command prompt (where you type in the commands to execute our MVPA scripts as we have been doing) you have to type "make" and hit enter. It should then work like Windows does
+
+3) for macos, I think the path of least resistance is to delete the 2.47 folder, go into the "liblinear_version_repo" folder and grab the "liblinear-1.94_OSX" zip file. Move it up a directory to where the 2.47 folder used to be, unzip it, and add that new folder with subfolders to your matlab path (since your path currently only includes the 2.47 folder you deleted). You're not done yet - the osx-compiled versions of the algorithm have a different name: the are called "ll_train" and "ll_predict" instead of just "train" and "predict". So your last step should be to edit a couple of lines in the plmvpa code to call on those algorithm files instead. These lines are...
+/plmvpaLite/liblinear_interface/train_liblinear_multiclass.m -> line 52, edit the function call "train(...)" to be "ll_train(...)" as in the comment I made about OSX above in line 51
+/plmvpaLite/liblinear_interface/test_liblinear_multiclass.m -> lines 75 and 78 do the same thing, changing "predict(...)" to "ll_predict(...)"
+
+A final issue I noted: I had the matlab neural network package installed, and it has its own "train" and "predict" functions and this was causing issues depending on which one was the most recent addition to my path. So if you have a bunch of other machine learning related packages in your matlab install there is a chance we will need to remove something from your path or rename your liblinear files (e.g., to ll_train like for the OSX users)
+
+I hope this helps 

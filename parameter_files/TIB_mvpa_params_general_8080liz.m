@@ -38,7 +38,7 @@ function [S idxTr idxTe par]= TIB_mvpa_params_general_8080(subj_id, task, TRsper
 % scripts to ensure proper use
 
 % Most variables are assigned to either 'par' or 'S' variables. At this time, it's not well
-% organized what info/home/thackery/Documents/work/mvpa_sample_data goes into what.
+% organized what info goes into what.
 
 %% EDIT - You must establish these general parameters
 

@@ -189,20 +189,20 @@ disp( sprintf('Starting %i cross-validation classification iterations - %s', ...
     nIterations,class_args.train_funct_name) );
 
 for n=1:nIterations
-    
+
     fprintf('\t%i',n);
     cur_iteration = [];
-    
+
     cv_args.cur_iteration = n;
     cv_args.n_iterations = nIterations;
-    
+
     % Set the current selector up
     cur_selsname = selnames{n};
     selectors = get_mat(subj,'selector',cur_selsname);
-    
+
     % Set up the current pattern
     cur_patname = patnames{n};
-    
+
     % Extract the training and testing indices from the selector
     train_idx = find(selectors==1);
     test_idx  = find(selectors==2);
@@ -212,30 +212,30 @@ for n=1:nIterations
     if length(unknown_idx) & ~args.ignore_unknowns
         warning( sprintf('There are unknown selector labels in %s',cur_selsname) );
     end
-    
+
     if isempty(train_idx) || isempty(test_idx) % changed by TIB 02/06/2019 to OR statement to skip xval folds where EITHER training or testing classes are missing.
         disp('No pats and targs timepoints for this iteration - skipping');
         continue
     end
-    
+
     % Set the current mask up
     cur_maskname = masknames{n};
-    
+
     if class_args.existpatmat == 0
         masked_pats = get_masked_pattern(subj,cur_patname,cur_maskname);
-        
+
         % Create the training patterns and targets
         trainpats  = masked_pats(:,train_idx);
         traintargs = regressors( :,train_idx);
         testpats   = masked_pats(:,test_idx);
         testtargs  = regressors( :,test_idx);
-        
+
     elseif class_args.existpatmat == 1
-        
+
         if ~ismaskgroup
             % added by TIB - for unmasked data (e.g., existing matrix ADNI)
             pats = get_mat(subj,'pattern',cur_patname);
-            
+
             % Create the training patterns and targets
             trainpats  = pats(:,train_idx);
             traintargs = regressors( :,train_idx);
@@ -243,7 +243,7 @@ for n=1:nIterations
             testtargs  = regressors( :,test_idx);
         elseif ismaskgroup %if we implemented a post-hoc mask to the existing pattern (e.g., featureselection)
             masked_pats = get_masked_pattern_existpat(subj,cur_patname,cur_maskname);
-            
+
             % Create the training patterns and targets
             trainpats  = masked_pats(:,train_idx);
             traintargs = regressors( :,train_idx);
@@ -251,46 +251,46 @@ for n=1:nIterations
             testtargs  = regressors( :,test_idx);
         end
     end
-    
+
     % Create a function handle for the classifier training function
     train_funct_hand = str2func(class_args.train_funct_name);
-    
+
     % Call whichever training function
     scratchpad = train_funct_hand(trainpats,traintargs,class_args,cv_args);
-    
+
     % Create a function handle for the classifier testing function
     test_funct_hand = str2func(class_args.test_funct_name);
-    
+
     % Call whichever testing function
     [acts scratchpad] = test_funct_hand(testpats,testtargs,scratchpad);
-    
+
     % If a post-processing function has been specified,
     % call it on the acts and scratchpad.
     if ~isempty(args.postproc_funct)
         postproc_funct_hand = str2func(args.postproc_funct);
         [acts scratchpad] = postproc_funct_hand(acts,scratchpad);
     end
-    
+
     % this is redundant, but it's the easiest way of
     % passing the current information to the perfmet
     scratchpad.cur_iteration = n;
-    
+
     % Run all the perfmet functions on the classifier outputs
     % and store the resulting perfmet structure in a cell
     for p=1:nPerfs
-        
+
         % Get the name of the perfmet function
         cur_pm_name = args.perfmet_functs{p};
-        
+
         % Create a function handle to it
         cur_pm_fh = str2func(cur_pm_name);
-        
+
         % Run the perfmet function and get an object back
         cur_pm = cur_pm_fh(acts,testtargs,scratchpad,args.perfmet_args{p});
-        
+
         % Add the function's name to the object
         cur_pm.function_name = cur_pm_name;
-        
+
         % Append this perfmet object to the array of perfmet objects,
         % only using a cell array if necessary
         if nPerfs==1
@@ -298,24 +298,28 @@ for n=1:nIterations
         else
             cur_iteration.perfmet{p} = cur_pm;
         end
-        
+
         % Store this iteration's performance. If it's a NaN, the NANMEAN
         % call below will ignore it. Updated on 080910 to store NaNs.
         cur_iteration.perf(p) = cur_pm.perf;
         % nPerfs x nIterations
         store_perfs(p,n) = cur_iteration.perf(p);
-        
+
     end
-    
+
     % Display the performance for this iteration
     disp( sprintf('\t%.2f',cur_iteration.perf(p)) );
-    
+
     % Book-keep the bountiful insight from this iteration
     cur_iteration.created.mvpa_datetime  = mvpa_datetime(true);
     cur_iteration.train_idx         = train_idx;
     cur_iteration.test_idx          = test_idx;
-    cur_iteration.unused_idx        = unused_idx;
-    cur_iteration.unknown_idx       = unknown_idx;
+    if ~isempty(unused_idx)
+        cur_iteration.unused_idx        = unused_idx;
+    end
+    if ~isempty(unknown_idx)
+        cur_iteration.unknown_idx       = unknown_idx;
+    end
     cur_iteration.acts              = acts;
     cur_iteration.scratchpad        = scratchpad;
     cur_iteration.header.history    = []; % should fill this in xxx
@@ -328,7 +332,7 @@ for n=1:nIterations
     cur_iteration.test_funct_name   = class_args.test_funct_name;
     cur_iteration.args              = args;
     results.iterations(n) = cur_iteration;
-    
+
 end % for n nIterations
 
 disp(' ');

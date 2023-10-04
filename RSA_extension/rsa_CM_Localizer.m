@@ -779,7 +779,7 @@ plot_savename = [S.group_mvpa_dir '/Rcorrs_' S.subj_id '_' mask '_' weights_str 
 saveas(gcf,plot_savename);
 
 %% examine correlation structure between two specific classes
-testinds = EA_intact+Scene_idx;
+testinds = EA_intact+AA_intact;
 custlbls = names(logical(testinds));
 rmat_condensed_short = rmat_condensed(:,logical(testinds));
 cm_2c = corr(rmat_condensed_short);
