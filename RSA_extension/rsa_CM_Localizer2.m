@@ -1,7 +1,7 @@
-function [] = rsa_CM_Localizer(Sub, Mask, TRsperRun)
+function [] = rsa_CM_Localizer2(Sub, Mask, TRsperRun)
 % code for RSA analysis.
 
-% example call with 'mvpa_sample_data' - rsa_CM_Localizer({'001'}, 'HVisCtx_1', [114 114])
+% example call with 'mvpa_sample_data' - rsa_CM_Localizer2({'001'}, 'HVisCtx_1', [114 114])
 
 %For alternate code demo purposes, this is built around both 4D and 3D
 %image file types. The use case for 4D includes scenarios like "raw" BOLD data or residual time-series
@@ -9,12 +9,32 @@ function [] = rsa_CM_Localizer(Sub, Mask, TRsperRun)
 %warning: as of 1/3/2018; unconcatenated 4D analysis has not been debugged.
 %at this time only use concatenated 3D
 
-%% flags and parameters
+%% functional data parameters
 S.TR = 2;
-theseTRWeights = [0 0 0.2 0.2 0.2 0.2 0.2];%[0 0.25 0.5 0.25 0];
+theseTRWeights = [0 0 0.2 0.2 0.2 0.2 0.2]; %[0 0.25 0.5 0.25 0];
 weights_str = mat2str(theseTRWeights);% assign values to string for custom output file naming
 
+% what extension do your BOLD images have (nii, img)
 funcftype = '.nii';
+
+% are we working with BOLDs/timeseries ('raw') or with beta maps ('betas')?
+S.inputformat = 'raw';
+
+%specify preprocessing level of BOLDs (if S.inputformat = 'raw')
+preproc_lvl = ''; % in SPM's conventions, these would be: 'a' for slice-time-only, 'u' for realigned-only, 'ua' for realign+unwarped, 'swua' for smoothed, normalized, and... you get the picture. Modify as needed if you changed SPM's prefix append defaults
+boldnames = [preproc_lvl 'run']; %name of image files with preprocessing level prefix
+% if your time-series is instead residuals (e.g., you regressed out
+% motion-related signal using a GLM - so the data aren't *truly* "raw"...
+%boldnames = ['ResI']; %for residual time-series
+
+%specify beta filename unique identifiers (often simply 'beta'; if S.inputformat = 'betas')
+betanames = 'beta'; %name shared across image files to help ensure only those are read. For LSS, often code renames betas according to conditions and events, so this could be set to read in only a specific condition type, or to load in all events ('event' - all patterns as you normally would)
+LStype = 'LSA'; %LSS or LSA will divert code to different accordingly named beta folders
+
+ImgDims = 3; %if working with timeseries, it is highly recommended that you use 4D nifti files ('4'). If you have split them out into TR-by-TR, or are working with betas, enter '3'
+
+
+%% analysis flags
 runs_concat = 1; %1 = typical SPM analysis; will have continuous onsets concatenated across runs. 0 = But you might not have bothered creating such a file, or in SST case we are using files from FSL. In this case, the onsets are assumed to "reset" for each run ('raw' unconcatenated onsets)
 use_exist_workspace = 0; %1=yes. Load existing pattern workspaces and onsets files. Saves time, but turn off if want to manually re-do pattern extraction and generation.
 
@@ -23,8 +43,15 @@ sortmatbycat = 1; %1=yes. Rearrange names and patterns according to alphabetical
 runhpfilt = 1;%1=yes. Standard
 runzscore = 1;%1=yes. Standard but controversial preprocessing.
 
-% %what if our data of interest don't start at "run_01"?
-% specify scan run range; currently used only if runs_concat = 0
+%optional - toss similarity values from correlation matrices below a certain number as well (e.g., maybe a zero
+%is equivalent to a NaN for your study. Say you are using a mask on "raw"
+%BOLD data that does nothing to account for signal drop-out and extra-brain
+%voxels are zeros instead of NaNs - here we can fix that
+threshpats = 0; % 1 = YES
+
+% what if our data of interest don't start at "run_01" (e.g., your localizer is the 10th and 11th scan session of the day)?
+% specify scan run range
+% NOTE: currently used only if runs_concat = 0
 runstart = 1;
 runend = 2;
 realrnums = runstart:1:runend;
@@ -33,30 +60,25 @@ realrnums = runstart:1:runend;
 par.substr = ['CM' Sub{1}];
 S.subj_id = par.substr;
 
-mask = Mask;
+% What is your study's name / study folder name (subject folders should be
+% subdirectories of this folder
 S.exp_name = 'CM_localizer';
 study_prefix = 'CM';
 
-S.inputformat = 'raw'; % are we working with BOLDs/timeseries ('raw') or with beta maps ('betas')?
+% What is the name of your .mat file which specificies the condition labels
+% and onset times for when the events of those conditions occurred?
+S.onsets_filename = [S.subj_id '_localizer_onsets_test'];
 
-S.onsets_filename = [S.subj_id '_localizer_onsets_test'];%_short'];
+% what if we don't want to use all of the conditions specified in our condition labels filed?
+% ditch unneeded indices. NOTE: this is custom for class example
+conditions_range = 1:7; %specify a vector to filter names/onsets/durations; class example 1:7 means use all conditions in the .mat file from #1 to 7 -> any conditions beyond that we won't bother finding patterns for them in the time-series
 
-%specify preprocessing level of BOLDs
-preproc_lvl = ''; % 'a' for slice-time-only, 'u' for realigned-only, 'ua' for realign+unwarped, 'swua' for smoothed, normalized, and... you get the picture. Modify as needed if you changed SPM's prefix append defaults
-boldnames = [preproc_lvl 'run']; %name of image files with preprocessing level prefix
-%boldnames = ['ResI']; %for residual time series
+mask = Mask;
 
-%specify beta filename unique identifiers (often simply 'beta')
-betanames = 'beta'; %name shared across image files to help ensure only those are read. For LSS, often code renames betas according to conditions and events, so this could be set to read in only a specific condition type, or to load in all events ('event' - all patterns as you normally would)
-LStype = 'LSA'; %LSS or LSA will divert code to different accordingly named beta folders
-
-ImgDims = 3; %if working with timeseries, it is highly recommended that you use 4D nifti files ('4'). If you have split them out into TR-by-TR, or are working with betas, enter '3'
-
-%flags for specialized analyses to run
+% flags for specialized analyses to run
 run_mds = 0; % run a "multimensional scaling" analysis?
 run_hrclust = 1; % run a hierarchical clustering analysis?
 run_simmodelfit = 0; % build "model" similarity matrices and test how well these fit observed
-
 
 %% Directories
 S.expt_dir = ['/Users/giova/Documents/work/My4803Folder/mvpa_sample_data/' S.exp_name '/'];%study location
@@ -96,16 +118,16 @@ if ~exist([S.mvpa_dir '/RSA_data/'])
 end
 
 
-%% extract patterns
+%% extract and process patterns based on flags above
 if runs_concat == 1
     %load onsets
     load([S.mvpa_dir S.onsets_filename]);
 
     %ditch unneeded indices. NOTE: this is custom for class example
-    names = names(1:7);
-    onsets = onsets(1:7);
-    durations = durations(1:7);
-
+    names = names(conditions_range);
+    onsets = onsets(conditions_range);
+    durations = durations(conditions_range);
+  
     rmat_condensed = [];
     onsets_TRs = [];
     names_TRs = [];%filled in if gen_onsetsTR == 1
@@ -199,7 +221,7 @@ if runs_concat == 1
                 figure;
                 % hp filter the data - recommended
                 if runhpfilt == 1
-                    rmat_t = hp_filter(rmat_t,run_sel',100,S.TR)';%2=2s TR
+                    rmat_t = hp_filter(rmat_t,run_sel',100,2)';%2=2s TR
 
                     %plot for exploration
                     cm_t = corr(rmat_t);
@@ -337,16 +359,17 @@ else %if runs are NOT concatenated %-------in debugging stage as of 1/3/2018
     tempmat = []; %initialize an empty matrix you'll append data from the runs to
     tnames = [];
 
-    for rnum = 1:length(TRsperRun)
+    for rnum = 1:length(TRsperRun) %4 for 4 probe runs 3-6
 
-        run = num2str(realrnums(rnum), '%02.f');%run = num2str(rnum, '%02.f');
+        run = num2str(realrnums(rnum), '%02.f'); %+2 added to start at run03 instead of run01
 
-        path = [par.funcdir '/run_' run '/'];
+
+        path = [par.funcdir '/run' run '/'];
 
         cd(path);
 
         %load onsets for the run
-        load(S.onsets_filename); %[S.mvpa_dir S.onsets_filename]);
+        load([S.onsets_filename '_' run]); %[S.mvpa_dir S.onsets_filename]);
 
         if ImgDims == 4 %in development
 
@@ -481,7 +504,7 @@ else %if runs are NOT concatenated %-------in debugging stage as of 1/3/2018
 
 end
 
-%% create indices for patterns of interest
+%% for visualization and statistical analyses, create indices for patterns of interest in corr matrices
 
 if gen_onsetsTR == 1
     names = names_TRs;
@@ -568,7 +591,7 @@ EA_intact = EA_idx-EA_scrambled;%
 AA_intact = AA_idx-AA_scrambled;
 Face_intact = Face_idx-scrambled_idx;
 
-%% sanity checks
+%% sanity checks - in this section, code some sanity checks to make sure # of patterns per condition make sense, etc
 % if sum(ea_ex) ~= sum(ea_ex2)
 %     disp('Trials from 1st and 2nd do not match');
 %     return
@@ -599,13 +622,8 @@ Face_intact = Face_idx-scrambled_idx;
 %     return
 % end
 
-%% create correlation matrix
+%% create correlation matrices
 
-%optional - toss values below a certain number as well (e.g., maybe a zero
-%is equivalent to a NaN for your study. Say you are using a mask on "raw"
-%BOLD data that does nothing to account for signal drop-out and extra-brain
-%voxels are zeros instead of NaNs - here we can fix that
-threshpats = 0; % 1 = YES
 if threshpats == 1
     thresh = 0.01*mean(mean(rmat_condensed'));%you come up with your scheme - this example will threshold out anything <99% of the average (quite liberal thresholding)
     x1 =[]; %vector of filtered intensity values
@@ -636,7 +654,7 @@ cm2(cm2==1)=nan; %nan out the diagonal
 res.cm = cm;
 res.cm2 = cm2;
 
-%% global similarity measures
+%% global similarity measures - what is the representational match of a category to other exemplars of itself, or to those of a superordinate category (e.g., face similarity with ALL visual stimuli [vs. auditory stimuli])
 res.EA_w_EA = cm(logical(EA_intact),logical(EA_intact));
 res.EA_w_EA_mean = nanmean(res.EA_w_EA(:));
 
@@ -653,11 +671,8 @@ res.EA_w_Obj = cm2(logical(EA_intact),logical(Obj_idx));
 res.EA_w_Obj_mean = nanmean(res.EA_w_Obj(:));
 
 res.Face_w_Obj = cm2(logical(Face_intact),logical(Obj_idx));
-%
-%cm_r1=cm(logical(cell2mat(runsel_TRs)==1),logical(cell2mat(runsel_TRs)==1));
-%cm2_r1=cm2(logical(cell2mat(runsel_TRs)==1),logical(cell2mat(runsel_TRs)==1));
 
-%% stability item/town specific effects
+%% stability "item" specific effects (e.g., how similar is a particular face to itself across repetitions, or a planning period in a particular environment across repetitions?)
 %
 % %within type (probe r1 with probe r2)
 % probe_assigned_r1_w_probe_assigned_r2_repst = [cm2(logical(probe_assigned_env1_r1),logical(probe_assigned_env1_r2)) cm2(logical(probe_assigned_env2_r1),logical(probe_assigned_env2_r2)) cm2(logical(probe_assigned_env3_r1),logical(probe_assigned_env3_r2)) cm2(logical(probe_assigned_env4_r1),logical(probe_assigned_env4_r2)) cm2(logical(probe_assigned_env5_r1),logical(probe_assigned_env5_r2)) cm2(logical(probe_assigned_env6_r1),logical(probe_assigned_env6_r2)) cm2(logical(probe_assigned_env7_r1),logical(probe_assigned_env7_r2)) cm2(logical(probe_assigned_env8_r1),logical(probe_assigned_env8_r2)) cm2(logical(probe_assigned_env9_r1),logical(probe_assigned_env9_r2)) cm2(logical(probe_assigned_env10_r1),logical(probe_assigned_env10_r2)) cm2(logical(probe_assigned_env11_r1),logical(probe_assigned_env11_r2)) cm2(logical(probe_assigned_env12_r1),logical(probe_assigned_env12_r2))];
@@ -688,7 +703,7 @@ res.Face_w_Obj = cm2(logical(Face_intact),logical(Obj_idx));
 % probe_assigned_r1_w_probe_arriv_r1_repstcon = [cm2(logical(probe_assigned_env1_r1),logical(probe_arriv_r1-probe_arriv_env1_r1)) cm2(logical(probe_assigned_env2_r1),logical(probe_arriv_r1-probe_arriv_env2_r1)) cm2(logical(probe_assigned_env3_r1),logical(probe_arriv_r1-probe_arriv_env3_r1)) cm2(logical(probe_assigned_env4_r1),logical(probe_arriv_r1-probe_arriv_env4_r1)) cm2(logical(probe_assigned_env5_r1),logical(probe_arriv_r1-probe_arriv_env5_r1)) cm2(logical(probe_assigned_env6_r1),logical(probe_arriv_r1-probe_arriv_env6_r1)) cm2(logical(probe_assigned_env7_r1),logical(probe_arriv_r1-probe_arriv_env7_r1)) cm2(logical(probe_assigned_env8_r1),logical(probe_arriv_r1-probe_arriv_env8_r1)) cm2(logical(probe_assigned_env9_r1),logical(probe_arriv_r1-probe_arriv_env9_r1)) cm2(logical(probe_assigned_env10_r1),logical(probe_arriv_r1-probe_arriv_env10_r1)) cm2(logical(probe_assigned_env11_r1),logical(probe_arriv_r1-probe_arriv_env11_r1)) cm2(logical(probe_assigned_env12_r1),logical(probe_arriv_r1-probe_arriv_env12_r1))];
 % probe_assigned_r1_w_probe_arriv_r1_repstcon_mean = nanmean(probe_assigned_r1_w_probe_arriv_r1_repstcon(:));
 
-%% univariate control
+%% univariate controls - could set up analyses computing signal level ACROSS voxels in ROI, to explore how RSA results might correlate with univariate amplitudes
 
 meanbetas = nanmean(rmat_condensed(:,:));%get mean activity values from the ROI for each regressor (only betas if patterns are actually betas...)
 
@@ -808,6 +823,8 @@ colormap('jet');
 colorbar;
 set(gca, 'YTicklabel', names, 'YTick', [1:length(names)]);
 
+
+
 %% MDS analysis
 if run_mds == 1
 
@@ -830,6 +847,7 @@ if run_mds == 1
 
 end
 
+
 %% hierarchical clustering analysis
 
 if run_hrclust == 1; % run a hierarchical clustering analysis?
@@ -837,7 +855,7 @@ if run_hrclust == 1; % run a hierarchical clustering analysis?
     %create vector of distances between instances in the cm
     distm = pdist(cm3,'correlation');% tell matlab metric is pearson r
     Z1 = linkage(distm,'average');%compute dendrogram, using average distance within clusters for agglomeration
-    
+
     %color code select original classes to help you evaluate clustering?
     colorcodeZ1 = 1; %1 = yes, let's color code, 0 = no; you may turn this off if working out the color coding is unnecessary
     if colorcodeZ1 == 1
@@ -872,7 +890,7 @@ if run_hrclust == 1; % run a hierarchical clustering analysis?
     saveas(gcf,plot_savename);
 
     % ~~~~ that level of visualization can be too hard to make sense of
-    
+
     % Let's break it down with a couple of examples to simplify interpretation
 
     % First, let's explore which classes belong to clusters at level __ in the dendrogram
@@ -882,7 +900,7 @@ if run_hrclust == 1; % run a hierarchical clustering analysis?
 
     % Second, let's try clustering just on a smaller subset of the data.
     % Let's use the same example from above using cm_2c and custlbls
-    
+
     %create vector of distances between instances in the cm
     distm_2 = pdist(cm_2c,'correlation');% tell matlab metric is pearson r
     Z2 = linkage(distm_2,'average');%compute dendrogram, using average distance within clusters for agglomeration
@@ -914,13 +932,10 @@ end
 
 %% Test models of similarity structure
 if run_simmodelfit == 1; % build "model" similarity matrices and test how well these fit observed
-
     modfits = CMmodelcomparison(cm2,EA_intact,AA_intact,Obj_idx,othercond_idx,Scene_idx,scrambled_idx);
-
 end
 
-
-%% end of script; Save data
+%% Save data
 savename = [S.group_mvpa_dir '/Rcorrs_' S.subj_id '_' mask '_' weights_str '_' S.exp_name '.mat'];
 save(savename, 'res');
 
@@ -939,18 +954,18 @@ data  = pat';	% transposition required for spm_filter
 for r = 1:nRuns
     progress(r,nRuns);
     this_run = sel==r; % select current run
-    
+
     K(r).row = find(this_run == 1);
     K(r).RT  = tr;
     K(r).HParam = cutoff;
-    
+
     data = spm_filter(K,data);
-    
+
 end
 end
 
 function modfits = CMmodelcomparison(cm,idx1,idx2,idx3,idx4,idx5,idx6)
-%% construct Four sample CM models 
+%% construct Four sample CM models
 %normally, these would be built from some theoretical or computational models of how information is organized in the
 %brain's perceptual, mnemonic, etc, systems
 
