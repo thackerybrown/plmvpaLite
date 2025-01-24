@@ -774,8 +774,8 @@ set(gca, 'YTicklabel', names, 'YTick', [1:length(names)]);
 %% MDS analysis
 if run_mds == 1
 
-    %let's see what's going on just within the face condition
-    [Y,eigvals] = cmdscale(cm4(logical(Face_intact),logical(Face_intact)));
+    %let's see what's going on just within the Positive condition
+    [Y,eigvals] = cmdscale(cm4(logical(Pos_idx),logical(Pos_idx)));
     figure;
     subplot(1,2,1), plot(1:length(eigvals),eigvals,'bo-');
     line([1,length(eigvals)],[0 0],'LineStyle',':','XLimInclude','off',...
@@ -784,7 +784,7 @@ if run_mds == 1
     xlabel('Eigenvalue number');
     ylabel('Eigenvalue');
 
-    labels = names_TRs(logical(Face_intact));
+    labels = names_TRs(logical(Pos_idx));
     subplot(1,2,2), plot(Y(:,1),Y(:,2),'bx');
     axis(max(max(abs(Y))) * [-1.1,1.1,-1.1,1.1]); axis('square');
     text(Y(:,1),Y(:,2),labels,'HorizontalAlignment','left');
