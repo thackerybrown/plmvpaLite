@@ -42,7 +42,7 @@ runs_concat = 1; %1 = typical SPM analysis; will have continuous onsets concaten
 use_exist_workspace = 0; %1=yes. Load existing pattern workspaces and onsets files. Saves time, but turn off if want to manually re-do pattern extraction and generation.
 
 gen_onsetsTR = 1; %1=yes. Typically, you'll use an onsets.mat file with tr-by-tr onsets and names (as used for a beta-series). But if you only have a traditional GLM model with one name for multiple onsets, setting this flag to 1 will auto-populate unique but related names (e.g., Face_1; Face_2...)
-sortmatbycat = 1; %1=yes. Rearrange names and patterns according to alphabetical order (helps with visualization of corrmats)
+sortmatbycat = 0; %1=yes. Rearrange names and patterns according to alphabetical order (helps with visualization of corrmats)
 runhpfilt = 1;%1=yes. Standard %ignore for betas
 runzscore = 1;%1=yes. Standard but controversial preprocessing. %ignore for betas
 
