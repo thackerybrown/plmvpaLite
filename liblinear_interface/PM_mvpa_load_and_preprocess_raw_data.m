@@ -23,8 +23,10 @@ if strcmp(S.patternType, 'betas')
         % zscore the data - useful for beta analysis IF features are
         % actually not all of the same type/unit (e.g., not actually betas,
         % but demographics
-        subj = zscore_runs(subj,'betas','runs');
-        subj = remove_mat(subj,'pattern','betas');
+        if S.zscore_firstpass==1
+            subj = zscore_runs(subj,'betas','runs');
+            subj = remove_mat(subj,'pattern','betas');
+        end
     else
         
         % if we are going to use betas to classify, load the betas
@@ -50,9 +52,10 @@ if strcmp(S.patternType, 'betas')
         subj = set_mat(subj,'selector','runs',runs);
         
         % zscore the data - not sure if useful for beta analysis
-        %      subj = zscore_runs(subj,'betas','runs');
-        %      subj = remove_mat(subj,'pattern','betas');
-        
+        if S.zscore_firstpass==1
+            subj = zscore_runs(subj,'betas','runs');
+            subj = remove_mat(subj,'pattern','betas');
+        end        
     end
     
 elseif strcmp(S.patternType, 'raw')

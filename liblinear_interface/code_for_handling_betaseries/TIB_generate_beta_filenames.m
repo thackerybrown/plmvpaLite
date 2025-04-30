@@ -32,10 +32,10 @@ if strcmp(S.trainTask,S.testTask) %if we are doing x-validation classification
     %% binary
     %betaidx{1,1} = strcmpi('AD',names);
     %betaidx{1,2} = strcmpi('HC',names);
-    betaidx{1,1} = strcmpi(' pibpos',names);
-    betaidx{1,2} = strcmpi('pibneg',names);
-    %betaidx{1,3} = strcmpi('3',names);
-    %betaidx{1,4} = strcmpi('4',names);
+    %betaidx{1,1} = strcmpi('ol_new_roi1',names);
+    %betaidx{1,2} = strcmpi('nol_new_roi1',names);
+    betaidx{1,1} = strcmpi('ol_new_roi4',names);
+    betaidx{1,2} = strcmpi('ol_new_roi6',names);
     
     %% 3-way
     % betaidx{1,1} = strcmpi('EA',names);
@@ -68,8 +68,8 @@ if strcmp(S.trainTask,S.testTask) %if we are doing x-validation classification
     % betaidx{1,10} = strcmpi('cues5_2',names);
     
     %% binary
-    bnames{1,1} = ' pibpos';
-    bnames{1,2} = 'pibneg';
+    bnames{1,1} = 'ol_new_roi4';
+    bnames{1,2} = 'ol_new_roi6';
     %bnames{1,3} = '3';
     %bnames{1,4} = '4';
     
@@ -138,11 +138,11 @@ if strcmp(S.trainTask,S.testTask) %if we are doing x-validation classification
 else
     
     %% binary
-    betaidx_tr{1,1} = strcmpi('EA',names);
-    betaidx_tr{1,2} = strcmpi('Scene',names);
+    betaidx_tr{1,1} = strcmpi('old_new_roi1',names);
+    betaidx_tr{1,2} = strcmpi('nol_new_roi1',names);
     
-    betaidx_te{1,1} = strcmpi('AA',names);
-    betaidx_te{1,2} = strcmpi('AAScrambled',names);
+    betaidx_te{1,1} = strcmpi('ol_old_roi1',names);
+    betaidx_te{1,2} = strcmpi('nol_old_roi1',names);
     %% 5-way
     % betaidx_tr{1,1} = strcmpi('goal1',names);%training set beta indices
     % betaidx_tr{1,2} = strcmpi('goal2',names);
@@ -175,11 +175,11 @@ else
     % betaidx_te{1,5} = strcmpi('cues5_2',names);
     
     %% binary
-    bnames_tr{1,1} = 'EA';
-    bnames_tr{1,2} = 'Scene';
+    bnames_tr{1,1} = 'ol_new_roi1';
+    bnames_tr{1,2} = 'nol_new_roi1';
     
-    bnames_te{1,1} = 'AA';
-    bnames_te{1,2} = 'AAScrambled';
+    bnames_te{1,1} = 'ol_new_roi1';
+    bnames_te{1,2} = 'nol_new_roi1';
     
     %% 5-way
     % bnames_tr{1,1} = 'goal1';

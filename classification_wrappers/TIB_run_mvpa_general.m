@@ -34,10 +34,11 @@ for b=(1:length(subj_array))
     tic; %start stopwatch to track analysis time on machine
     %% load general parameter information
     
-    [S idxTr idxTe par] = TIB_mvpa_params_general_8080(subj_array(b), task, TRsperRun{b}, 'raw');%runs with CM localizer data.
+    %[S idxTr idxTe par] = TIB_mvpa_params_general_8080(subj_array(b), task, TRsperRun{b}, 'raw');%runs with CM localizer data.
     %[S idxTr idxTe par] = TIB_mvpa_params_ADNI(subj_array(b), task, TRsperRun{b}, 'betas');%runs as 'existpatmat' example
     %[S idxTr idxTe par] = TIB_mvpa_params_8080_pseudo(subj_array(b), task, TRsperRun{b}, 'raw');%runs with pseudodata
-    
+    [S idxTr idxTe par] = mvpa_params_general_COSPALtimecourse(subj_array(b), task, TRsperRun{b}, 'betas');%runs as 'existpatmat' example
+
     S.idxTr = idxTr;
     S.idxTe = idxTe;
     
