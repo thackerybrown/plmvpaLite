@@ -37,13 +37,13 @@ for b=(1:length(subj_array))
     %[S idxTr idxTe par] = TIB_mvpa_params_general_8080(subj_array(b), task, TRsperRun{b}, 'raw');%runs with CM localizer data.
     %[S idxTr idxTe par] = TIB_mvpa_params_ADNI(subj_array(b), task, TRsperRun{b}, 'betas');%runs as 'existpatmat' example
     %[S idxTr idxTe par] = TIB_mvpa_params_8080_pseudo(subj_array(b), task, TRsperRun{b}, 'raw');%runs with pseudodata
-    [S idxTr idxTe par] = mvpa_params_general_COSPALtimecourse(subj_array(b), task, TRsperRun{b}, 'betas');%runs as 'existpatmat' example
+    [S idxTr idxTe par] = mvpa_params_general_OLNOLTimecourses(subj_array(b), task, TRsperRun{b}, 'betas');%runs as 'existpatmat' example
 
     S.idxTr = idxTr;
     S.idxTe = idxTe;
     
     for ws = 1:length(S.TR_weights_set)
-        S.saveName = [studyName '_' S.nwayclass 'way_' S.xvaltype '_ws' num2str(ws) '_' S.subj_id];%set name for the .mat results and data log file. Will contain all the goodies for analysis.
+        S.saveName = [studyName '_' S.nwayclass 'way_' S.xvaltype '_train_' S.trainTask '_test_' S.testTask '_' S.subj_id];%set name for the .mat results and data log file. Will contain all the goodies for analysis.
         S.saveName2 = [studyName '_' S.nwayclass 'way_MeanActivity_ws' num2str(ws) '_' S.subj_id];
         
         S.subj_array = subj_array; %subjects, input to function at the "call". put in as strings of subject numbers - e.g. '12'.
