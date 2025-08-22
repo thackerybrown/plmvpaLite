@@ -10,7 +10,8 @@ function [] = rsa_simple()
 % for this simple example, bypass having separate model files and reading
 % in image names and masks in a complex manner...
 
-studydir = 'C:\Users\giova\Documents\work\prosthesis\';
+%studydir = 'C:\Users\giova\Documents\work\prosthesis'; %example for windows use
+studydir = '/home/thackery/Documents/mvpa_sample_data/Prosthesis'; %example for Mac and Linux use
 
 %specify the "model" - simplified here, this is just condition labels, 
 % 1 image per condition per subject
@@ -19,7 +20,7 @@ onsets = {[1],[2],[3],[4],[5],[6],[7],[8],[9],[10],[11],[12],[13],[14],[15],[16]
 
 %find the MRI files you want to load in as patterns
 datadir = 'data';
-raw_filenames = dir(fullfile([studydir '\' datadir],'*.img'));
+raw_filenames = dir(fullfile(studydir, datadir,'*.img'));
 
 %specify a mask to analyze the patterns within (must be same resolution as
 %MRI files you want to analyze
