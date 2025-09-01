@@ -1,13 +1,14 @@
-function [] = rsa_CM_Localizer2(Sub, Mask, TRsperRun)
-% code for RSA analysis.
+function [] = rsa_simple_2(Sub, Mask, TRsperRun)
+% code for RSA analysis - 
+% expanding on "rsa_simple", this version reads in data from WITHIN a subject (their time-series). It does this using a "model file" [event table] and a function that lists all of the "raw filenames" within the subject's BOLD data directories.
 
-% example call with 'mvpa_sample_data' - rsa_CM_Localizer2({'001'}, 'HVisCtx_1', [114 114])
+% example call with 'mvpa_sample_data' - rsa_simple_2({'001'}, 'HVisCtx_1', [114 114])
 
 %For alternate code demo purposes, this is built around both 4D and 3D
 %image file types. The use case for 4D includes scenarios like "raw" BOLD data or residual time-series
 
 %warning: as of 1/3/2018; unconcatenated 4D analysis has not been debugged.
-%at this time only use concatenated 3D
+% at this time only use 3D images unless you fix the script
 
 %% functional data parameters
 S.TR = 2;
@@ -18,6 +19,8 @@ weights_str = mat2str(theseTRWeights);% assign values to string for custom outpu
 funcftype = '.nii';
 
 % are we working with BOLDs/timeseries ('raw') or with beta maps ('betas')?
+% in this example code, only "raw" works - see rsa_CM_localizer2.m for
+% example edits to add "betas" functionality
 S.inputformat = 'raw';
 
 %specify preprocessing level of BOLDs (if S.inputformat = 'raw')
@@ -26,10 +29,6 @@ boldnames = [preproc_lvl 'run']; %name of image files with preprocessing level p
 % if your time-series is instead residuals (e.g., you regressed out
 % motion-related signal using a GLM - so the data aren't *truly* "raw"...
 %boldnames = ['ResI']; %for residual time-series
-
-%specify beta filename unique identifiers (often simply 'beta'; if S.inputformat = 'betas')
-betanames = 'beta'; %name shared across image files to help ensure only those are read. For LSS, often code renames betas according to conditions and events, so this could be set to read in only a specific condition type, or to load in all events ('event' - all patterns as you normally would)
-LStype = 'LSA'; %LSS or LSA will divert code to different accordingly named beta folders
 
 ImgDims = 3; %if working with timeseries, it is recommended that you use 4D nifti files ('4'). If you have split them out into TR-by-TR, or are working with betas, enter '3'
 
@@ -75,10 +74,6 @@ conditions_range = 1:7; %specify a vector to filter names/onsets/durations; clas
 
 mask = Mask;
 
-% flags for specialized analyses to run
-run_mds = 0; % run a "multimensional scaling" analysis?
-run_hrclust = 1; % run a hierarchical clustering analysis?
-run_simmodelfit = 0; % build "model" similarity matrices and test how well these fit observed
 
 %% Directories
 S.expt_dir = ['/home/thackery/Documents/mvpa_sample_data/' S.exp_name '/'];%study location
@@ -92,16 +87,8 @@ S.workspace_dir = [par.subdir '/mvpa_workspace'];%temporary files workspace
 %model file directory (onsets.mat and betas in here) - this is still used
 %when working with raw data. We must have some way to tell the classifier
 %which images correspond to which classes
-if strcmp(S.inputformat, 'raw')
-    S.mvpa_dir = [S.expt_dir S.subj_id '/results01/'];
-elseif strcmp(S.inputformat, 'betas')
-    S.mvpa_dir = [S.expt_dir S.subj_id '/results01/'];
-    if strcmp(LStype,'LSS')
-        S.beta_dir = [S.expt_dir S.subj_id '/results01/LSS/'];
-    elseif strcmp(LStype,'LSA')
-        S.beta_dir = [S.expt_dir S.subj_id '/results01/LSA/'];
-    end
-end
+S.mvpa_dir = [S.expt_dir S.subj_id '/results01/'];
+
 
 %ROI masks (could be whole-brain mask, but the code wants a mask file
 S.anat_dir = [S.expt_dir S.subj_id '/Masks'];
@@ -295,54 +282,6 @@ if runs_concat == 1
                 names_TRs = tempnames(:,filt);
 
 
-            elseif strcmp(S.inputformat, 'betas')
-                %note, this analysis assumes betas are grouped by
-                %condition, and in the order of the conditions in your
-                %onsets file. If they are in a different order, such as the
-                %actual correct temporal order of events in your task
-                %(e.g., conditions interleaved) then some of the code below
-                %that reorders the betas will need to be updated
-                allrawfilenames{1,1} = dir(fullfile(S.beta_dir, ['/*' betanames '*.nii']));%
-
-                for idx = 1:length(allrawfilenames{1,1});
-                    raw_filenames{idx,1} = [S.beta_dir allrawfilenames{1,1}(idx).name];
-                end
-
-                imgslength = length(raw_filenames);
-
-                %% iterate through 3D frames to extract all patterns
-                for i=1:imgslength
-                    betamaps{i} = raw_filenames{i};%[tmp.name ',' num2str(i)];
-
-                    [b,r] = MAP_getROI(maskname, betamaps{i}, 'vox', 0, '');
-                    bmat_t(:,i) = b{1}; % returns all voxels, whether or not they have NaNs
-                    rmat_t(:,i) = r; % returns voxels excluding NaNs
-                    %meanbetas_t = nanmean(bmat_t(:,:));%get mean beta values from the ROI for each regressor
-
-                end
-
-                rmat_condensed = rmat_t;
-                %% now pull out original condition names, and resort to original trial order to help index and analyze pattern data and compare with raw bold patterns. Requires input of TR numbers for study even though we are working with precomputed beta maps
-                time_idx_sortvec = [];%we'll fill in the TR times for events, and use this to resort the betas into their true event order (LSS and LSA code typically create betas grouped by condition/out of temporal order)
-                for n = 1:length(names)
-                    time_idx = floor(onsets{n}/S.TR) + 1;%convert onsets to TRs
-                    time_idx_sortvec = [time_idx_sortvec time_idx];
-
-                    if gen_onsetsTR == 1 %if we need to split our names out by individual events
-                        for tidx = 1:length(time_idx)
-                            tempnames{time_idx(tidx)} = [names{n} '_' num2str(tidx)];
-                            % temprunsel{time_idx(tidx)} = run_sel(time_idx(tidx));
-                        end
-                    end
-                end
-
-                filt = any(~cellfun('isempty', tempnames),1);
-                %rmat_condensed = cell2mat(condmat_condensed_t(:,filt));
-                %runsel_TRs = temprunsel(:,filt);
-                names_TRs = tempnames(:,filt);
-
-                [~,sortnames]=sort(time_idx_sortvec);%calculate sorting vector for original temporal order for the task
-                rmat_condensed = rmat_condensed(:,sortnames);%let's sort the patterns into their original temporal order for the task
             end
         end
 
@@ -362,7 +301,6 @@ else %if runs are NOT concatenated %-------in debugging stage as of 1/3/2018
     for rnum = 1:length(TRsperRun) %4 for 4 probe runs 3-6
 
         run = num2str(realrnums(rnum), '%02.f'); %+2 added to start at run03 instead of run01
-
 
         path = [par.funcdir '/run' run '/'];
 
@@ -591,37 +529,6 @@ EA_intact = EA_idx-EA_scrambled;%
 AA_intact = AA_idx-AA_scrambled;
 Face_intact = Face_idx-scrambled_idx;
 
-%% sanity checks - in this section, code some sanity checks to make sure # of patterns per condition make sense, etc
-% if sum(ea_ex) ~= sum(ea_ex2)
-%     disp('Trials from 1st and 2nd do not match');
-%     return
-% end
-%
-% if sum(aa_ex) ~= sum(aa_ex2)
-%     disp('Trials from 1st and 2nd do not match');
-%     return
-% end
-%
-% if sum(ea_ex_corr) ~= sum(ea_ex_corr2)
-%     disp('Trials from 1st and 2nd do not match');
-%     return
-% end
-%
-% if sum(aa_ex_corr) ~= sum(aa_ex_corr2)
-%     disp('Trials from 1st and 2nd do not match');
-%     return
-% end
-%
-% if sum(ea_ex_incorr) ~= sum(ea_ex_incorr2)
-%     disp('Trials from 1st and 2nd do not match');
-%     return
-% end
-%
-% if sum(aa_ex_incorr) ~= sum(aa_ex_incorr2)
-%     disp('Trials from 1st and 2nd do not match');
-%     return
-% end
-
 %% create correlation matrices
 
 if threshpats == 1
@@ -672,94 +579,6 @@ res.EA_w_Obj_mean = nanmean(res.EA_w_Obj(:));
 
 res.Face_w_Obj = cm2(logical(Face_intact),logical(Obj_idx));
 
-%% stability "item" specific effects (e.g., how similar is a particular face to itself across repetitions, or a planning period in a particular environment across repetitions?)
-%
-% %within type (probe r1 with probe r2)
-% probe_assigned_r1_w_probe_assigned_r2_repst = [cm2(logical(probe_assigned_env1_r1),logical(probe_assigned_env1_r2)) cm2(logical(probe_assigned_env2_r1),logical(probe_assigned_env2_r2)) cm2(logical(probe_assigned_env3_r1),logical(probe_assigned_env3_r2)) cm2(logical(probe_assigned_env4_r1),logical(probe_assigned_env4_r2)) cm2(logical(probe_assigned_env5_r1),logical(probe_assigned_env5_r2)) cm2(logical(probe_assigned_env6_r1),logical(probe_assigned_env6_r2)) cm2(logical(probe_assigned_env7_r1),logical(probe_assigned_env7_r2)) cm2(logical(probe_assigned_env8_r1),logical(probe_assigned_env8_r2)) cm2(logical(probe_assigned_env9_r1),logical(probe_assigned_env9_r2)) cm2(logical(probe_assigned_env10_r1),logical(probe_assigned_env10_r2)) cm2(logical(probe_assigned_env11_r1),logical(probe_assigned_env11_r2)) cm2(logical(probe_assigned_env12_r1),logical(probe_assigned_env12_r2))];
-% probe_assigned_r1_w_probe_assigned_r2_repst_mean = nanmean(probe_assigned_r1_w_probe_assigned_r2_repst(:));
-%
-% probe_assigned_r1_w_probe_assigned_r2_repstcon = [cm2(logical(probe_assigned_env1_r1),logical(probe_assigned_r2-probe_assigned_env1_r2)) cm2(logical(probe_assigned_env2_r1),logical(probe_assigned_r2-probe_assigned_env2_r2)) cm2(logical(probe_assigned_env3_r1),logical(probe_assigned_r2-probe_assigned_env3_r2)) cm2(logical(probe_assigned_env4_r1),logical(probe_assigned_r2-probe_assigned_env4_r2)) cm2(logical(probe_assigned_env5_r1),logical(probe_assigned_r2-probe_assigned_env5_r2)) cm2(logical(probe_assigned_env6_r1),logical(probe_assigned_r2-probe_assigned_env6_r2)) cm2(logical(probe_assigned_env7_r1),logical(probe_assigned_r2-probe_assigned_env7_r2)) cm2(logical(probe_assigned_env8_r1),logical(probe_assigned_r2-probe_assigned_env8_r2)) cm2(logical(probe_assigned_env9_r1),logical(probe_assigned_r2-probe_assigned_env9_r2)) cm2(logical(probe_assigned_env10_r1),logical(probe_assigned_r2-probe_assigned_env10_r2)) cm2(logical(probe_assigned_env11_r1),logical(probe_assigned_r2-probe_assigned_env11_r2)) cm2(logical(probe_assigned_env12_r1),logical(probe_assigned_r2-probe_assigned_env12_r2))];
-% probe_assigned_r1_w_probe_assigned_r2_repstcon_mean = nanmean(probe_assigned_r1_w_probe_assigned_r2_repstcon(:));
-%
-% probe_assigned_r2_w_probe_assigned_r1_repstcon = [cm2(logical(probe_assigned_env1_r2),logical(probe_assigned_r1-probe_assigned_env1_r1)) cm2(logical(probe_assigned_env2_r2),logical(probe_assigned_r1-probe_assigned_env2_r1)) cm2(logical(probe_assigned_env3_r2),logical(probe_assigned_r1-probe_assigned_env3_r1)) cm2(logical(probe_assigned_env4_r2),logical(probe_assigned_r1-probe_assigned_env4_r1)) cm2(logical(probe_assigned_env5_r2),logical(probe_assigned_r1-probe_assigned_env5_r1)) cm2(logical(probe_assigned_env6_r2),logical(probe_assigned_r1-probe_assigned_env6_r1)) cm2(logical(probe_assigned_env7_r2),logical(probe_assigned_r1-probe_assigned_env7_r1)) cm2(logical(probe_assigned_env8_r2),logical(probe_assigned_r1-probe_assigned_env8_r1)) cm2(logical(probe_assigned_env9_r2),logical(probe_assigned_r1-probe_assigned_env9_r1)) cm2(logical(probe_assigned_env10_r2),logical(probe_assigned_r1-probe_assigned_env10_r1)) cm2(logical(probe_assigned_env11_r2),logical(probe_assigned_r1-probe_assigned_env11_r1)) cm2(logical(probe_assigned_env12_r2),logical(probe_assigned_r1-probe_assigned_env12_r1))];
-% probe_assigned_r2_w_probe_assigned_r1_repstcon_mean = nanmean(probe_assigned_r2_w_probe_assigned_r1_repstcon(:));
-%
-%
-% %across type (probe with habit), r1 with habit
-% probe_assigned_r1_w_habit_assigned_r1_repst = [cm2(logical(probe_assigned_env1_r1),logical(habit_assigned_env1_r1)) cm2(logical(probe_assigned_env2_r1),logical(habit_assigned_env2_r1)) cm2(logical(probe_assigned_env3_r1),logical(habit_assigned_env3_r1)) cm2(logical(probe_assigned_env4_r1),logical(habit_assigned_env4_r1)) cm2(logical(probe_assigned_env5_r1),logical(habit_assigned_env5_r1)) cm2(logical(probe_assigned_env6_r1),logical(habit_assigned_env6_r1)) cm2(logical(probe_assigned_env7_r1),logical(habit_assigned_env7_r1)) cm2(logical(probe_assigned_env8_r1),logical(habit_assigned_env8_r1)) cm2(logical(probe_assigned_env9_r1),logical(habit_assigned_env9_r1)) cm2(logical(probe_assigned_env10_r1),logical(habit_assigned_env10_r1)) cm2(logical(probe_assigned_env11_r1),logical(habit_assigned_env11_r1)) cm2(logical(probe_assigned_env12_r1),logical(habit_assigned_env12_r1))];
-% probe_assigned_r1_w_habit_assigned_r1_repst_mean = nanmean(probe_assigned_r1_w_habit_assigned_r1_repst(:));
-%
-% probe_assigned_r1_w_habit_assigned_r1_repstcon = [cm2(logical(probe_assigned_env1_r1),logical(habit_assigned_r1-habit_assigned_env1_r1)) cm2(logical(probe_assigned_env2_r1),logical(habit_assigned_r1-habit_assigned_env2_r1)) cm2(logical(probe_assigned_env3_r1),logical(habit_assigned_r1-habit_assigned_env3_r1)) cm2(logical(probe_assigned_env4_r1),logical(habit_assigned_r1-habit_assigned_env4_r1)) cm2(logical(probe_assigned_env5_r1),logical(habit_assigned_r1-habit_assigned_env5_r1)) cm2(logical(probe_assigned_env6_r1),logical(habit_assigned_r1-habit_assigned_env6_r1)) cm2(logical(probe_assigned_env7_r1),logical(habit_assigned_r1-habit_assigned_env7_r1)) cm2(logical(probe_assigned_env8_r1),logical(habit_assigned_r1-habit_assigned_env8_r1)) cm2(logical(probe_assigned_env9_r1),logical(habit_assigned_r1-habit_assigned_env9_r1)) cm2(logical(probe_assigned_env10_r1),logical(habit_assigned_r1-habit_assigned_env10_r1)) cm2(logical(probe_assigned_env11_r1),logical(habit_assigned_r1-habit_assigned_env11_r1)) cm2(logical(probe_assigned_env12_r1),logical(habit_assigned_r1-habit_assigned_env12_r1))];
-% probe_assigned_r1_w_habit_assigned_r1_repstcon_mean = nanmean(probe_assigned_r1_w_habit_assigned_r1_repstcon(:));
-%
-% %% reinstatement analysis
-% %probe r1 with arrive
-% probe_assigned_r1_w_probe_arriv_r1_repst = [cm2(logical(probe_assigned_env1_r1),logical(probe_arriv_env1_r1)) cm2(logical(probe_assigned_env2_r1),logical(probe_arriv_env2_r1)) cm2(logical(probe_assigned_env3_r1),logical(probe_arriv_env3_r1)) cm2(logical(probe_assigned_env4_r1),logical(probe_arriv_env4_r1)) cm2(logical(probe_assigned_env5_r1),logical(probe_arriv_env5_r1)) cm2(logical(probe_assigned_env6_r1),logical(probe_arriv_env6_r1)) cm2(logical(probe_assigned_env7_r1),logical(probe_arriv_env7_r1)) cm2(logical(probe_assigned_env8_r1),logical(probe_arriv_env8_r1)) cm2(logical(probe_assigned_env9_r1),logical(probe_arriv_env9_r1)) cm2(logical(probe_assigned_env10_r1),logical(probe_arriv_env10_r1)) cm2(logical(probe_assigned_env11_r1),logical(probe_arriv_env11_r1)) cm2(logical(probe_assigned_env12_r1),logical(probe_arriv_env12_r1))];
-% probe_assigned_r1_w_probe_arriv_r1_repst_mean = nanmean(probe_assigned_r1_w_probe_arriv_r1_repst(:));
-%
-% probe_assigned_r1_w_habit_arriv_r1_repst = [cm2(logical(probe_assigned_env1_r1),logical(habit_arriv_env1_r1)) cm2(logical(probe_assigned_env2_r1),logical(habit_arriv_env2_r1)) cm2(logical(probe_assigned_env3_r1),logical(habit_arriv_env3_r1)) cm2(logical(probe_assigned_env4_r1),logical(habit_arriv_env4_r1)) cm2(logical(probe_assigned_env5_r1),logical(habit_arriv_env5_r1)) cm2(logical(probe_assigned_env6_r1),logical(habit_arriv_env6_r1)) cm2(logical(probe_assigned_env7_r1),logical(habit_arriv_env7_r1)) cm2(logical(probe_assigned_env8_r1),logical(habit_arriv_env8_r1)) cm2(logical(probe_assigned_env9_r1),logical(habit_arriv_env9_r1)) cm2(logical(probe_assigned_env10_r1),logical(habit_arriv_env10_r1)) cm2(logical(probe_assigned_env11_r1),logical(habit_arriv_env11_r1)) cm2(logical(probe_assigned_env12_r1),logical(habit_arriv_env12_r1))];
-% probe_assigned_r1_w_habit_arriv_r1_repst_mean = nanmean(probe_assigned_r1_w_habit_arriv_r1_repst(:));
-%
-% probe_assigned_r1_w_probe_arriv_r1_repstcon = [cm2(logical(probe_assigned_env1_r1),logical(probe_arriv_r1-probe_arriv_env1_r1)) cm2(logical(probe_assigned_env2_r1),logical(probe_arriv_r1-probe_arriv_env2_r1)) cm2(logical(probe_assigned_env3_r1),logical(probe_arriv_r1-probe_arriv_env3_r1)) cm2(logical(probe_assigned_env4_r1),logical(probe_arriv_r1-probe_arriv_env4_r1)) cm2(logical(probe_assigned_env5_r1),logical(probe_arriv_r1-probe_arriv_env5_r1)) cm2(logical(probe_assigned_env6_r1),logical(probe_arriv_r1-probe_arriv_env6_r1)) cm2(logical(probe_assigned_env7_r1),logical(probe_arriv_r1-probe_arriv_env7_r1)) cm2(logical(probe_assigned_env8_r1),logical(probe_arriv_r1-probe_arriv_env8_r1)) cm2(logical(probe_assigned_env9_r1),logical(probe_arriv_r1-probe_arriv_env9_r1)) cm2(logical(probe_assigned_env10_r1),logical(probe_arriv_r1-probe_arriv_env10_r1)) cm2(logical(probe_assigned_env11_r1),logical(probe_arriv_r1-probe_arriv_env11_r1)) cm2(logical(probe_assigned_env12_r1),logical(probe_arriv_r1-probe_arriv_env12_r1))];
-% probe_assigned_r1_w_probe_arriv_r1_repstcon_mean = nanmean(probe_assigned_r1_w_probe_arriv_r1_repstcon(:));
-
-%% univariate controls - could set up analyses computing signal level ACROSS voxels in ROI, to explore how RSA results might correlate with univariate amplitudes
-
-meanbetas = nanmean(rmat_condensed(:,:));%get mean activity values from the ROI for each regressor (only betas if patterns are actually betas...)
-
-
-% probe_assigned_r1_mbeta = meanbetas(logical(probe_assigned_r1));
-% probe_assigned_r1_mbeta_mean = nanmean(probe_assigned_r1_mbeta(:));
-%
-% probe_nav_r1_mbeta = meanbetas(logical(probe_nav_r1));
-% probe_nav_r1_mbeta_mean = nanmean(probe_nav_r1_mbeta(:));
-%
-% probe_arriv_r1_mbeta = meanbetas(logical(probe_arriv_r1));
-% probe_arriv_r1_mbeta_mean = nanmean(probe_arriv_r1_mbeta(:));
-%
-% habit_assigned_r1_mbeta = meanbetas(logical(habit_assigned_r1));
-% habit_assigned_r1_mbeta_mean = nanmean(habit_assigned_r1_mbeta(:));
-%
-% habit_nav_r1_mbeta = meanbetas(logical(habit_nav_r1));
-% habit_nav_r1_mbeta_mean = nanmean(habit_nav_r1_mbeta(:));
-%
-% habit_arriv_r1_mbeta = meanbetas(logical(habit_arriv_r1));
-% habit_arriv_r1_mbeta_mean = nanmean(habit_arriv_r1_mbeta(:));
-%
-% %second repetition indices
-% probe_assigned_r2_mbeta = meanbetas(logical(probe_assigned_r2));
-% probe_assigned_r2_mbeta_mean = nanmean(probe_assigned_r2_mbeta(:));
-%
-% probe_nav_r2_mbeta = meanbetas(logical(probe_nav_r2));
-% probe_nav_r2_mbeta_mean = nanmean(probe_nav_r2_mbeta(:));
-%
-% probe_arriv_r2_mbeta = meanbetas(logical(probe_arriv_r2));
-% probe_arriv_r2_mbeta_mean = nanmean(probe_arriv_r2_mbeta(:));
-
-
-%probe_assigned_r1_w_probe_assigned_r1 = cm(logical(probe_assigned_r1),logical(probe_assigned_r1));
-
-% %% Activity-correlation control
-
-% %are trial-by-trial rsa scores correlated with univariate signal?
-% r_ea_mbetawr = corr(ea_corr_mbeta', nanmean(ea_r_with_ea)');
-% r_aa_mbetawr = corr(aa_corr_mbeta', nanmean(aa_r_with_aa)');
-% r_ea_mbetawr_inc = corr(ea_incorr_mbeta', nanmean(ea_f_with_ea)');
-% r_aa_mbetawr_inc = corr(aa_incorr_mbeta', nanmean(aa_f_with_aa)');
-% r_ea_mbetawr2 = corr(ea_corr_mbeta2', nanmean(ea_r_with_ea2)');
-% r_aa_mbetawr2 = corr(aa_corr_mbeta2', nanmean(aa_r_with_aa2)');
-% r_ea_mbetawr2_inc = corr(ea_incorr_mbeta2', nanmean(ea_f_with_ea2)');
-% r_aa_mbetawr2_inc = corr(aa_incorr_mbeta2', nanmean(aa_f_with_aa2)');
-%
-% %are trial 1-2 stability measurements correlated with trial 1-2 activity
-% %differences?
-% r_ea_betawstab = corr(ea1_ea2_r_actdiff', ea1_ea2_r);
-% r_aa_betawstab = corr(aa1_aa2_r_actdiff', aa1_aa2_r);
-% r_ea_betawstab_inc = corr(ea1_ea2_f_actdiff', ea1_ea2_f);
-% r_aa_betawstab_inc = corr(aa1_aa2_f_actdiff', aa1_aa2_f);
-
-%fisher's z
-%fish = 0.5*log((1+CM2)./(1-CM2))
 
 %% Plots
 %plot matrices of interest
@@ -809,137 +628,17 @@ res.cm_2c = cm_2c;
 % is there a rhyme or reason to the similarity accorting to category?
 schemaball(cm2,names_TRs);
 
-%% clustering and multidimensional scaling
-cm3 = corr(rmat_condensed);%generate a corrmat without NaNs
-%cm3_r1=cm3(logical(cell2mat(runsel_TRs)==1),logical(cell2mat(runsel_TRs)==1));
-cm4 = 1-cm3;%generate DISsimilarity matrix - some clustering algorithms assume distance, not proximity, is the significance of the numbers in the matrix
-
-res.cm4=cm4;%store in res structure for posterity
-
-%visualize  a DISsimilarity matrix
-figure;
-subplot(2,1,1),imagesc(cm4);
-colormap('jet');
-colorbar;
-set(gca, 'YTicklabel', names, 'YTick', [1:length(names)]);
-
-
-
-%% MDS analysis
-if run_mds == 1
-
-    %let's see what's going on just within the face condition
-    [Y,eigvals] = cmdscale(cm4(logical(Face_intact),logical(Face_intact)));
-    figure;
-    subplot(1,2,1), plot(1:length(eigvals),eigvals,'bo-');
-    line([1,length(eigvals)],[0 0],'LineStyle',':','XLimInclude','off',...
-        'Color',[.7 .7 .7])
-    axis([1,length(eigvals),min(eigvals),max(eigvals)*1.1]);
-    xlabel('Eigenvalue number');
-    ylabel('Eigenvalue');
-
-    labels = names_TRs(logical(Face_intact));
-    subplot(1,2,2), plot(Y(:,1),Y(:,2),'bx');
-    axis(max(max(abs(Y))) * [-1.1,1.1,-1.1,1.1]); axis('square');
-    text(Y(:,1),Y(:,2),labels,'HorizontalAlignment','left');
-    line([-1,1],[0 0],'XLimInclude','off','Color',[.7 .7 .7])
-    line([0 0],[-1,1],'YLimInclude','off','Color',[.7 .7 .7])
-
-end
-
-
-%% hierarchical clustering analysis
-
-if run_hrclust == 1; % run a hierarchical clustering analysis?
-
-    %create vector of distances between instances in the cm
-    distm = pdist(cm3,'correlation');% tell matlab metric is pearson r
-    Z1 = linkage(distm,'average');%compute dendrogram, using average distance within clusters for agglomeration
-
-    %color code select original classes to help you evaluate clustering?
-    colorcodeZ1 = 1; %1 = yes, let's color code, 0 = no; you may turn this off if working out the color coding is unnecessary
-    if colorcodeZ1 == 1
-        xz(1:size(names'),1) = {[0 0 0]};%create dendrogram condition colors using RGB code (default = [0 0 0], black)
-        xz(logical(AA_intact)) = {[1 0 0]};
-        xz(logical(EA_intact)) = {[0 1 0]};
-        xz(logical(AA_scrambled)) = {[1 0.5 0]};
-        xz(logical(EA_scrambled)) = {[0 1 .5]};
-        xz(logical(Scene_idx)) = {[0 0 1]};
-        xz(logical(Obj_idx)) = {[1 0 1]};
-        %h = cell2mat(userOptions.conditionColours)
-        userOptions.conditionColours = cell2mat(xz);
-    end
-
-    % compute dendrogram. This example code labels each branch termination
-    % according to the name of that event in the 'names' model file you
-    % provided
-    subplot(2,1,2),[H_ignore T_ignore labelReordering] = dendrogram(Z1,0,'labels',names,'Orientation','left');%display dendrogram. 0 = show all items in correlation structure (default would limit to 30 clusters)
-
-    if colorcodeZ1 == 1
-        color_t = xz(labelReordering);
-        hold on;
-        x = xlim(gca);
-        for condition = 1:size(cm3,1)%size(squareRDM(cm4), 1)
-            plot(x(1), condition, 'o', 'MarkerFaceColor', color_t{condition, :}, 'MarkerEdgeColor', 'none', 'MarkerSize', 8);
-        end%for:condition
-        hold off;
-    end
-
-    % save plot
-    plot_savename = [S.group_mvpa_dir '/Rcorrs_' S.subj_id '_' mask '_' weights_str '_' S.exp_name '_hierarchicalclustering.png'];
-    saveas(gcf,plot_savename);
-
-    % ~~~~ that level of visualization can be too hard to make sense of
-
-    % Let's break it down with a couple of examples to simplify interpretation
-
-    % First, let's explore which classes belong to clusters at level __ in the dendrogram
-    clustlvl = 3;%define level of dendrogram to inspect. E.g., 3 means the level from the top where there are 3 clusters
-    cl_content{clustlvl} = cluster(Z1,'maxclust',clustlvl); %what are the items in cluster level 'cutoff'?
-    names_cl1 = names(cl_content{clustlvl}==1); % which classes are in cluster 1 at this level of the dendrogram?
-
-    % Second, let's try clustering just on a smaller subset of the data.
-    % Let's use the same example from above using cm_2c and custlbls
-
-    %create vector of distances between instances in the cm
-    distm_2 = pdist(cm_2c,'correlation');% tell matlab metric is pearson r
-    Z2 = linkage(distm_2,'average');%compute dendrogram, using average distance within clusters for agglomeration
-    % compute dendrogram.
-    figure;
-    subplot(1,1,1),[H_ignore T_ignore labelReordering] = dendrogram(Z2,0,'labels',custlbls,'Orientation','left');%display dendrogram. 0 = show all items in correlation structure (default would limit to 30 clusters)
-    %color code select original classes to help you evaluate clustering?
-    colorcodeZ2 = 1; %1 = yes, let's color code, 0 = no; you may turn this off if working out the color coding is unnecessary
-    if colorcodeZ2 == 1
-        xz2(1:size(custlbls'),1) = {[0 0 0]};%create dendrogram condition colors using RGB code (default = [0 0 0], black)
-        xz2(logical(EA_intact(logical(testinds)))) = {[0 1 0]};%NOTE - before using our EA_intact idx here, we have to shorten it to just have 1s and 0s that agree with the size of our shrunken-down matrix; in this case, since our cm_2c drops values associated with AA, etc., we need to drop 0s in our EA_intact index that are associated with those same 0s. We can do this easily by filtering our EA_intact idx by the 'testinds' idx we created above for this example, which has 0s for every pattern which is dropped out of cm_2c and 1s for every pattern which is stil in cm_2c
-        xz2(logical(Scene_idx(logical(testinds)))) = {[0 0 1]};
-        userOptions.conditionColours2 = cell2mat(xz2);
-        color_t2 = xz2(labelReordering);
-        hold on;
-        x = xlim(gca);
-        for condition = 1:size(cm_2c,1)
-            plot(x(1), condition, 'o', 'MarkerFaceColor', color_t2{condition, :}, 'MarkerEdgeColor', 'none', 'MarkerSize', 8);
-        end%for:condition
-        hold off;
-    end
-
-    % how do you know if your clustering fit the data well? one way is to
-    % ensure the linkage heights it came up with resemble the raw pairwise
-    % distances in the original matrix.
-    %c = cophenet(Z2,distm_2); % is c, the cophenetic correlation very high? ideally yes. if not, your linkage algorithm may not handle the data well and you might try something else (e.g., 'average' vs 'complete')
-
-end
-
-%% Test models of similarity structure
-if run_simmodelfit == 1; % build "model" similarity matrices and test how well these fit observed
-    modfits = CMmodelcomparison(cm2,EA_intact,AA_intact,Obj_idx,othercond_idx,Scene_idx,scrambled_idx);
-end
 
 %% Save data
 savename = [S.group_mvpa_dir '/Rcorrs_' S.subj_id '_' mask '_' weights_str '_' S.exp_name '.mat'];
 save(savename, 'res');
 
 end
+
+
+
+
+
 
 function data = hp_filter(pat,sel,cutoff,tr)
 
