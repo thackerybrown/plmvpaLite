@@ -49,13 +49,12 @@ and system-wide installation.
     This generates a .so file in the LIBLINEAR main directory and you
     can run the interface in the current python directory.
     
-    For Windows, the shared library liblinear.dll is ready in the
-    directory `..\windows' and you can directly run the interface in
-    the current python directory. You can copy liblinear.dll to the
-    system directory (e.g., `C:\WINDOWS\system32\') to make it
-    system-widely available. To regenerate liblinear.dll, please
-    follow the instruction of building Windows binaries in LIBLINEAR
-    README.
+    For Windows, starting from version 2.48, we no longer provide the 
+    pre-built shared library liblinear.dll. To run the interface in the 
+    current python directory, please follow the instruction of building 
+    Windows binaries in LIBLINEAR README. You can copy liblinear.dll to 
+    the system directory (e.g., `C:\WINDOWS\system32\') to make it 
+    system-widely available.
 
 - System-wide installation:
 
@@ -173,7 +172,11 @@ carefully.
 
 >>> from liblinear.liblinear import *
 >>> prob = problem(np.asarray([1,-1]), scipy.sparse.csr_matrix(([1, 1, -1, -1], ([0, 0, 1, 1], [0, 2, 0, 2]))))
->>> param = parameter('-c 4')
+>>> param = parameter('-s 1 -c 4')
+# One may also direct assign the options after creating the parameter instance
+>>> param = parameter()
+>>> param.solver_type = 1
+>>> param.C = 4
 >>> m = liblinear.train(prob, param) # m is a ctype pointer to a model
 # Convert a tuple of ndarray (index, data) to feature_nodearray, a ctypes structure
 # Note that index starts from 0, though the following example will be changed to 1:1, 3:1 internally
@@ -257,6 +260,32 @@ LIBLINEAR shared library:
 
     Note that if your x contains sparse data (i.e., dictionary), the internal
     ctypes data format is still sparse.
+
+    Copy a problem instance.
+    DON'T use this unless you know what it does.
+
+    >>> prob_copy = prob.copy()
+
+    The reason we need to copy a problem instance is because, for example,
+    in multi-label tasks using the OVR setting, we need to train a binary
+    classification problem for each label on data with/without that label.
+    Since each training uses the same x but different y, simply looping
+    over labels and creating a new problem instance for each training would
+    introduce overhead either from repeatedly transforming x into feature_node
+    or from allocating additional memory space for x during parallel training.
+
+    With problem copying, suppose x represents data, y1 represents the label
+    for class 1 and y2 represent the label for class 2.
+    We can do:
+
+    >>> class1_prob = problem(y1, x)
+    >>> class2_prob = class1_prob.copy()
+    >>> class2_prob.y = (ctypes.c_double * class1_prob.l)(*y2)
+
+    Note that although the copied problem is a new instance, attributes such as
+    y (POINTER(c_double)), x (POINTER(POINTER(feature_node))), and x_space (list/np.ndarray)
+    are copied by reference. That is, class1_prob and class2_prob share the same
+    y, x and x_space after the copy.
 
 - class parameter:
 
@@ -350,12 +379,14 @@ To use utility functions, type
     >>> from liblinear.liblinearutil import *
 
 The above command loads
-    train()            : train a linear model
-    predict()          : predict testing data
-    svm_read_problem() : read the data from a LIBSVM-format file.
-    load_model()       : load a LIBLINEAR model.
-    save_model()       : save model to a file.
-    evaluations()      : evaluate prediction results.
+    train()                : train a linear model
+    predict()              : predict testing data
+    svm_read_problem()     : read the data from a LIBSVM-format file or object.
+    load_model()           : load a LIBLINEAR model.
+    save_model()           : save model to a file.
+    evaluations()          : evaluate prediction results.
+    csr_find_scale_param() : find scaling parameter for data in csr format.
+    csr_scale()            : apply data scaling to data in csr format.
 
 - Function: train
 
@@ -455,6 +486,8 @@ The above command loads
     See the usage by examples:
 
     >>> y, x = svm_read_problem('data.txt')
+    >>> with open('data.txt') as f:
+    >>>     y, x = svm_read_problem(f)
     >>> m = load_model('model_file')
     >>> save_model('model_file', m)
 
