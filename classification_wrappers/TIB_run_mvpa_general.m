@@ -3,7 +3,7 @@ function [res, results]= TIB_run_mvpa_general(subj_array, task, TRsperRun, study
 
 %example call, CM localizer - TIB_run_mvpa_general({'001'},'CM_localizer',{[114,114]},'8080test')
 %example call, CM pseudodata - TIB_run_mvpa_general({'2'},'CM_localizer',{[375]},'8080test')
-%example call, existpatmat - TIB_run_mvpa_general({'15'},'ADNI',{[177]},'8080test')
+%example call, existpattmat - TIB_run_mvpa_general({'15'},'ADNI',{[177]},'8080test')
 
 %subj_array = structural array listing strings of unique sub IDs. The code
 %at large assumes the rest of subj identifier, if any, that is not

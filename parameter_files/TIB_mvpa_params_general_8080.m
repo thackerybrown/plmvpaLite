@@ -84,8 +84,8 @@ S.stbetacount = 12; % NOTE: the code assumes all single trial betas of potential
 
 %% EDIT - You must establish parameters for this SPECIFIC classification scenario involving the data described in the preceding section
 
-% ~~~ what study conditions or phases do you want to *TRAIN* on?
-S.trainTask = 'EAvsAA';%Circmaze - 'goals' or 'plan'
+% ~~~ what study EAvsSceneconditions or phases do you want to *TRAIN* on?
+S.trainTask = 'AAvsScrambled';%Circmaze - 'goals' or 'plan'
 
 % ~~~ WHAT is the ROI we're analyzing
 S.roi_name = 'hvis0p1intensthresh'; %S.roi_name = 'HVisCtx_1.nii'; %S.roi_name = 'NativeGM_BOLDres.nii';
@@ -94,7 +94,7 @@ S.roi_name = 'hvis0p1intensthresh'; %S.roi_name = 'HVisCtx_1.nii'; %S.roi_name =
 % NOTE: if the string here is not the same as S.trainTask, the classifier
 % will switch to a 'tr1teo' procedure (train one phase, test on the other).
 % When would tr1teo be useful? e.g., if you want to train on a functional localizer, and test on a memory retrieval task
-S.testTask = 'EAvsAA';%Circamze - 'goals' or 'plan'
+S.testTask = 'AAvsScrambled';%Circamze - 'goals' or 'plan'
 
 % ~~~ what cross-validation procedure do you want? *ignored if S.testTask
 % and S.trainTask are not the same
@@ -151,13 +151,13 @@ par.boldrundirpfx = 'run_';
 %% EDIT - Classifier tuning and various settings
 
 % ~~~ Iteration Parameters
-S.num_results_iter = 1; % number of times to run the entire classification process (select subset of the data and train/test classifier)
+S.num_results_iter = 100; % number of times to run the entire classification process (select subset of the data and train/test classifier)
 S.num_iter_with_same_data = 1; % number of times to run the classfication step for a given subset of data - useful for non-deterministic cases.
 
 % ~~~ Balancing Parameters
 S.equate_number_of_trials_in_groups = 0; % equate number of trials in conditions
 S.numBalancedParams = 1; % number of parameters to balance across (e.g., both goal location AND cue in Circmaze data). The code currently (12/29/17) only handles two options - 1 (standard; main class type), or 2 (main class type plus a second parameter, specified in a second file).
-S.numBalancedIts = 10; % number of iterations to run, with different randomization for the balancing
+S.numBalancedIts = 100; % number of iterations to run, with different randomization for the balancing
 
 % ~~~ Secondary Z-Scoring
 % note: by default all raw BOLDs and existpatmats are subjected to a FIRST
@@ -188,7 +188,7 @@ S.defineROIsFromANOVAFS = 0; % define ROIs using ANOVA-based feature selection, 
 % S.ROI2_file   = [par.subdir '/analysis_loc_mnem/' S.ROI2_name];
 
 % ~~~ Importance Maps
-S.generate_importance_maps = 1; %visualize classifier weights
+S.generate_importance_maps = 0; %visualize classifier weights
 S.generateBetaMaps = 1; %use betas, instead of importance values
 S.impType = {'pos' 'neg' 'both' 'raw'}; %importance map types
 S.regNames = {'CondA' 'CondB'}; % should match number of classes
@@ -211,7 +211,7 @@ end
 % ~~~ Special types of analysis
 S.searchlightAnalysis = 0; % run a searchlight analysis
 %S.linReg = 0; % run an analysis with a continuous outcome variable
-S.scrambleregs = 0; % run an anlysis with the class labels scrambled on a run-by-run basis.
+S.scrambleregs = 1; % run an anlysis with the class labels scrambled on a run-by-run basis.
 
 % ~~~ classifier parameters
 S.class_args.train_funct_name = 'train_liblinear_multiclass';%'train_pLR';   %training function
@@ -222,7 +222,7 @@ S.statmap_funct = 'statmap_anova';%'AG_statmap_anova'; % performance metric
 
 S.class_args.nVox = 0; % number of voxels to select with feature selection e.g. [1000 5000 10000]
 S.class_args.fseltype = 'topn'; % feature selection format: top N vox (topn) or random N vox (rand)?
-S.class_args.libLin = '-q -s 6 -B 1'; %arguments for liblinear; -s 0 = L2; -s 6 = L1; -s 5 = L1 with L2 loss; -s 3 L2 with L1 loss
+S.class_args.libLin = '-q -s 0 -B 1'; %arguments for liblinear; -s 0 = L2; -s 6 = L1; -s 5 = L1 with L2 loss; -s 3 L2 with L1 loss
 S.class_args.constant = true; % include a constant term?
 S.class_args.prefitWeights = true;
 
@@ -230,7 +230,7 @@ S.class_args.chooseOptimalPenalty = 0; % 1 = yes. cycle through cost parameters 
 S.class_args.penaltyRange = [.001 .005 .01 .05 .1 .5 1 5 10 50 100 500 1000 50000]; % a vector "[]" of cost parameters to cycle through
 S.class_args.nFoldsPenaltySelection = 10; % number of cross validation folds for penalty parameter selection.
 
-S.class_args.penalty = 1.5; %uncomment if not using optimal penalty. Typical value is 1. If using sample data provided with plmvpaLite, start with 0.000001 to see how minimal regularization harms performance.
+S.class_args.penalty = 1; %uncomment if not using optimal penalty. Typical value is 1. If using sample data provided with plmvpaLite, start with 0.000001 to see how minimal regularization harms performance.
 %establishment
 
 %% Default and auto-generated parameters. **Only change if you must for your specific use case to work**
@@ -448,6 +448,7 @@ elseif strcmp(S.trainTask,'FacevsScenevsObj')
         S.filenames_train = beta_filenames;%
     end
     S.durTrain = numel(S.filenames_train) * par.TR;
+    
 end
 
 % testing - this defines the testing set. The code is set up this way to enable us to step outside xval if desired to test on different set of data (e.g., at retrieval)
