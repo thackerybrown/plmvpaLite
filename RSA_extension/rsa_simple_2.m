@@ -42,6 +42,10 @@ sortmatbycat = 1; %1=yes. Rearrange names and patterns according to alphabetical
 runhpfilt = 1;%1=yes. Standard
 runzscore = 1;%1=yes. Standard but controversial preprocessing.
 
+%optional - after extracting patterns excluding NaN, do a second filter to
+%exclude rows (voxels) where all the values are 0s
+dropzeros = 1; %1=yes
+
 %optional - toss similarity values from correlation matrices below a certain number as well (e.g., maybe a zero
 %is equivalent to a NaN for your study. Say you are using a mask on "raw"
 %BOLD data that does nothing to account for signal drop-out and extra-brain
@@ -201,6 +205,13 @@ if runs_concat == 1
                     rmat_t(:,i) = r; % returns voxels excluding NaNs
                     %meanbetas_t = nanmean(bmat_t(:,:));%get mean beta values from the ROI for each regressor
 
+                end
+
+                %drop rows where the values are entirely 0 (i.e., "raw"
+                %equivalent of NaN in betas
+                if dropzeros == 1;
+                    temporarymat = rmat_t(any(rmat_t,2),:);
+                    rmat_t = temporarymat;
                 end
 
                 run_sel = cell2mat(run_sel);

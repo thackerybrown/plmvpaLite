@@ -151,11 +151,11 @@ par.boldrundirpfx = 'run_';
 %% EDIT - Classifier tuning and various settings
 
 % ~~~ Iteration Parameters
-S.num_results_iter = 100; % number of times to run the entire classification process (select subset of the data and train/test classifier)
+S.num_results_iter = 1; % number of times to run the entire classification process (select subset of the data and train/test classifier)
 S.num_iter_with_same_data = 1; % number of times to run the classfication step for a given subset of data - useful for non-deterministic cases.
 
 % ~~~ Balancing Parameters
-S.equate_number_of_trials_in_groups = 0; % equate number of trials in conditions
+S.equate_number_of_trials_in_groups = 1; % equate number of trials in conditions
 S.numBalancedParams = 1; % number of parameters to balance across (e.g., both goal location AND cue in Circmaze data). The code currently (12/29/17) only handles two options - 1 (standard; main class type), or 2 (main class type plus a second parameter, specified in a second file).
 S.numBalancedIts = 100; % number of iterations to run, with different randomization for the balancing
 
@@ -211,7 +211,7 @@ end
 % ~~~ Special types of analysis
 S.searchlightAnalysis = 0; % run a searchlight analysis
 %S.linReg = 0; % run an analysis with a continuous outcome variable
-S.scrambleregs = 1; % run an anlysis with the class labels scrambled on a run-by-run basis.
+S.scrambleregs = 0; % run an anlysis with the class labels scrambled on a run-by-run basis.
 
 % ~~~ classifier parameters
 S.class_args.train_funct_name = 'train_liblinear_multiclass';%'train_pLR';   %training function
@@ -640,8 +640,8 @@ if S.existpatmat==1
     S.roi_file = 'NA';
     S.secondaryMask = [];
 else
-    S.vol_info = spm_vol(fullfile(par.funcdir, [par.boldrundirpfx par.refrun], par.ref_funcimage)); %get functional data resolution info for spm .img writing
-    
+    %S.vol_info = spm_vol(fullfile(par.funcdir, [par.boldrundirpfx par.refrun], par.ref_funcimage)); %get functional data resolution info for spm .img writing
+    S.vol_info = spm_vol(raw_filenames{1});% get functional data resolution info for spm .img writing from the first image in "raw_filenames" (if applicable)
     S.roi_file = [S.expt_dir S.subj_id '/' S.maskdir '/' S.roi_name par.imageextension]; %this is the large-scale ROI (could be wholebrain) that workspace info is calculated for. Saves time to have this volume include any sub-volumes you are interested in (e.g. MTL if you plan on looking in hippo and phc separately)
     
     %Apply another mask to the primary data loaded in the workspace. [] = no secondary mask.
@@ -743,45 +743,52 @@ for idx = 1:length(allrawfilenames);
     raw_filenames{idx,1} = [par.funcdir char(allrawfilepaths(idx)) '/' allrawfilenames(idx).name];
 end
 
-%files may have been read in out of order. This would be very very bad.
-%Here, we try to confirm/fix this with a resort - but you *MUST* double
-%check that the final file order is correct before proceeding with
-%analysis
-for idx = 1:length(raw_filenames)
-    %first, identify the image number from its name in full
-    %('001' from run_001.nii)
-    nifti_indices = strfind(raw_filenames{idx,1}, par.imageextension);
-    underscore_indices = strfind(raw_filenames{idx,1}, '_'); %assuming the number is preceded by '_', where are the underscores?
-    imnum = str2double(raw_filenames{idx,1}(underscore_indices(end)+1:nifti_indices(end)-1));
-    raw_filenames{idx,2} = imnum;
-    %if length(raw_filenames{idx,1}) == 100%80
-    %    raw_filenames{idx,2} = str2double(raw_filenames{idx,1}(length(raw_filenames{idx,1})-9:length(raw_filenames{idx,1})-9));
-    %else
-    %    raw_filenames{idx,2} = str2double(raw_filenames{idx,1}(length(raw_filenames{idx,1})-10:length(raw_filenames{idx,1})-9));
-    %end
+    %files may have been read in out of order. This would be very very bad.
+    %Here, we try to confirm/fix this with a resort - 
+    % - But you *MUST* double check that the final file order is correct before proceeding with
+    %analysis. 
+    % - Only turn this function on if necessary, and edit as needed to
+    %find run numbers in the filenames to resort by!
     
-end
-
-a = sortrows(raw_filenames, 2);
-raw_filenames = a(:,1);
-
-%if the BOLD images are 3D instead of 4D (TR-by-TR; NOT recommended, but currently only option supported [12/31/17]),
-%we need to modify indices further to avoid introducing a new sorting error
-if par.ImgDims == 3
-    if ~strcmp(par.runnames,'') % add contingency for when all the raw filenames are just dumped in your main funcdir (i.e., there are no runfolds)
-        for idx = 1:length(raw_filenames)
-            %first, identify the RUN number from its name in full
-            runref_indices = strfind(raw_filenames{idx,1}, ['/' par.boldrundirpfx]);
-            runidxnum = str2double(raw_filenames{idx,1}(runref_indices(1)+5:runref_indices(2)-1));
-            raw_filenames{idx,3} = runidxnum;
-        end
-        
-        b = sortrows(raw_filenames, 3);
-        raw_filenames = b(:,1);
+    resortrawfnamesbyrunnum = 0;%1 = yes, try to re-sort the rawfilenames
+    if resortrawfnamesbyrunnum == 1
+    
+    for idx = 1:length(raw_filenames)
+        %first, identify the image number from its name in full
+        %('001' from run_001.nii)
+        nifti_indices = strfind(raw_filenames{idx,1}, par.imageextension);
+        underscore_indices = strfind(raw_filenames{idx,1}, '_'); %assuming the number is preceded by '_', where are the underscores?
+        imnum = str2double(raw_filenames{idx,1}(underscore_indices(end)+1:nifti_indices(end)-1));
+        raw_filenames{idx,2} = imnum;
+        %if length(raw_filenames{idx,1}) == 100%80
+        %    raw_filenames{idx,2} = str2double(raw_filenames{idx,1}(length(raw_filenames{idx,1})-9:length(raw_filenames{idx,1})-9));
+        %else
+        %    raw_filenames{idx,2} = str2double(raw_filenames{idx,1}(length(raw_filenames{idx,1})-10:length(raw_filenames{idx,1})-9));
+        %end
+    
     end
-end
-
-%save raw_filenames for reference
+    
+    a = sortrows(raw_filenames, 2);
+    raw_filenames = a(:,1);
+    
+    %if the BOLD images are 3D instead of 4D (TR-by-TR; NOT recommended, but currently only option supported [12/31/17]),
+    %we need to modify indices further to avoid introducing a new sorting error
+    if par.ImgDims == 3
+        if ~strcmp(par.runnames,'') % add contingency for when all the raw filenames are just dumped in your main funcdir (i.e., there are no runfolds)
+            for idx = 1:length(raw_filenames)
+                %first, identify the RUN number from its name in full
+                runref_indices = strfind(raw_filenames{idx,1}, ['/' par.boldrundirpfx]);
+                runidxnum = str2double(raw_filenames{idx,1}(runref_indices(1)+5:runref_indices(2)-1));
+                raw_filenames{idx,3} = runidxnum;
+            end
+    
+            b = sortrows(raw_filenames, 3);
+            raw_filenames = b(:,1);
+        end
+    end
+    end
+    
+    %save raw_filenames for reference
 savename_rawfnms=[par.funcdir 'raw_filenames.mat'];
 save(savename_rawfnms, 'raw_filenames');
 
