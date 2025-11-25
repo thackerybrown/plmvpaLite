@@ -213,7 +213,7 @@ if runs_concat == 1
                     runidxnum = str2double(raw_filenames{idx,1}(runref_indices(1)+5:runref_indices(1)+6));%runref_indices(2)-1)); %%Warning - this coding assumes the run numbers do not exceed double digits
                     run_sel{idx,1} = runidxnum;
                 end
-                run_sel = cell2mat(run_sel);
+
                 imgslength = length(raw_filenames);
 
                 %% iterate through 3D frames to extract all patterns
@@ -234,11 +234,12 @@ if runs_concat == 1
                     rmat_t = temporarymat;
                 end
 
+                run_sel = cell2mat(run_sel);
                 %% optional preprocessing
                 figure;
                 % hp filter the data - recommended
                 if runhpfilt == 1
-                    rmat_t = hp_filter(rmat_t,run_sel',100,S.TR)';%2=2s TR
+                    rmat_t = hp_filter(rmat_t,run_sel',100,2)';%2=2s TR
 
                     %plot for exploration
                     cm_t = corr(rmat_t);
@@ -381,19 +382,12 @@ else %if runs are NOT concatenated %-------in debugging stage as of 1/3/2018
                 %meanbetas_t = nanmean(bmat_t(:,:));%get mean beta values from the ROI for each regressor
             end
 
-            %drop rows where the values are entirely 0 (i.e., "raw"
-            %equivalent of NaN in betas
-            if dropzeros == 1;
-                temporarymat = rmat_t(any(rmat_t,2),:);
-                rmat_t = temporarymat;
-            end
-
             %% optional preprocessing
             figure;
             % hp filter the data - recommended
             run_sel = ones(1,imgslength); % because we are doing one run at a time, run_sel is nonexistant at this time
             if runhpfilt == 1
-                rmat_t = hp_filter(rmat_t,run_sel',100,S.TR)';%2=2s TR
+                rmat_t = hp_filter(rmat_t,run_sel',100,2)';%2=2s TR
 
                 %plot for exploration
                 cm_t = corr(rmat_t);

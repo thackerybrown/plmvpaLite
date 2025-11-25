@@ -6,7 +6,7 @@ function [S idxTr idxTe par]= TIB_mvpa_params_general_8080(subj_id, task, TRsper
 % to execute an MVPA analysis referencing this parameter file
 
 % Study paths, scan parameters, and subject parameters are set up here for
-% the analysis in several dat structures (e.g., S.xX; par.xX)
+% the analysis in several daraw_fit structures (e.g., S.xX; par.xX)
 
 % ~~~Understanding the arguments (provided when executing TIB_run_mvpa_general.m)~~~~
 % <subj_id> - identifier for the given subject/participant/data ID. Can be numerical or a
