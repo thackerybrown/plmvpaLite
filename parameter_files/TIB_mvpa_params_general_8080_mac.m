@@ -155,7 +155,7 @@ S.num_results_iter = 1; % number of times to run the entire classification proce
 S.num_iter_with_same_data = 1; % number of times to run the classfication step for a given subset of data - useful for non-deterministic cases.
 
 % ~~~ Balancing Parameters
-S.equate_number_of_trials_in_groups = 1; % equate number of trials in conditions
+S.equate_number_of_trials_in_groups = 0; % equate number of trials in conditions
 S.numBalancedParams = 1; % number of parameters to balance across (e.g., both goal location AND cue in Circmaze data). The code currently (12/29/17) only handles two options - 1 (standard; main class type), or 2 (main class type plus a second parameter, specified in a second file).
 S.numBalancedIts = 100; % number of iterations to run, with different randomization for the balancing
 

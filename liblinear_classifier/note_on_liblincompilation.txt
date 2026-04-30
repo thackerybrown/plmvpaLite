@@ -1,4 +1,31 @@
-﻿Hi all,
+12/11/2025
+
+To get liblinear working on MacOS
+
+1) open terminal and run 'make'
+2) make sure Xcode is installed and license agreement is accepted
+3) open Matlab, cd into liblinear's Matlab subdirectory, and run 'make.m' from command prompt 
+^fails with error
+Error: /Users/thackery/Documents/code/plmvpaLite/liblinear_classifier/liblinear-2.49/matlab/make.m failed (line 15)
+Undefined symbols for architecture arm64:
+  "_mexCreateMexFunction", referenced from:
+      <initial-undefines>
+  "_mexDestroyMexFunction", referenced from:
+      <initial-undefines>
+  "_mexFunctionAdapter", referenced from:
+      <initial-undefines>
+ld: symbol(s) not found for architecture arm64
+clang++: error: linker command failed with exit code 1 (use -v to see invocation)
+
+
+Workaround: create modified make_applesilicon.m file - run this instead of make in Matlab. Note the workaround is temporary (according to google), a "fix" for an incompatibility in current versions of Matlab, Xcode and/or Tahoe that may be fixed more permanently soon but the workaround supposedly will stop working soon as well. 
+
+
+
+
+
+
+Hi all,
 
 I've done some digging and here's the status for the algorithm and my suggestions:
 

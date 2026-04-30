@@ -3,7 +3,7 @@ function [res, results]= TIB_run_mvpa_general(subj_array, task, TRsperRun, study
 
 %example call, CM localizer - TIB_run_mvpa_general({'001'},'CM_localizer',{[114,114]},'8080test')
 %example call, CM pseudodata - TIB_run_mvpa_general({'2'},'CM_localizer',{[375]},'8080test')
-%example call, existpatmat - TIB_run_mvpa_general({'15'},'ADNI',{[177]},'8080test')
+%example call, existpattmat - TIB_run_mvpa_general({'15'},'ADNI',{[177]},'8080test')
 
 %subj_array = structural array listing strings of unique sub IDs. The code
 %at large assumes the rest of subj identifier, if any, that is not
@@ -34,10 +34,10 @@ for b=(1:length(subj_array))
     tic; %start stopwatch to track analysis time on machine
     %% load general parameter information
     
-    %[S idxTr idxTe par] = TIB_mvpa_params_general_8080(subj_array(b), task, TRsperRun{b}, 'raw');%runs with CM localizer data.
+    [S idxTr idxTe par] = TIB_mvpa_params_general_8080(subj_array(b), task, TRsperRun{b}, 'raw');%runs with CM localizer data.
     %[S idxTr idxTe par] = TIB_mvpa_params_ADNI(subj_array(b), task, TRsperRun{b}, 'betas');%runs as 'existpatmat' example
     %[S idxTr idxTe par] = TIB_mvpa_params_8080_pseudo(subj_array(b), task, TRsperRun{b}, 'raw');%runs with pseudodata
-    [S idxTr idxTe par] = mvpa_params_general_OLNOLTimecourses(subj_array(b), task, TRsperRun{b}, 'betas');%runs as 'existpatmat' example
+    %[S idxTr idxTe par] = mvpa_params_general_OLNOLTimecourses(subj_array(b), task, TRsperRun{b}, 'betas');%runs as 'existpatmat' example
 
     S.idxTr = idxTr;
     S.idxTe = idxTe;
