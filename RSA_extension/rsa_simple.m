@@ -1,4 +1,4 @@
-function [] = rsa_simple()
+function [] = rsa_simple(studir)
 % code for RSA analysis simplified!
 
 % example call with 'mvpa_sample_data' - rsa_simple()
@@ -10,7 +10,7 @@ function [] = rsa_simple()
 % for this simple example, bypass having separate model files and reading
 % in image names and masks in a complex manner...
 
-studydir = 'C:\Users\giova\Documents\work\prosthesis\';
+studydir = studir; %'C:\Users\giova\Documents\work\prosthesis\';
 
 %specify the "model" - simplified here, this is just condition labels, 
 % 1 image per condition per subject
