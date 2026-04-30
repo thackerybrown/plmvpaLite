@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import os, sys
 from .liblinear import *
 from .liblinear import __all__ as liblinear_all
@@ -139,9 +141,9 @@ def train(arg1, arg2=None, arg3=None):
         else:
             start_p = -1.0
         liblinear.find_parameters(prob, param, nr_fold, start_C, start_p, best_C, best_p, best_score)
-        if param.solver_type in [solver_names.L2R_LR, solver_names.L2R_L2LOSS_SVC]:
+        if param.solver_type in [L2R_LR, L2R_L2LOSS_SVC]:
             print("Best C = %g  CV accuracy = %g%%\n"% (best_C.value, 100.0*best_score.value))
-        elif param.solver_type in [solver_names.L2R_L2LOSS_SVR]:
+        elif param.solver_type in [L2R_L2LOSS_SVR]:
             print("Best C = %g Best p = %g  CV MSE = %g\n"% (best_C.value, best_p.value, best_score.value))
         return best_C.value,best_p.value,best_score.value
 
@@ -151,7 +153,7 @@ def train(arg1, arg2=None, arg3=None):
         target = (c_double * l)()
         liblinear.cross_validation(prob, param, nr_fold, target)
         ACC, MSE, SCC = evaluations(prob.y[:l], target[:l])
-        if param.solver_type in [solver_names.L2R_L2LOSS_SVR, solver_names.L2R_L2LOSS_SVR_DUAL, solver_names.L2R_L1LOSS_SVR_DUAL]:
+        if param.solver_type in [L2R_L2LOSS_SVR, L2R_L2LOSS_SVR_DUAL, L2R_L1LOSS_SVR_DUAL]:
             print("Cross Validation Mean squared error = %g" % MSE)
             print("Cross Validation Squared correlation coefficient = %g" % SCC)
             return MSE
@@ -201,7 +203,7 @@ def predict(y, x, m, options=""):
 
     if scipy and isinstance(x, np.ndarray):
         x = np.ascontiguousarray(x) # enforce row-major
-    elif scipy and isinstance(x, sparse.spmatrix):
+    elif sparse and isinstance(x, sparse.spmatrix):
         x = x.tocsr()
     elif not isinstance(x, (list, tuple)):
         raise TypeError("type of x: {0} is not supported!".format(type(x)))

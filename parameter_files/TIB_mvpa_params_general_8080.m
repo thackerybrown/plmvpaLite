@@ -130,7 +130,11 @@ par.ref_funcimage = [par.boldnames '_01_010' par.imageextension];
 
 % ~~~ WHAT IS YOUR *computer base path* (where your study and its subfolders
 % live
+<<<<<<< Updated upstream
 S.sbasepath = '/Users/thackery/Documents/mvpa_sample_data/';
+=======
+S.sbasepath = 'C:\Users\giova\Documents\work\My4803Folder\mvpa_sample_data\';%/home/thackery/Documents/mvpa_sample_data/';
+>>>>>>> Stashed changes
 
 % ~~~ WHAT IS THE NAME *of your model folder's directory*?
 S.modfold = 'results01';
@@ -216,7 +220,7 @@ S.scrambleregs = 0; % run an anlysis with the class labels scrambled on a run-by
 % ~~~ classifier parameters
 S.class_args.train_funct_name = 'train_liblinear_multiclass';%'train_pLR';   %training function
 S.class_args.test_funct_name = 'test_liblinear_multiclass';%'test_pLR';      %testing function
-S.class_args.classType = 'libLin';
+S.class_args.classType = libLin;%svm
 S.perfmet_functs = 'perfmet_maxclass'; % performance metric
 S.statmap_funct = 'statmap_anova';%'AG_statmap_anova'; % performance metric
 

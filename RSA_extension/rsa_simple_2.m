@@ -80,7 +80,7 @@ mask = Mask;
 
 
 %% Directories
-S.expt_dir = ['/home/thackery/Documents/mvpa_sample_data/' S.exp_name '/'];%study location
+S.expt_dir = ['C:\Users\giova\Documents\work\My4803Folder\mvpa_sample_data\' S.exp_name '\'];%['/home/thackery/Documents/mvpa_sample_data/' S.exp_name '/'];%study location
 
 par.subdir =[S.expt_dir S.subj_id];%subject location
 
@@ -248,6 +248,11 @@ if runs_concat == 1
                     colorbar;
                     caxis([-1 1]);
                 end
+
+a = mean(rmat_t)
+b = mean(a)
+c = std(a)
+tsner = b/c
 
                 % zscore within runs
                 if runzscore == 1
