@@ -25,9 +25,9 @@ raw_filenames = dir(fullfile(studydir, datadir,'*.img'));
 %specify a mask to analyze the patterns within (must be same resolution as
 %MRI files you want to analyze
 maskdir = 'Masks';
-maskname = 'rNativeGM_BOLDres.nii';
+maskname = 'bilatall';
 
-masknameandpath = [studydir '\' maskdir '\' maskname];
+masknameandpath = [studydir '\' maskdir '\' maskname '.nii'];
 
 %% extract all patterns, iterating through 3D MRI frames
 for i=1:length(raw_filenames)
@@ -154,54 +154,100 @@ pros_posttrain_idx = pros_idx.*post_idx; %intersection of idx...
 % global similarity measures
 res.intact_w_intact = cm(logical(int_notrain_idx),logical(int_notrain_idx));
 res.intact_w_intact_mean = nanmean(res.intact_w_intact(:));
+% to get SEM, let's assume we want one value per subject, their avg with
+% all others...
+temp_intact_w_intact = cm2(logical(int_notrain_idx),logical(int_notrain_idx));
+res.sub_intact_w_intact = nanmean(temp_intact_w_intact);
+res.intact_w_intact_sem = nanstd(res.sub_intact_w_intact)/sqrt(length(res.sub_intact_w_intact));
 
 res.pros_w_pros = cm(logical(pros_notrain_idx),logical(pros_notrain_idx));
 res.pros_w_pros_mean = nanmean(res.pros_w_pros(:));
+% to get SEM, let's assume we want one value per subject, their avg with
+% all others...
+temp_pros_w_pros = cm2(logical(pros_notrain_idx),logical(pros_notrain_idx));
+res.sub_pros_w_pros = nanmean(temp_pros_w_pros);
+res.pros_w_pros_sem = nanstd(res.sub_pros_w_pros)/sqrt(length(res.sub_pros_w_pros));
 
 res.intact_w_pros = cm2(logical(int_notrain_idx),logical(pros_notrain_idx));
 res.intact_w_pros_mean = nanmean(res.intact_w_pros(:));
+% to get SEM, let's assume we want one value per subject, their avg with
+% all others...
+res.sub_intact_w_pros = nanmean(res.intact_w_pros);
+res.intact_w_pros_sem = nanstd(res.sub_intact_w_pros)/sqrt(length(res.sub_intact_w_pros));
+
 
 % how does training impact the two subjects?
 % first - how similar are intacts before prosthetic training?
 res.intact_w_pretrainint = cm2(logical(int_notrain_idx),logical(int_pretrain_idx));
 res.intact_w_pretrainint_mean = nanmean(res.intact_w_pretrainint(:));
+% to get SEM, let's assume we want one value per subject, their avg with
+% all others...
+res.sub_intact_w_pretrainint = nanmean(res.intact_w_pretrainint);
+res.intact_w_pretrainint_sem = nanstd(res.intact_w_pretrainint)/sqrt(length(res.intact_w_pretrainint));
+
+
 % does that change with prosthetic training?
 res.intact_w_posttrainint = cm2(logical(int_notrain_idx),logical(int_posttrain_idx));
 res.intact_w_posttrainint_mean = nanmean(res.intact_w_posttrainint(:));
+% to get SEM, let's assume we want one value per subject, their avg with
+% all others...
+res.sub_intact_w_posttrainint = nanmean(res.intact_w_posttrainint);
+res.intact_w_posttrainint_sem = nanstd(res.intact_w_posttrainint)/sqrt(length(res.intact_w_posttrainint));
 
 
 %ok - do prosthetic patterns "grow away" from intact with training?
 % pre-training...
 res.intact_w_pretrainpros = cm2(logical(int_notrain_idx),logical(pros_pretrain_idx));
 res.intact_w_pretrainpros_mean = nanmean(res.intact_w_pretrainpros(:));
+% to get SEM, let's assume we want one value per subject, their avg with
+% all others...
+res.sub_intact_w_pretrainpros  = nanmean(res.intact_w_pretrainpros );
+res.intact_w_pretrainpros_sem = nanstd(res.intact_w_pretrainpros)/sqrt(length(res.intact_w_pretrainpros));
+
+
 % post-training...
 res.intact_w_posttrainpros = cm2(logical(int_notrain_idx),logical(pros_posttrain_idx));
 res.intact_w_posttrainpros_mean = nanmean(res.intact_w_posttrainpros(:));
+% to get SEM, let's assume we want one value per subject, their avg with
+% all others...
+res.sub_intact_w_posttrainpros  = nanmean(res.intact_w_posttrainpros);
+res.intact_w_posttrainpros_sem = nanstd(res.intact_w_posttrainpros)/sqrt(length(res.intact_w_posttrainpros));
+
 
 %ok - do prosthetic patterns "grow away" from naive prosthetic with training?
 % pre-training...
 res.pros_w_pretrainpros = cm2(logical(pros_notrain_idx),logical(pros_pretrain_idx));
 res.pros_w_pretrainpros_mean = nanmean(res.pros_w_pretrainpros(:));
+% to get SEM, let's assume we want one value per subject, their avg with
+% all others...
+res.sub_pros_w_pretrainpros = nanmean(res.pros_w_pretrainpros);
+res.pros_w_pretrainpros_sem = nanstd(res.pros_w_pretrainpros)/sqrt(length(res.pros_w_pretrainpros));
+
+
 % post-training...
 res.pros_w_posttrainpros = cm2(logical(pros_notrain_idx),logical(pros_posttrain_idx));
 res.pros_w_posttrainpros_mean = nanmean(res.pros_w_posttrainpros(:));
+% to get SEM, let's assume we want one value per subject, their avg with
+% all others...
+res.sub_pros_w_posttrainpros = nanmean(res.pros_w_posttrainpros);
+res.pros_w_posttrainpros_sem = nanstd(res.pros_w_posttrainpros)/sqrt(length(res.pros_w_posttrainpros));
 
 
 
 % %% Plots
-% %plot matrices of interest
-% figure;
-% subplot(2,2,1), imagesc(cm);
-% title('Within-cond corrmat');
-% colormap('jet'); % set the colorscheme
-% caxis([-1 1]);
-% colorbar; % enable colorbar
-% 
-% subplot(2,2,2), imagesc(cm2);
-% title('Overall corrmat');
-% colormap('jet'); % set the colorscheme
-% caxis([-1 1]);
-% colorbar; % enable colorbar
+%plot matrices of interest
+figure;
+subplot(2,2,1), imagesc(cm);
+title('Within-cond corrmat');
+colormap('jet'); % set the colorscheme
+caxis([-1 1]);
+colorbar; % enable colorbar
+
+subplot(2,2,2), imagesc(cm2);
+title('Overall corrmat');
+colormap('jet'); % set the colorscheme
+caxis([-1 1]);
+colorbar; % enable colorbar
 % 
 % subplot(2,2,3), imagesc(cm(logical(EA_intact),logical(EA_intact)));
 % title('EA with EA across blocks and runs');

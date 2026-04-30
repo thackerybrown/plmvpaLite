@@ -1,8 +1,7 @@
-#include <stdbool.h>
 #ifndef _LIBLINEAR_H
 #define _LIBLINEAR_H
 
-#define LIBLINEAR_VERSION 249
+#define LIBLINEAR_VERSION 247
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,7 +39,6 @@ struct parameter
 	double nu;
 	double *init_sol;
 	int regularize_bias;
-	bool w_recalc;		/* for -s 1, 3; may be extended to -s 12, 13, 21 */
 };
 
 struct model

@@ -1,9 +1,11 @@
+#!/usr/bin/env python
+
 from ctypes import *
 from ctypes.util import find_library
 from os import path
 from glob import glob
 import sys
-from enum import IntEnum
+
 try:
     import numpy as np
     import scipy
@@ -16,7 +18,10 @@ if sys.version_info[0] < 3:
     from itertools import izip as zip
 
 __all__ = ['liblinear', 'feature_node', 'gen_feature_nodearray', 'problem',
-           'parameter', 'model', 'toPyModel', 'solver_names',
+           'parameter', 'model', 'toPyModel', 'L2R_LR', 'L2R_L2LOSS_SVC_DUAL',
+           'L2R_L2LOSS_SVC', 'L2R_L1LOSS_SVC_DUAL', 'MCSVM_CS',
+           'L1R_L2LOSS_SVC', 'L1R_LR', 'L2R_LR_DUAL', 'L2R_L2LOSS_SVR',
+           'L2R_L2LOSS_SVR_DUAL', 'L2R_L1LOSS_SVR_DUAL', 'ONECLASS_SVM',
            'print_null']
 
 try:
@@ -29,7 +34,7 @@ except:
         if sys.platform == 'win32':
             liblinear = CDLL(path.join(dirname, r'..\..\windows\liblinear.dll'))
         else:
-            liblinear = CDLL(path.join(dirname, '../../liblinear.so.6'))
+            liblinear = CDLL(path.join(dirname, '../../liblinear.so.5'))
     except:
     # For unix the prefix 'lib' is not considered.
         if find_library('linear'):
@@ -39,31 +44,22 @@ except:
         else:
             raise Exception('LIBLINEAR library not found.')
 
-class solver_names(IntEnum):
-    L2R_LR = 0
-    L2R_L2LOSS_SVC_DUAL = 1
-    L2R_L2LOSS_SVC = 2
-    L2R_L1LOSS_SVC_DUAL = 3
-    MCSVM_CS = 4
-    L1R_L2LOSS_SVC = 5
-    L1R_LR = 6
-    L2R_LR_DUAL = 7
-    L2R_L2LOSS_SVR = 11
-    L2R_L2LOSS_SVR_DUAL = 12
-    L2R_L1LOSS_SVR_DUAL = 13
-    ONECLASS_SVM = 21
+L2R_LR = 0
+L2R_L2LOSS_SVC_DUAL = 1
+L2R_L2LOSS_SVC = 2
+L2R_L1LOSS_SVC_DUAL = 3
+MCSVM_CS = 4
+L1R_L2LOSS_SVC = 5
+L1R_LR = 6
+L2R_LR_DUAL = 7
+L2R_L2LOSS_SVR = 11
+L2R_L2LOSS_SVR_DUAL = 12
+L2R_L1LOSS_SVR_DUAL = 13
+ONECLASS_SVM = 21
 
 PRINT_STRING_FUN = CFUNCTYPE(None, c_char_p)
 def print_null(s):
     return
-
-# In multi-threading, all threads share the same memory space of
-# the dynamic library (liblinear). Thus, we use a module-level
-# variable to keep a reference to ctypes print_null, preventing
-# python from garbage collecting it in thread B while thread A
-# still needs it. Check the usage of svm_set_print_string_function()
-# in LIBLINEAR README for details.
-ctypes_print_null = PRINT_STRING_FUN(print_null)
 
 def genFields(names, types):
     return list(zip(names, types))
@@ -97,14 +93,15 @@ def gen_feature_nodearray(xi, feature_max=None):
             index_range = index_range[np.where(index_range <= feature_max)]
     elif isinstance(xi, (dict, list, tuple)):
         if isinstance(xi, dict):
-            index_range = sorted(xi.keys())
+            index_range = xi.keys()
         elif isinstance(xi, (list, tuple)):
             xi_shift = 1
             index_range = range(1, len(xi) + 1)
-        index_range = list(filter(lambda j: xi[j-xi_shift] != 0, index_range))
+        index_range = filter(lambda j: xi[j-xi_shift] != 0, index_range)
 
         if feature_max:
-            index_range = list(filter(lambda j: j <= feature_max, index_range))
+            index_range = filter(lambda j: j <= feature_max, index_range)
+        index_range = sorted(index_range)
     else:
         raise TypeError('xi should be a dictionary, list, tuple, 1-d numpy array, or tuple of (index, data)')
 
@@ -114,10 +111,9 @@ def gen_feature_nodearray(xi, feature_max=None):
 
     if scipy and isinstance(xi, tuple) and len(xi) == 2\
             and isinstance(xi[0], np.ndarray) and isinstance(xi[1], np.ndarray): # for a sparse vector
-        # since xi=(indices, values), we must sort them simultaneously.
-        for idx, arg in enumerate(np.argsort(index_range)):
-            ret[idx].index = index_range[arg]
-            ret[idx].value = (xi[1])[arg]
+        for idx, j in enumerate(index_range):
+            ret[idx].index = j
+            ret[idx].value = (xi[1])[idx]
     else:
         for idx, j in enumerate(index_range):
             ret[idx].index = j
@@ -132,18 +128,10 @@ try:
     from numba import jit
     jit_enabled = True
 except:
-    # We need to support two cases: when jit is called with no arguments, and when jit is called with
-    # a keyword argument.
-    def jit(func=None, *args, **kwargs):
-        if func is None:
-            # This handles the case where jit is used with parentheses: @jit(nopython=True)
-            return lambda x: x
-        else:
-            # This handles the case where jit is used without parentheses: @jit
-            return func
+    jit = lambda x: x
     jit_enabled = False
 
-@jit(nopython=True)
+@jit
 def csr_to_problem_jit(l, x_val, x_ind, x_rowptr, prob_val, prob_ind, prob_rowptr):
     for i in range(l):
         b1,e1 = x_rowptr[i], x_rowptr[i+1]
@@ -159,9 +147,6 @@ def csr_to_problem_nojit(l, x_val, x_ind, x_rowptr, prob_val, prob_ind, prob_row
         prob_val[prob_slice] = x_val[x_slice]
 
 def csr_to_problem(x, prob):
-    if not x.has_sorted_indices:
-        x.sort_indices()
-
     # Extra space for termination node and (possibly) bias term
     x_space = prob.x_space = np.empty((x.nnz+x.shape[0]*2), dtype=feature_node)
     # rowptr has to be a 64bit integer because it will later be used for pointer arithmetic,
@@ -249,19 +234,10 @@ class problem(Structure):
 
         self.bias = bias
 
-    def copy(self):
-        prob_copy = problem.__new__(problem)
-        for key in problem._names + list(vars(self)):
-            setattr(prob_copy, key, getattr(self, key))
-        return prob_copy
-
 
 class parameter(Structure):
-    _names = ["solver_type", "eps", "C", "nr_weight", "weight_label",
-              "weight", "p", "nu", "init_sol", "regularize_bias",
-              "w_recalc"]
-    _types = [c_int, c_double, c_double, c_int, POINTER(c_int),
-              POINTER(c_double), c_double, c_double, POINTER(c_double), c_int,c_bool]
+    _names = ["solver_type", "eps", "C", "nr_weight", "weight_label", "weight", "p", "nu", "init_sol", "regularize_bias"]
+    _types = [c_int, c_double, c_double, c_int, POINTER(c_int), POINTER(c_double), c_double, c_double, POINTER(c_double), c_int]
     _fields_ = genFields(_names, _types)
 
     def __init__(self, options = None):
@@ -280,7 +256,7 @@ class parameter(Structure):
         return s
 
     def set_to_default_values(self):
-        self.solver_type = solver_names.L2R_L2LOSS_SVC_DUAL
+        self.solver_type = L2R_L2LOSS_SVC_DUAL
         self.eps = float('inf')
         self.C = 1
         self.p = 0.1
@@ -291,7 +267,6 @@ class parameter(Structure):
         self.init_sol = None
         self.bias = -1
         self.regularize_bias = 1
-        self.w_recalc = False
         self.flag_cross_validation = False
         self.flag_C_specified = False
         self.flag_p_specified = False
@@ -316,7 +291,7 @@ class parameter(Structure):
         while i < len(argv) :
             if argv[i] == "-s":
                 i = i + 1
-                self.solver_type = solver_names(int(argv[i]))
+                self.solver_type = int(argv[i])
                 self.flag_solver_specified = True
             elif argv[i] == "-c":
                 i = i + 1
@@ -347,7 +322,7 @@ class parameter(Structure):
                 weight_label += [int(argv[i-1][2:])]
                 weight += [float(argv[i])]
             elif argv[i] == "-q":
-                self.print_func = ctypes_print_null
+                self.print_func = PRINT_STRING_FUN(print_null)
             elif argv[i] == "-C":
                 self.flag_find_parameters = True
             elif argv[i] == "-R":
@@ -368,23 +343,23 @@ class parameter(Structure):
             if not self.flag_cross_validation:
                 self.nr_fold = 5
             if not self.flag_solver_specified:
-                self.solver_type = solver_names.L2R_L2LOSS_SVC
+                self.solver_type = L2R_L2LOSS_SVC
                 self.flag_solver_specified = True
-            elif self.solver_type not in [solver_names.L2R_LR, solver_names.L2R_L2LOSS_SVC, solver_names.L2R_L2LOSS_SVR]:
+            elif self.solver_type not in [L2R_LR, L2R_L2LOSS_SVC, L2R_L2LOSS_SVR]:
                 raise ValueError("Warm-start parameter search only available for -s 0, -s 2 and -s 11")
 
         if self.eps == float('inf'):
-            if self.solver_type in [solver_names.L2R_LR, solver_names.L2R_L2LOSS_SVC]:
+            if self.solver_type in [L2R_LR, L2R_L2LOSS_SVC]:
                 self.eps = 0.01
-            elif self.solver_type in [solver_names.L2R_L2LOSS_SVR]:
+            elif self.solver_type in [L2R_L2LOSS_SVR]:
                 self.eps = 0.0001
-            elif self.solver_type in [solver_names.L2R_L2LOSS_SVC_DUAL, solver_names.L2R_L1LOSS_SVC_DUAL, solver_names.MCSVM_CS, solver_names.L2R_LR_DUAL]:
+            elif self.solver_type in [L2R_L2LOSS_SVC_DUAL, L2R_L1LOSS_SVC_DUAL, MCSVM_CS, L2R_LR_DUAL]:
                 self.eps = 0.1
-            elif self.solver_type in [solver_names.L1R_L2LOSS_SVC, solver_names.L1R_LR]:
+            elif self.solver_type in [L1R_L2LOSS_SVC, L1R_LR]:
                 self.eps = 0.01
-            elif self.solver_type in [solver_names.L2R_L2LOSS_SVR_DUAL, solver_names.L2R_L1LOSS_SVR_DUAL]:
+            elif self.solver_type in [L2R_L2LOSS_SVR_DUAL, L2R_L1LOSS_SVR_DUAL]:
                 self.eps = 0.1
-            elif self.solver_type in [solver_names.ONECLASS_SVM]:
+            elif self.solver_type in [ONECLASS_SVM]:
                 self.eps = 0.01
 
 class model(Structure):

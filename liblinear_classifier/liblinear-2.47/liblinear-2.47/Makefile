@@ -3,7 +3,7 @@ CC ?= gcc
 CFLAGS = -Wall -Wconversion -O3 -fPIC
 LIBS = blas/blas.a
 #LIBS = -lblas
-SHVER = 6
+SHVER = 5
 OS = $(shell uname)
 ifeq ($(OS),Darwin)
 	SHARED_LIB_FLAG = -dynamiclib -Wl,-install_name,liblinear.so.$(SHVER)
