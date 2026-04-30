@@ -1,4 +1,4 @@
-function [] = rsa_simple(studir)
+function [] = rsa_simple(studydir,masknameandpath)
 % code for RSA analysis simplified!
 
 % example call with 'mvpa_sample_data' - rsa_simple()
@@ -10,7 +10,7 @@ function [] = rsa_simple(studir)
 % for this simple example, bypass having separate model files and reading
 % in image names and masks in a complex manner...
 
-studydir = studir; %'C:\Users\giova\Documents\work\prosthesis\';
+%studydir is input from GUI as string: e.g., studydir = 'C:\Users\giova\Documents\work\prosthesis\';
 
 %specify the "model" - simplified here, this is just condition labels, 
 % 1 image per condition per subject
@@ -23,10 +23,9 @@ raw_filenames = dir(fullfile(studydir, datadir,'*.img'));
 
 %specify a mask to analyze the patterns within (must be same resolution as
 %MRI files you want to analyze
-maskdir = 'Masks';
-maskname = 'bilatall';
-
-masknameandpath = [studydir '\' maskdir '\' maskname '.nii'];
+%masknameandpath is input from GUI as string: = [studydir '\' maskdir '\' maskname '.nii'];
+%---maskdir = 'Masks';
+%---maskname = 'bilatall';
 
 %% extract all patterns, iterating through 3D MRI frames
 for i=1:length(raw_filenames)
