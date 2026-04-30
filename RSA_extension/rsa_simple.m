@@ -10,12 +10,7 @@ function [] = rsa_simple(studir)
 % for this simple example, bypass having separate model files and reading
 % in image names and masks in a complex manner...
 
-<<<<<<< HEAD
 studydir = studir; %'C:\Users\giova\Documents\work\prosthesis\';
-=======
-%studydir = 'C:\Users\giova\Documents\work\prosthesis'; %example for windows use
-studydir = '/home/thackery/Documents/mvpa_sample_data/Prosthesis'; %example for Mac and Linux use
->>>>>>> origin/master
 
 %specify the "model" - simplified here, this is just condition labels, 
 % 1 image per condition per subject
