@@ -1,4 +1,4 @@
-function [] = rsa_simple(studydir,masknameandpath)
+function [] = rsa_simple(studydir,masknameandpath,maskname)
 % code for RSA analysis simplified!
 
 % example call with 'mvpa_sample_data' - rsa_simple()
