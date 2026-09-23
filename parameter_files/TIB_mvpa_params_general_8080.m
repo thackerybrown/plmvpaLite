@@ -192,7 +192,7 @@ S.defineROIsFromANOVAFS = 0; % define ROIs using ANOVA-based feature selection, 
 % S.ROI2_file   = [par.subdir '/analysis_loc_mnem/' S.ROI2_name];
 
 % ~~~ Importance Maps
-S.generate_importance_maps = 0; %visualize classifier weights
+S.generate_importance_maps = 1; %visualize classifier weights
 S.generateBetaMaps = 1; %use betas, instead of importance values
 S.impType = {'pos' 'neg' 'both' 'raw'}; %importance map types
 S.regNames = {'CondA' 'CondB'}; % should match number of classes

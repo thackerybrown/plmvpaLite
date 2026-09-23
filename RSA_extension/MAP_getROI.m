@@ -13,6 +13,7 @@ function [Betas, results, mask_name]=MAP_getROI(maskname, betamaps, operation, t
 %           'over'    Count, percent, and mean of suprathreshold voxels (requires a threshold)
 %           'below'   Count,  Percent, and mean of subthreshold voxels (requires a
 %                       threshold)
+%           'vox'     use for splitting mask into separate voxels, will spit out value for each voxel within mask.
 %           'none'    (default)
 %threshold  (needed for some operations) a threshold to use for count and percent 
 %Output:
